@@ -835,10 +835,10 @@ function go(board){STATE.board=board;renderNav();renderView();closeSidebar();}
 function renderNav(){
   const nav=$("#nav");
   const groups=[
-    ["总览",["home","todo","weekplan","stats","me","secretary","net","news"]],
+    ["总览",["home","todo","weekplan","stats","me","secretary","net","news","quotes"]],
     ["自媒体",["docs","create","shoot","accountRecord","accountAI","topicReview","viral","hot","aicmd","benchmark"]],
     ["生活记录",["mood","english","cost","weight","exercise","supplement","period","sleep"]]];
-  const hiddenIds=["idea","copy","review","quotes"]; /* v5：已并入 创作中心 / 恩子的号 / 时事新闻 */
+  const hiddenIds=["idea","copy","review"]; /* v5：已并入 创作中心 / 恩子的号 / 时事新闻；quotes(每日一句)已按需求移回总览第9位 */
   const usedIds=hiddenIds.slice();groups.forEach(g=>g[1].forEach(id=>usedIds.push(id)));
   const restIds=BOARDS.map(b=>b.id).filter(id=>usedIds.indexOf(id)<0);
   if(restIds.length)groups.push(["花园",restIds]);
