@@ -879,7 +879,13 @@ function homeHTML(){
   return '<div class="hero"><div class="hi">'+greet()+'，恩子 '+dailyIcon()+'<span class="slogan">（不要给脑子留时间，直接开干，用肉体控制精神）</span></div><div class="dt">'+new Date().toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"})+'</div>'
     +'<div class="prog"><i style="width:'+rate+'%"></i></div>'
     +'<div style="font-size:12px;color:var(--ink2);margin-top:6px;">今日待办完成 '+done+'/'+total+'</div></div></div>'
-    +quoteCardHTML()
+    +'<div class="page-title">📰 时事新闻</div>'
+    +'<div class="page-sub">热点速览 · 点「查看完整榜单」看全部分类</div>'
+    +'<div id="homeNewsBox"><div class="empty">加载中…</div></div>'
+    +'<div style="text-align:center;margin:8px 0 14px;"><button class="btn ghost" data-q="news">📰 查看完整榜单 →</button></div>'
+    +'<div class="page-title" style="margin-top:6px;">💡 每日一句</div>'
+    +'<div class="page-sub">短句金句 + 长句语录 + 好书句子（中英）· 多分类 · 离线永久可用</div>'
+    +quotesInnerHTML()
     +'<div class="grid2">'
     +statCard(today(),'今日',total?'待办 '+done+'/'+total:'暂无待办')
     +statCard(ideas,'选题灵感','条已收藏')
@@ -1279,6 +1285,8 @@ function bindView(){
     const bCopy=document.getElementById("secCopy");if(bCopy)bCopy.onclick=()=>{const el=document.querySelector('.sec-brief');copyText(el?el.innerText:"");};
     document.querySelectorAll('[data-cidx]').forEach(b=>b.onclick=()=>{const i=+b.dataset.cidx;copyText((STATE.aiMsgs[i]||{}).text||"");});
   }
+  // 首页：加载时事新闻（独立于实时新闻板）
+  if(STATE.board==="home")loadHomeNews();
   // 实时新闻
   if(STATE.board==="news"){
     document.querySelectorAll('.net-tabs button').forEach(b=>b.onclick=()=>{STATE.newsType=b.dataset.nt;renderView();loadNews();});
@@ -1402,8 +1410,8 @@ function bindView(){
     document.querySelectorAll('[data-tid]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.tid);if(r)openTreasure(r);});
     document.querySelectorAll('.trea-img').forEach(im=>im.onclick=()=>{const w=window.open("");if(w){w.document.write('<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="'+im.src+'" style="max-width:100%;max-height:100vh;"></body>');}});
   }
-  // 每日一句（独立板块 + 嵌入时事新闻 都生效）
-  if(STATE.board==="quotes"||STATE.board==="news"){
+  // 每日一句（总览首页 / 独立板块 / 实时新闻板 都生效）
+  if(STATE.board==="quotes"||STATE.board==="news"||STATE.board==="home"){
     document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{STATE.quoteMode=b.dataset.qm;renderView();});
     document.querySelectorAll('[data-qc]').forEach(b=>b.onclick=()=>{STATE.quoteCat=b.dataset.qc;renderView();});
     document.querySelectorAll('[data-qcopy]').forEach(b=>b.onclick=()=>copyText(b.dataset.qcopy));
@@ -3334,8 +3342,7 @@ function newsHTML(){
   const links='<div class="hot-links"><a href="https://s.weibo.com/top/summary" target="_blank" rel="noopener">↗ 微博热搜</a><a href="https://www.zhihu.com/hot" target="_blank" rel="noopener">↗ 知乎热榜</a><a href="https://top.baidu.com/board" target="_blank" rel="noopener">↗ 百度热点</a></div>';
   return '<div class="page-title">📰 实时新闻</div><div class="page-sub">热搜/热点速览 · 点「关注」存为待办</div>'+links+tabs
     +'<div style="text-align:center;margin:8px 0;"><button class="btn ghost" id="newsFav" style="padding:8px 14px;">⭐ 关注头条到第1条</button></div>'
-    +'<div id="newsBox"><div class="empty">点击平台加载新闻</div></div>'
-    +'<div class="page-title" style="margin-top:18px;">💡 每日一句</div><div class="page-sub">短句 · 长句语录 · 好书句子（中英）· 每天陪你一句</div>'+quotesInnerHTML();
+    +'<div id="newsBox"><div class="empty">点击平台加载新闻</div></div>';
 }
 async function loadNews(){
   const box=document.getElementById("newsBox");if(!box)return;
@@ -3355,6 +3362,24 @@ function renderNews(){
   const box=document.getElementById("newsBox");if(!box)return;
   const items=STATE.newsItems||[];
   box.innerHTML=items.map((it,i)=>'<div class="hot-item"><span class="rk">'+(i+1)+'</span><span class="ht">'+esc(it.title)+'</span>'+(it.hot?'<span class="hk">🔥'+esc(it.hot)+'</span>':'')+'</div>').join("")||'<div class="empty">暂无数据</div>';
+}
+async function loadHomeNews(){
+  const box=document.getElementById("homeNewsBox");if(!box)return;
+  box.innerHTML='<div class="empty">加载中…</div>';
+  const apis=NET_API[STATE.newsType||"weibo"]||NET_API[Object.keys(NET_API)[0]]||[];
+  for(const [url,map] of apis){
+    try{
+      const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),6000);
+      const res=await fetch(url,{signal:ctrl.signal});clearTimeout(t);
+      const data=await res.json();const items=map(data);
+      if(items&&items.length){
+        const top=items.slice(0,6).map(x=>({title:String(x.title||x.hot||x.word||x.name||""),hot:x.hot||x.heat||""}));
+        box.innerHTML=top.map((it,i)=>'<div class="hot-item"><span class="rk">'+(i+1)+'</span><span class="ht">'+esc(it.title)+'</span>'+(it.hot?'<span class="hk">🔥'+esc(it.hot)+'</span>':'')+'</div>').join("")||'<div class="empty">暂无数据</div>';
+        return;
+      }
+    }catch(e){}
+  }
+  box.innerHTML='<div class="empty">新闻接口暂连不上，点「查看完整榜单」重试</div>';
 }
 function saveNewsFav(it){if(!it)return;openAdd("todo",{text:"关注新闻："+it.title});}
 
