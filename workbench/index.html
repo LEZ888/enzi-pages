@@ -95,6 +95,14 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .stat .n{font-size:26px;font-weight:800;color:var(--accent-d);}
 .stat .l{font-size:12px;color:var(--ink2);margin-top:2px;}
 .q-badge{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;padding:0 6px;border-radius:50%;background:#ff4d4f;color:#fff;font-size:12px;line-height:20px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(255,77,79,.55);box-sizing:border-box;}
+/* 统计·近七天事项完成排行（横向条形，主题绿，禁用突兀色） */
+.cmp-list{max-height:260px;overflow:auto;margin-top:6px;}
+.cmp-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-name{flex:0 0 92px;font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmp-track{flex:1;height:14px;background:var(--line);border-radius:7px;overflow:hidden;}
+.cmp-fill{display:block;height:100%;border-radius:7px;background:#8BC34A;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);}
+.cmp-val{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--ink2);min-width:40px;text-align:right;}
 .delay-one{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.6;color:var(--ink);}
 .delay-one .ic{flex:0 0 auto;font-size:15px;line-height:1.4;}
 .delay-one .dt{flex:1;min-width:0;}
@@ -1033,6 +1041,10 @@ function unDone(id){
 }
 function quickCard(id,txt){const n=unDone(id);return '<div class="stat" data-q="'+id+'" style="cursor:pointer;text-align:center;position:relative;">'+esc(txt)+(n>0?'<span class="q-badge" title="'+n+' 条待处理">'+n+'</span>':'')+'</div>';}
 function weekStart(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");}
+/* 通用「完成」判定：各模块的"已完成"标准不同，统一在此定义。
+   今日待办/本周计划 → done===true；拍摄安排 → status==="已发布"（即已确认/已发布）。
+   其余模块（文档库/创作中心等）当前数据模型无"完成"概念，默认不计入完成数。*/
+function isCompleted(x){if(!x)return false;if(x.type==="todo"||x.type==="weekplan")return !!x.done;if(x.type==="shoot")return (x.status||"")==="已发布";return false;}
 function sleepDur(r){
   if(!r.bedtime||!r.wake)return "";
   const p=s=>s.split(":").map(Number);const [bh,bm]=p(r.bedtime),[wh,wm]=p(r.wake);
@@ -1142,12 +1154,24 @@ function statsHTML(){
   const weekTodo=r.filter(x=>x.type==="todo"&&x.date>=wStart);
   const wDone=weekTodo.filter(x=>x.done).length;
   const rate=weekTodo.length?Math.round(wDone/weekTodo.length*100):0;
-  const weekCost=r.filter(x=>x.type==="cost"&&x.date>=wStart).reduce((s,x)=>s+(+x.amount||0),0);
-  const weights=r.filter(x=>x.type==="weight"&&x.value).sort((a,b)=>a.date.localeCompare(b.date)).slice(-7);
-  const wPath=lineChart(weights.map(x=>+x.value));
+  // —— 第二卡：本周完成最多的事（真实数据，动态计算） ——
+  const weekDoneRecs=r.filter(x=>x.date>=wStart && isCompleted(x));
+  const cntWeek={}; weekDoneRecs.forEach(x=>cntWeek[x.type]=(cntWeek[x.type]||0)+1);
+  let topId=null,topN=0; Object.keys(cntWeek).forEach(t=>{if(cntWeek[t]>topN){topN=cntWeek[t];topId=t;}});
+  const topCard = topId ? (boardMeta(topId).name+'：'+topN+'次') : '本周暂无完成事项';
+  // —— 第三卡：近七天事项完成统计表（横向条形排行榜） ——
+  const d7=new Date();d7.setDate(d7.getDate()-6);
+  const sevenStart=d7.getFullYear()+'-'+(d7.getMonth()+1).toString().padStart(2,'0')+'-'+d7.getDate().toString().padStart(2,'0');
+  const sevDone=r.filter(x=>x.date>=sevenStart && isCompleted(x));
+  const cnt7={}; sevDone.forEach(x=>cnt7[x.type]=(cnt7[x.type]||0)+1);
+  const arr7=Object.keys(cnt7).map(t=>({t,n:cnt7[t]})).sort((a,b)=>b.n-a.n).slice(0,10);
+  const max7=arr7.length?arr7[0].n:1;
+  const bars = arr7.length
+    ? arr7.map(o=>{const m=boardMeta(o.t);const w=Math.max(6,Math.round(o.n/max7*100));return '<div class="cmp-row"><span class="cmp-name">'+m.icon+' '+m.name+'</span><span class="cmp-track"><span class="cmp-fill" style="width:'+w+'%"></span></span><span class="cmp-val">'+o.n+'件</span></div>';}).join('')
+    : '<div class="empty" style="padding:16px;">近七天暂无完成事项</div>';
   return '<div class="page-title">📈 统计</div><div class="page-sub">本周概览与趋势</div>'
-    +'<div class="grid2">'+statCard(rate+"%","本周待办完成率","")+statCard("¥"+weekCost.toFixed(0),"本周消费","")+'</div>'
-    +'<div class="stat" style="margin-bottom:14px;"><div class="l">近7次体重趋势 (kg)</div>'+(weights.length?'<svg viewBox="0 0 280 120" style="width:100%;height:auto;margin-top:8px;">'+wPath+'</svg>':'<div class="empty" style="padding:18px;">暂无体重记录</div>')+'</div>'
+    +'<div class="grid2">'+statCard(rate+"%","本周待办完成率","")+statCard(topCard,"本周完成最多的事","")+'</div>'
+    +'<div class="stat" style="margin-bottom:14px;"><div class="l">近七天事项完成统计</div><div class="cmp-list">'+bars+'</div></div>'
     +'<div class="stat"><div class="l">各模块记录数</div>'+moduleCounts()+'</div>';
 }
 function lineChart(vals){
