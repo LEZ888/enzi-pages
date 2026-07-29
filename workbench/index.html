@@ -11,11 +11,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="恩子的工作台">
 <link rel="manifest" href="manifest.json">
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/zcool-kuaile@5.3.0/index.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/ma-shan-zheng@5.3.0/index.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.3.0/500.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.3.0/700.css" rel="stylesheet">
 <style>
 :root{
   --paper:#F5E9D3; --paper2:#FFFBF2; --paper3:#FAF1DC;
@@ -55,13 +50,13 @@
 .note-tilt-r2{transform:rotate(1.2deg);}
 .underline-dashed{border-bottom:1.5px dashed var(--line2);}
 .divider-dotted{border-top:2px dotted var(--line2);height:0;margin:14px 0;}
-.day-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-weight:700;font-size:12px;font-family:"ZCOOL KuaiLe","Ma Shan Zheng",sans-serif;}
+.day-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-weight:700;font-size:12px;}
 .day-tag.d1{background:var(--note-yellow);color:#8a6a00;}
 .day-tag.d2{background:var(--note-green);color:#3a6a1a;}
 .day-tag.d3{background:var(--note-blue);color:#1a4a6a;}
 .day-tag.d4{background:var(--note-pink);color:#8a3a3a;}
 .day-tag.d5{background:var(--note-purple);color:#5a2a7a;}
-.handwrite{font-family:"Caveat","Ma Shan Zheng",cursive;font-weight:700;letter-spacing:.5px;}
+.handwrite{font-weight:700;letter-spacing:.5px;}
 html,body{margin:0;padding:0;height:100%;}
 body{background:var(--paper);color:var(--ink);writing-mode:horizontal-tb;
   font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
@@ -71,9 +66,8 @@ body{background:var(--paper);color:var(--ink);writing-mode:horizontal-tb;
     radial-gradient(circle at 88% 82%, rgba(248,180,180,.12) 0, transparent 22%),
     repeating-linear-gradient(0deg, transparent 0, transparent 32px, rgba(193,168,120,.05) 32px, rgba(193,168,120,.05) 33px);
 }
-.page-title,.page-sub,.hero .hi,.quote-card .q-text,.cheer-box,.stat .n{font-family:"ZCOOL KuaiLe","Ma Shan Zheng","PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:.5px;}
-.note .mh,.doc-name,.wcard .wen,.hot-item .rk,.cmp-val b,.wt-cur,.rw-word,.rw-zh,.qword,.bm-name,.tc-cat,.vc-title,.cmd-t{font-family:"ZCOOL KuaiLe","Ma Shan Zheng","PingFang SC",sans-serif;}
-.hk,.rk,.hk-badge,.count{font-family:"Caveat","ZCOOL KuaiLe",cursive;font-weight:700;}
+.page-title,.page-sub,.hero .hi,.quote-card .q-text,.cheer-box,.stat .n{letter-spacing:.5px;}
+.hk,.rk,.hk-badge,.count{font-weight:700;}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 #app{display:flex;min-height:100vh;}
