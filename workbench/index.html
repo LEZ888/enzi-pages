@@ -1488,7 +1488,6 @@ function bindView(){
       const rec=STATE.recs.find(r=>r.id===el.dataset.id);if(rec)openEdit(rec);};
     if(el.querySelector(".ck"))el.querySelector(".ck").onclick=async(e)=>{e.stopPropagation();
       const rec=STATE.recs.find(r=>r.id===el.dataset.id);if(rec){
-        if(rec.type==="todo"&&!rec.done){const rm=prompt("🎉 这件事完成啦！写一句完成备注（可留空直接确定）",rec.remark||"");if(rm===null)return;if(rm.trim())rec.remark=rm.trim();}
         rec.done=!rec.done;await putRec(rec);flashSave();await reload();}};
   });
   // 快捷卡
