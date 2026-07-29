@@ -94,8 +94,10 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .stat{background:#FFFDF6;border:1px solid var(--line);border-radius:16px;padding:14px;}
 .stat .n{font-size:26px;font-weight:800;color:var(--accent-d);}
 .stat .l{font-size:12px;color:var(--ink2);margin-top:2px;}
-.q-badge{position:absolute;top:-7px;right:-7px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;background:var(--danger);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(229,115,115,.55);}
-.q-badge.q-dot{min-width:11px;width:11px;height:11px;padding:0;top:-5px;right:-5px;}
+.q-badge{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;padding:0 6px;border-radius:50%;background:#ff4d4f;color:#fff;font-size:12px;line-height:20px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(255,77,79,.55);box-sizing:border-box;}
+.delay-sec{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.55;}
+.delay-p{flex:0 0 auto;font-weight:800;color:#ff4d4f;}
+.delay-t{flex:1;color:var(--ink2);}
 .hero{background:linear-gradient(135deg,#FFF6D8,#EAF6D8);border-radius:20px;padding:18px;margin-bottom:16px;}
 .hero .hi{font-size:22px;font-weight:800;}
 .hero .dt{color:var(--ink2);margin-top:3px;}
@@ -905,6 +907,7 @@ function homeHTML(){
   return '<div class="hero"><div class="hi">'+greet()+'，恩子 '+dailyIcon()+'<span class="slogan">（不要给脑子留时间，直接开干，用肉体控制精神）</span></div><div class="dt">'+new Date().toLocaleDateString("zh-CN",{month:"long",day:"numeric",weekday:"long"})+'</div>'
     +'<div class="prog"><i style="width:'+rate+'%"></i></div>'
     +'<div style="font-size:12px;color:var(--ink2);margin-top:6px;">今日待办完成 '+done+'/'+total+'</div></div></div>'
+    +homeDelayHTML()
     +'<div class="grid2">'
     +statCard(today(),'今日',total?'待办 '+done+'/'+total:'暂无待办')
     +statCard(wpAll.length,'本周计划',wpUndone?'未完成 '+wpUndone:'全部完成')
@@ -919,27 +922,40 @@ function homeHTML(){
     +quickCard("sleep","😴 睡眠记录")+quickCard("mood","😊 心情日记")
     +'</div>';
 }
+function homeDelayHTML(){
+  const t=pickDelay3();
+  const sec='<div class="delay-sec"><span class="delay-p">🌅 早上</span><span class="delay-t">'+esc(t[0])+'</span></div>'
+    +'<div class="delay-sec"><span class="delay-p">☀️ 中午</span><span class="delay-t">'+esc(t[1])+'</span></div>'
+    +'<div class="delay-sec"><span class="delay-p">🌙 晚上</span><span class="delay-t">'+esc(t[2])+'</span></div>';
+  return '<div class="stat" style="margin:14px 0;border:1px solid rgba(255,77,79,.35);background:linear-gradient(135deg,#FFF6F6,#FFFDF6);"><div class="l" style="font-weight:800;color:#ff4d4f;">⏰ 恩子今日防拖延提醒</div>'+sec+'</div>';
+}
+function pickDelay3(){
+  /* 从纯拖延语库 QUOTE_DELAY 中，按日期稳定取 3 句分配给早/中/晚（每天自动换，同一天不变） */
+  const seed=dayIdx()*131+1;const arr=QUOTE_DELAY.slice();let s=seed;
+  const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;}
+  return [arr[0],arr[1],arr[2]];
+}
 function statCard(n,l,sub){return '<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'+(sub?'<div class="l">'+esc(sub)+'</div>':'')+'</div>';}
-/* 快速入口角标·模拟数据开关（对接真实数据前测试用）。
-   想看红点/数字角标时，把对应项改成数字或 true，例如：
-     BADGE_FORCE.hot = 3;                 // 热点爆款 显示数字 3
-     BADGE_FORCE.accountRecord = true;    // 恩子的号 显示纯红点（无数字）
-   恢复真实数据：把值改回 0（或删掉该行）即可。*/
-const BADGE_FORCE = { todo:0, weekplan:0, shoot:0, create:0, docs:0, hot:0, accountRecord:0, treasure:0, sleep:0, mood:0 };
-function unDone(id){
-  /* 模拟开关优先：非 0 / true 时直接采用，方便测试 */
-  const f=BADGE_FORCE[id];
-  if(f!==undefined && f!==null && f!==0){ return (f===true)?1:Number(f); }
-  const r=STATE.recs;
+/* 快速入口角标·模拟数据（对接真实数据前测试用）。
+   键=入口名称，值=未读/待办数字；>0 显示红色数字角标，0 或不填则不显示。
+   后续接真实数据时：把这里的数字改成真实计算结果，或删掉对应键走下方 realUnDone 真实逻辑。*/
+const badgeData = {'今日待办':3,'恩子的号':1,'热点爆款':5,'本周计划':0,'拍摄安排':0,'创作中心':0,'文档库':0,'恩子宝藏库':0,'睡眠记录':0,'心情日记':0};
+const QE_NAMES = {todo:'今日待办',weekplan:'本周计划',shoot:'拍摄安排',create:'创作中心',docs:'文档库',hot:'热点爆款',accountRecord:'恩子的号',treasure:'恩子宝藏库',sleep:'睡眠记录',mood:'心情日记'};
+function realUnDone(id){const r=STATE.recs;
   if(id==="todo")return r.filter(x=>x.type==="todo"&&x.date===today()&&!x.done).length;
   if(id==="weekplan")return r.filter(x=>x.type==="weekplan"&&!x.done).length;
   if(id==="shoot")return r.filter(x=>x.type==="shoot"&&(x.status||"")!=="已发布").length;
   if(id==="sleep")return r.some(x=>x.type==="sleep"&&x.date===today())?0:1;   // 今天没记睡眠 → 提醒
   if(id==="mood")return r.some(x=>x.type==="mood"&&x.date===today())?0:1;     // 今天没记心情 → 提醒
-  /* create/docs/hot/accountRecord/treasure：暂无以"未完成"计的项，默认无角标（用 BADGE_FORCE 模拟） */
-  return 0;
+  return 0;}
+function unDone(id){
+  /* 模拟数据优先：badgeData 已写死示例，便于测试；键为入口名称 */
+  const nm=QE_NAMES[id];
+  if(nm!==undefined && badgeData[nm]!==undefined) return Number(badgeData[nm])||0;
+  return realUnDone(id); /* 未列入 badgeData 的入口走真实数据 */
 }
-function quickCard(id,txt){const n=unDone(id);let badge='';if(n>1)badge='<span class="q-badge" title="'+n+' 项待处理">'+n+'</span>';else if(n===1)badge='<span class="q-badge q-dot" title="有未处理事项"></span>';return '<div class="stat" data-q="'+id+'" style="cursor:pointer;text-align:center;position:relative;">'+esc(txt)+badge+'</div>';}
+function quickCard(id,txt){const n=unDone(id);return '<div class="stat" data-q="'+id+'" style="cursor:pointer;text-align:center;position:relative;">'+esc(txt)+(n>0?'<span class="q-badge" title="'+n+' 条待处理">'+n+'</span>':'')+'</div>';}
 function weekStart(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");}
 function sleepDur(r){
   if(!r.bedtime||!r.wake)return "";
