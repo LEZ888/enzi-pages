@@ -98,6 +98,12 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .delay-one{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.6;color:var(--ink);}
 .delay-one .ic{flex:0 0 auto;font-size:15px;line-height:1.4;}
 .delay-one .dt{flex:1;min-width:0;}
+.home-todo{display:flex;gap:10px;align-items:flex-start;padding:8px 4px;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5;color:var(--ink);cursor:pointer;}
+.home-todo:last-child{border-bottom:none;}
+.home-todo input{margin-top:2px;width:18px;height:18px;flex:0 0 auto;accent-color:#5D4037;cursor:pointer;}
+.home-todo-done .home-todo-txt{text-decoration:line-through;color:#B7A99A;}
+.home-todo-pri{font-style:normal;font-size:12px;color:var(--ink2);}
+.home-todo-empty{font-size:13px;color:var(--ink2);padding:8px 4px;}
 .hero{background:linear-gradient(135deg,#FFF6D8,#EAF6D8);border-radius:20px;padding:18px;margin-bottom:16px;}
 .hero .hi{font-size:22px;font-weight:800;}
 .hero .dt{color:var(--ink2);margin-top:3px;}
@@ -909,7 +915,7 @@ function homeHTML(){
     +'<div style="font-size:12px;color:var(--ink2);margin-top:6px;">今日待办完成 '+done+'/'+total+'</div></div></div>'
     +homeDelayHTML()
     +'<div class="grid2">'
-    +statCard(today(),'今日',total?'待办 '+done+'/'+total:'暂无待办')
+    +homeTodoHTML()
     +statCard(wpAll.length,'本周计划',wpUndone?'未完成 '+wpUndone:'全部完成')
     +'</div>'
     +homeSuppReminder()
@@ -975,6 +981,23 @@ function homeDelayHTML(){
   return '<div class="stat" data-delay-open style="margin:14px 0;cursor:pointer;">'
     +'<div class="l" style="font-weight:800;color:var(--ink);">⏰ 今日防拖延提醒</div>'
     +'<div class="delay-one"><span class="ic">'+ic+'</span><span class="dt">'+esc(t)+'</span></div></div>';
+}
+/* 首页「今日待办」交互列表：每项为可勾选复选框，完成→删除线+浅灰；按 createdAt 降序（最新在上） */
+function homeTodoHTML(){
+  /* 数据来源：STATE.recs 中 type==="todo" 且 date===today() 的记录。
+     数据对象字段：{id, text, done(完成态布尔), createdAt(时间戳), priority, date, ...}
+     —— done 即"completed"；新增待办时由 putRec 自动写入 createdAt，无需迁移。 */
+  const list=STATE.recs.filter(x=>x.type==="todo"&&x.date===today()).slice()
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));   // 降序：最新添加的在最上方
+  const total=list.length, done=list.filter(x=>x.done).length;
+  const rows=list.length?list.map(t=>{
+    const checked=t.done?' checked':'';
+    const cls=t.done?' home-todo-done':'';
+    const pri=(t.priority&&t.priority!=="中")?' <i class="home-todo-pri">['+t.priority+']</i>':'';
+    return '<label class="home-todo'+cls+'"><input type="checkbox" data-todoid="'+esc(t.id)+'"'+checked+'>'
+      +'<span class="home-todo-txt">'+esc(t.text||"")+pri+'</span></label>';
+  }).join(""):'<div class="home-todo-empty">今天还没有待办，去「今日待办」里添加一条吧～</div>';
+  return '<div class="stat" style="margin-bottom:14px;"><div class="l" style="font-weight:800;color:var(--ink);">✅ 今日待办 <span style="font-weight:400;color:var(--ink2);">'+done+'/'+total+'</span></div>'+rows+'</div>';
 }
 function statCard(n,l,sub){return '<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'+(sub?'<div class="l">'+esc(sub)+'</div>':'')+'</div>';}
 /* 快速入口角标·模拟数据（对接真实数据前测试用）。
@@ -1340,6 +1363,11 @@ function bindView(){
   if(STATE.board==="home"){
     if(!STATE.quoteTimer){STATE.quoteTimer=setInterval(rotateQuote,8000);}
     const dOpen=document.querySelector('[data-delay-open]');if(dOpen)dOpen.onclick=()=>{/* 预留：点击进入「今日防拖延提醒」详情页，暂未实现 */};
+    document.querySelectorAll('[data-todoid]').forEach(c=>c.onchange=async()=>{
+      const rec=STATE.recs.find(x=>x.id===c.dataset.todoid);if(!rec)return;
+      rec.done=!!c.checked;rec.updatedAt=nowTs();   // 切换完成态
+      await putRec(rec);flashSave();renderView();    // 持久化并重渲染（完成态划线/排序即时更新）
+    });
   }else if(STATE.quoteTimer){clearInterval(STATE.quoteTimer);STATE.quoteTimer=null;}
   // 每日一句
   if(STATE.board==="quotes"){
