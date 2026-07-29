@@ -157,6 +157,41 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .modal-msg{font-size:15px;color:var(--ink);line-height:1.6;margin-bottom:18px;text-align:center;}
 .modal-btns{display:flex;flex-direction:row;gap:10px;}
 .modal-btns .btn{flex:1 1 0;width:auto;padding:11px;}
+/* ===== 好书阅读（仅总览页） ===== */
+.books-sec{margin-top:18px;}
+.books-tabs{display:flex;flex-direction:row;flex-wrap:wrap;gap:7px;margin:8px 0 10px;}
+.btab{flex:0 0 auto;padding:6px 13px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:13px;color:var(--ink2);font-weight:600;}
+.btab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.books-head{display:flex;flex-direction:row;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.books-cur{font-weight:800;color:var(--ink);font-size:15px;}
+.books-refresh{flex:0 0 auto;padding:7px 14px;border-radius:12px;background:var(--note-blue);color:var(--ink);font-weight:700;font-size:13px;}
+.book-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+@media(min-width:560px){.book-grid{grid-template-columns:repeat(3,1fr);}}
+@media(min-width:820px){.book-grid{grid-template-columns:repeat(4,1fr);}}
+.book-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;box-shadow:var(--shadow-soft);cursor:pointer;display:flex;flex-direction:column;gap:6px;}
+.book-cover-wrap{position:relative;width:100%;aspect-ratio:3/4;border-radius:9px;overflow:hidden;background:var(--note-yellow);}
+.book-cover-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;}
+.book-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.book-title{font-weight:700;font-size:13px;line-height:1.35;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.book-author{font-size:11px;color:var(--ink2);}
+.book-fav{position:absolute;right:8px;bottom:8px;font-size:17px;background:rgba(255,255,255,.88);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.12);z-index:2;}
+.book-cont{position:absolute;left:8px;bottom:8px;font-size:10px;font-weight:700;color:#fff;background:var(--accent);border-radius:9px;padding:3px 7px;z-index:2;}
+.books-loading,.books-empty{padding:24px;text-align:center;color:var(--ink2);font-size:13px;}
+.book-modal-mask{position:fixed;inset:0;background:rgba(120,90,40,.5);display:none;align-items:center;justify-content:center;z-index:300;padding:14px;}
+.book-modal{width:min(420px,92vw);max-height:88vh;overflow:auto;background:var(--paper);border-radius:18px;padding:18px;box-shadow:0 14px 50px rgba(120,90,40,.35);}
+.book-modal .bm-row{display:flex;flex-direction:row;gap:14px;margin-bottom:10px;}
+.book-modal .bm-cover{width:110px;height:150px;object-fit:cover;border-radius:10px;background:var(--note-yellow);flex:0 0 auto;}
+.book-modal .bm-title{font-weight:800;font-size:17px;color:var(--ink);}
+.book-modal .bm-author{font-size:13px;color:var(--ink2);margin-top:3px;}
+.book-modal .bm-meta{font-size:12px;color:var(--ink2);margin-top:8px;line-height:1.7;}
+.book-modal .bm-desc{font-size:13px;color:var(--ink);line-height:1.7;margin:10px 0;max-height:150px;overflow:auto;white-space:pre-wrap;}
+.book-modal .bm-acts{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:6px;}
+.book-modal .bm-acts .btn{flex:1 1 auto;min-width:110px;padding:10px;}
+.book-float{position:fixed;width:200px;height:120px;background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(120,90,40,.3);z-index:400;display:none;overflow:hidden;cursor:pointer;}
+.book-float .bf-cover{width:64px;height:88px;object-fit:cover;border-radius:8px;margin:16px 0 0 14px;background:var(--note-yellow);float:left;}
+.book-float .bf-title{margin:14px 12px 0 96px;font-size:12px;font-weight:700;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.book-float .bf-close{position:absolute;top:4px;right:6px;font-size:13px;color:var(--ink2);background:rgba(255,255,255,.7);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;z-index:3;}
+.book-float .bf-tip{position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10px;color:var(--ink2);}
 /* 富文本编辑器 */
 .etb{display:flex;flex-direction:row;gap:5px;overflow-x:auto;padding:7px;background:#FFFBF2;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;-webkit-overflow-scrolling:touch;}
 .etb-group{display:flex;gap:3px;align-items:center;padding-right:6px;margin-right:2px;border-right:1px solid var(--line);flex:0 0 auto;}
@@ -1028,7 +1063,8 @@ function homeHTML(){
     +quickCard("docs","📚 文档库")+quickCard("hot","🔥 热点爆款")
     +quickCard("accountRecord","📱 恩子的号")+quickCard("treasure","💎 恩子宝藏库")
     +quickCard("sleep","😴 睡眠记录")+quickCard("mood","😊 心情日记")
-    +'</div>';
+    +'</div>'
+    +booksSectionHTML();
 }
 /* 拖延症提醒语库（≥30 条·纯激励行动/克服拖延主题） */
 const DELAY_LIST=[
@@ -1239,6 +1275,139 @@ function noteHTML(r,id){
   return '<div class="note'+colorCls+doneCls+'" data-id="'+r.id+'">'
     +'<div class="acts"><button data-act="edit">✏️</button><button data-act="del">🗑</button></div>'
     +'<div class="row">'+ck+'<div class="body">'+body+(meta?'<div class="meta">'+meta+'</div>':'')+'</div></div></div>';
+}
+
+/* ============ 好书阅读（仅总览页，Open Library 数据源） ============ */
+const BOOK_CATS=[{cn:"励志",en:"inspiration"},{cn:"商业",en:"business"},{cn:"营销",en:"marketing"},{cn:"名人",en:"biography"},{cn:"女性力量",en:"feminism"},{cn:"生活技巧",en:"household"},{cn:"健康",en:"health"},{cn:"国学",en:"philosophy"},{cn:"言情",en:"romance"},{cn:"中医",en:"medicine"}];
+const BOOK_COVER_PH="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='110'%3E%3Crect width='80' height='110' fill='%23FCE4B6'/%3E%3Ctext x='40' y='64' font-size='34' text-anchor='middle' fill='%238a6a00'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E";
+STATE.bookCat=STATE.bookCat||"励志";STATE.bookPool=STATE.bookPool||{};STATE.bookShown=STATE.bookShown||{};STATE.bookDetail=STATE.bookDetail||null;
+function bookFavList(){try{return JSON.parse(localStorage.getItem("enzi_books_fav")||"[]");}catch(e){return[];}}
+function bookProgMap(){try{return JSON.parse(localStorage.getItem("enzi_books_prog")||"{}");}catch(e){return{};}}
+function isFav(k){return bookFavList().some(x=>x.key===k);}
+function bookCoverUrl(b){return b&&b.cover?("https://covers.openlibrary.org/b/id/"+b.cover+"-M.jpg"):"";}
+function findBook(k){return ([].concat.apply([],Object.values(STATE.bookShown)).concat([].concat.apply([],Object.values(STATE.bookPool)))).find(x=>x.key===k);}
+function booksSectionHTML(){
+  const tabs=BOOK_CATS.map(c=>'<button class="btab'+(c.cn===STATE.bookCat?' on':'')+'" data-cat="'+c.cn+'">'+c.cn+'</button>').join("");
+  return '<div class="books-sec"><div class="page-sub" style="margin-top:0;">📚 好书阅读</div>'
+    +'<div class="books-tabs" id="bookTabs">'+tabs+'</div>'
+    +'<div class="books-head"><span class="books-cur" id="bookCurCat">'+STATE.bookCat+'</span>'
+    +'<button class="books-refresh" id="bookRefresh">🔄 换一批</button></div>'
+    +'<div class="book-grid" id="bookGrid"><div class="books-loading">加载中…</div></div></div>';
+}
+function bookCardHTML(b){
+  const fav=isFav(b.key),prog=bookProgMap()[b.key],cover=bookCoverUrl(b);
+  return '<div class="book-card" data-book="'+esc(b.key)+'">'
+    +'<div class="book-cover-wrap"><div class="book-cover-ph">📖</div>'
+    +(cover?'<img class="book-cover" src="'+cover+'" onerror="this.remove()">':'')+'</div>'
+    +'<div class="book-title">'+esc(b.title||"无题")+'</div>'
+    +'<div class="book-author">'+(b.author||"佚名")+'</div>'
+    +(prog?'<div class="book-cont">继续阅读</div>':'')
+    +'<div class="book-fav" data-fav="'+esc(b.key)+'" title="收藏">'+(fav?'❤️':'🤍')+'</div></div>';
+}
+function renderBookGrid(cat){
+  const grid=document.getElementById("bookGrid");if(!grid)return;
+  const list=STATE.bookShown[cat]||[];
+  grid.innerHTML=list.length?list.map(bookCardHTML).join(""):'<div class="books-empty">该分类暂无书籍，点「换一批」试试</div>';
+}
+function pickNew(cat,mapped){
+  const shownSet=new Set((STATE.bookShown[cat]||[]).map(x=>x.key));
+  let picks=mapped.filter(x=>!shownSet.has(x.key));
+  if(picks.length<8){const poolPicks=STATE.bookPool[cat].filter(x=>!shownSet.has(x.key));picks=poolPicks.slice(0,8);}
+  else picks=picks.slice(0,8);
+  return picks;
+}
+async function loadBooks(cat,isRefresh){
+  const grid=document.getElementById("bookGrid");if(!grid)return;
+  if(isRefresh)grid.innerHTML='<div class="books-loading">换一批中…</div>';
+  else if(!(STATE.bookShown[cat]&&STATE.bookShown[cat].length))grid.innerHTML='<div class="books-loading">加载中…</div>';
+  const en=(BOOK_CATS.find(c=>c.cn===cat)||{en:"inspiration"}).en;
+  const offset=isRefresh?Math.floor(Math.random()*80):0;
+  const url="https://openlibrary.org/search.json?subject="+encodeURIComponent(en)+"&limit=20&offset="+offset+"&fields=key,title,author_name,cover_i,first_publish_year,number_of_pages_median";
+  let docs=[];
+  try{const res=await fetch(url);const j=await res.json();docs=j.docs||[];}catch(e){grid.innerHTML='<div class="books-empty">⚠️ 网络加载失败，请检查网络后点「换一批」重试</div>';return;}
+  const mapped=docs.map(d=>({key:d.key,title:d.title,author:(d.author_name&&d.author_name[0])||"",cover:d.cover_i||0,pages:d.number_of_pages_median||0,year:d.first_publish_year||0,url:"https://openlibrary.org"+d.key})).filter(x=>x.key);
+  STATE.bookPool[cat]=(STATE.bookPool[cat]||[]).concat(mapped);
+  const picks=pickNew(cat,mapped);
+  STATE.bookShown[cat]=(STATE.bookShown[cat]||[]).concat(picks);
+  renderBookGrid(cat);
+}
+function switchBookCat(cat){
+  STATE.bookCat=cat;
+  const cur=document.getElementById("bookCurCat");if(cur)cur.textContent=cat;
+  document.querySelectorAll("#bookTabs .btab").forEach(t=>t.classList.toggle("on",t.dataset.cat===cat));
+  if(!(STATE.bookShown[cat]&&STATE.bookShown[cat].length))loadBooks(cat,false);else renderBookGrid(cat);
+}
+function toggleFavFromCard(b,btn){
+  const list=bookFavList(),i=list.findIndex(x=>x.key===b.key);
+  if(i>=0){showConfirm("确定取消收藏《"+(b.title||"")+"》？",()=>{list.splice(i,1);localStorage.setItem("enzi_books_fav",JSON.stringify(list));btn.textContent="🤍";});}
+  else{list.push({key:b.key,title:b.title,author:b.author,cover:b.cover,url:b.url});localStorage.setItem("enzi_books_fav",JSON.stringify(list));btn.textContent="❤️";}
+}
+async function openBookDetail(key){
+  const b=findBook(key);if(!b)return;STATE.bookDetail=b;
+  const mask=ensureBookModal();
+  let desc="（暂无简介）";
+  try{const r=await fetch("https://openlibrary.org"+b.key+".json");const j=await r.json();if(j.description){desc=typeof j.description==="string"?j.description:(j.description.value||desc);}}catch(e){}
+  const fav=isFav(b.key),prog=bookProgMap()[b.key];
+  mask.querySelector(".book-modal").innerHTML=
+    '<div class="bm-row"><img class="bm-cover" src="'+bookCoverUrl(b)+'" onerror="this.src=\''+BOOK_COVER_PH+'\'">'
+    +'<div class="bm-info"><div class="bm-title">'+esc(b.title)+'</div><div class="bm-author">'+(b.author||"佚名")+'</div></div></div>'
+    +'<div class="bm-meta">页数：'+(b.pages||"未知")+'　|　出版：'+(b.year||"未知")+'</div>'
+    +'<div class="bm-desc">'+esc(desc)+'</div>'
+    +'<div class="bm-acts">'
+      +'<button class="btn pri" id="bmRead">📖 在线试读</button>'
+      +(prog?'<button class="btn ghost" id="bmCont">📌 继续阅读</button>':'')
+      +'<button class="btn ghost" id="bmFav">'+(fav?'💔 取消收藏':'❤️ 收藏')+'</button>'
+      +'<button class="btn ghost" id="bmMin">📌 最小化</button>'
+      +'<button class="btn ghost" id="bmClose">✕ 关闭</button>'
+    +'</div>';
+  document.getElementById("bmRead").onclick=bookRead;
+  const cb=document.getElementById("bmCont");if(cb)cb.onclick=()=>{const p=bookProgMap()[b.key];if(p)window.open(p.url,"_blank");};
+  document.getElementById("bmFav").onclick=bookFavToggle;
+  document.getElementById("bmMin").onclick=bookMinimize;
+  document.getElementById("bmClose").onclick=()=>{mask.style.display="none";};
+  mask.style.display="flex";
+}
+function ensureBookModal(){
+  let m=document.getElementById("bookModalMask");
+  if(!m){m=document.createElement("div");m.id="bookModalMask";m.className="book-modal-mask";m.innerHTML='<div class="book-modal"></div>';m.onclick=(e)=>{if(e.target===m)m.style.display="none";};document.body.appendChild(m);}
+  return m;
+}
+function bookRead(){
+  const b=STATE.bookDetail;if(!b)return;
+  const pm=bookProgMap();pm[b.key]={url:b.url,ts:Date.now()};localStorage.setItem("enzi_books_prog",JSON.stringify(pm));
+  window.open(b.url,"_blank");
+  if(STATE.bookShown[STATE.bookCat])renderBookGrid(STATE.bookCat);
+}
+function bookFavToggle(){
+  const b=STATE.bookDetail;if(!b)return;
+  const list=bookFavList(),i=list.findIndex(x=>x.key===b.key);
+  if(i>=0){showConfirm("确定取消收藏《"+(b.title||"")+"》？",()=>{list.splice(i,1);localStorage.setItem("enzi_books_fav",JSON.stringify(list));if(STATE.bookShown[STATE.bookCat])renderBookGrid(STATE.bookCat);const m=document.getElementById("bookModalMask");if(m)m.style.display="none";});}
+  else{list.push({key:b.key,title:b.title,author:b.author,cover:b.cover,url:b.url});localStorage.setItem("enzi_books_fav",JSON.stringify(list));alert("已收藏到「我的书单」❤️");if(STATE.bookShown[STATE.bookCat])renderBookGrid(STATE.bookCat);const m=document.getElementById("bookModalMask");if(m)m.style.display="none";}
+}
+function bookMinimize(){
+  const b=STATE.bookDetail;if(!b)return;
+  const m=document.getElementById("bookModalMask");if(m)m.style.display="none";
+  const f=ensureBookFloat();
+  f.querySelector(".bf-cover").src=bookCoverUrl(b)||BOOK_COVER_PH;
+  f.querySelector(".bf-title").textContent=b.title||"";
+  f.dataset.key=b.key;
+  f.style.left=(window.innerWidth-216)+"px";f.style.top=(window.innerHeight-136)+"px";f.style.right="auto";f.style.bottom="auto";
+  f.style.display="block";
+}
+function ensureBookFloat(){
+  let f=document.getElementById("bookFloat");
+  if(!f){
+    f=document.createElement("div");f.id="bookFloat";f.className="book-float";
+    f.innerHTML='<div class="bf-close">✕</div><img class="bf-cover" src=""><div class="bf-title"></div><div class="bf-tip">点击展开 · 拖动移动</div>';
+    document.body.appendChild(f);
+    f.querySelector(".bf-close").onclick=(e)=>{e.stopPropagation();f.style.display="none";};
+    f.onclick=()=>{const k=f.dataset.key;if(k)openBookDetail(k);};
+    let sx=0,sy=0,dx=0,dy=0,drag=false;
+    f.addEventListener("pointerdown",(e)=>{if(e.target.classList.contains("bf-close"))return;drag=true;sx=e.clientX;sy=e.clientY;dx=f.offsetLeft;dy=f.offsetTop;try{f.setPointerCapture(e.pointerId);}catch(_){}});
+    f.addEventListener("pointermove",(e)=>{if(!drag)return;let nx=dx+(e.clientX-sx),ny=dy+(e.clientY-sy);nx=Math.max(0,Math.min(window.innerWidth-200,nx));ny=Math.max(0,Math.min(window.innerHeight-120,ny));f.style.left=nx+"px";f.style.top=ny+"px";f.style.right="auto";f.style.bottom="auto";});
+    f.addEventListener("pointerup",()=>{drag=false;});
+  }
+  return f;
 }
 
 /* ============ 统计 ============ */
@@ -1526,6 +1695,20 @@ function bindView(){
       rec.done=!!c.checked;rec.updatedAt=nowTs();   // 切换完成态
       await putRec(rec);flashSave();renderView();    // 持久化并重渲染（完成态划线/排序即时更新）
     });
+    // 好书阅读（仅总览页）
+    const bt=document.getElementById("bookTabs");
+    if(bt){
+      bt.querySelectorAll(".btab").forEach(t=>t.onclick=()=>switchBookCat(t.dataset.cat));
+      const rf=document.getElementById("bookRefresh");if(rf)rf.onclick=()=>loadBooks(STATE.bookCat,true);
+      const g=document.getElementById("bookGrid");
+      if(g)g.onclick=(e)=>{
+        const fb=e.target.closest("[data-fav]");
+        if(fb){const b=findBook(fb.dataset.fav);if(b)toggleFavFromCard(b,fb);return;}
+        const card=e.target.closest("[data-book]");if(card)openBookDetail(card.dataset.book);
+      };
+      if(!(STATE.bookShown[STATE.bookCat]&&STATE.bookShown[STATE.bookCat].length))loadBooks(STATE.bookCat,false);
+      else renderBookGrid(STATE.bookCat);
+    }
   }else if(STATE.quoteTimer){clearInterval(STATE.quoteTimer);STATE.quoteTimer=null;}
   // 每日一句
   if(STATE.board==="quotes"){
