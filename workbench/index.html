@@ -1887,7 +1887,6 @@ function bindView(){
     const nc=document.getElementById("crNewCat");if(nc)nc.onclick=async()=>{const n=prompt("新分类名（如：思路开窍 / 故事罐头）");if(!n||!n.trim())return;const cats=STATE.settings.createCats||[];if(cats.indexOf(n.trim())<0)cats.push(n.trim());STATE.settings.createCats=cats;await setSet("createCats",cats);renderView();};
     document.querySelectorAll('[data-crcopy]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.crcopy);if(r)copyText((r.title||"")+"\n"+(r.content||r.note||""));});
     document.querySelectorAll('[data-crtele]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.crtele);if(r)openTele((r.title?r.title+"\n\n":"")+(r.content||r.note||r.title||""));});
-    const ct=document.getElementById("crTele");if(ct)ct.onclick=()=>{const t=prompt("输入要提词的大字报内容（可直接粘贴文案）：");if(t&&t.trim())openTele(t.trim());};
   }
   // 恩子的号（记录+复盘 合并）
   if(STATE.board==="accountRecord"){
@@ -3631,7 +3630,6 @@ function createHTML(){
       +'<button class="btn pri" data-crtele="'+r.id+'">🖥 大字报</button></div></div>';
   }).join(""):'<div class="empty"><div class="big">'+(tab==="idea"?"💡":"🎙")+'</div>还没有'+(tab==="idea"?"选题":"文案")+'<br>点右下角 ＋ 添加（可选分类、加图片）</div>';
   return '<div class="page-title">🎨 创作中心</div><div class="page-sub">选题灵感 + 口播文案合并管理 · 自建分类 · 一键复制 · 大字报提词</div>'
-    +'<div class="cr-actions" style="margin-bottom:10px;"><button class="btn ghost" id="crTele">🖥 大字报提词</button></div>'
     +tabs+cats+cards;
 }
 /* ---- 大字报提词器 ---- */
