@@ -83,6 +83,32 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .note .acts{position:absolute;top:8px;right:10px;display:flex;gap:6px;opacity:0;transition:opacity .15s;}
 .note:hover .acts{opacity:1;}
 .note .acts button{font-size:13px;color:var(--ink2);background:rgba(255,255,255,.6);border-radius:8px;padding:2px 6px;}
+/* 文档库：列表项 / 置顶 / 滑动删除 */
+.doc-item{position:relative;margin-bottom:10px;border-radius:14px;overflow:hidden;background:var(--note-blue);box-shadow:0 2px 7px rgba(120,90,40,.10);border:1px solid rgba(120,90,40,.06);}
+.doc-item.pinned{background:#FFF3D6;border-color:rgba(201,162,39,.35);}
+.doc-swipe{position:relative;display:flex;align-items:center;gap:10px;padding:13px 15px;background:inherit;border-radius:14px;transition:transform .18s;touch-action:pan-y;z-index:1;}
+.doc-del{position:absolute;top:0;right:0;height:100%;width:84px;background:var(--danger);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;cursor:pointer;z-index:0;}
+.doc-del:active{filter:brightness(.92);}
+.doc-pin{position:absolute;top:8px;right:10px;font-size:16px;cursor:pointer;z-index:3;opacity:.4;user-select:none;background:rgba(255,255,255,.6);border-radius:8px;padding:0 5px;line-height:1.35;}
+.doc-item.pinned .doc-pin{opacity:1;}
+.doc-icon{font-size:20px;flex:0 0 24px;text-align:center;}
+.doc-info{flex:1;min-width:0;padding-right:34px;}
+.doc-name{font-weight:700;font-size:15px;word-break:break-word;}
+.doc-meta{font-size:12px;color:var(--ink2);margin-top:2px;}
+.doc-pinflag{display:inline-block;font-size:11px;color:#8a6d1e;background:rgba(201,162,39,.18);border-radius:8px;padding:0 6px;margin-left:6px;font-weight:600;}
+.doc-open{font-size:13px;color:#fff;background:var(--accent);border-radius:8px;padding:6px 14px;flex:0 0 auto;cursor:pointer;margin-left:6px;}
+/* 富文本编辑器 */
+.etb{display:flex;flex-direction:row;gap:5px;overflow-x:auto;padding:7px;background:#FFFDF6;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;-webkit-overflow-scrolling:touch;}
+.etb-group{display:flex;gap:3px;align-items:center;padding-right:6px;margin-right:2px;border-right:1px solid var(--line);flex:0 0 auto;}
+.etb-group:last-child{border-right:none;}
+.etb-btn{flex:0 0 auto;min-width:30px;height:30px;padding:0 8px;border-radius:8px;background:#fff;border:1px solid var(--line);font-size:14px;color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;}
+.etb-btn:active{background:var(--note-blue);}
+.etb select{height:30px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:12px;color:var(--ink);padding:0 4px;}
+.etb input[type=color]{width:30px;height:30px;border:1px solid var(--line);border-radius:8px;padding:1px;background:#fff;cursor:pointer;}
+.ed-body{min-height:52vh;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:14px;line-height:1.9;outline:none;overflow-y:auto;}
+.ed-body:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,195,74,.18);}
+.ed-body img{max-width:100%;border-radius:8px;margin:4px 0;display:block;}
+.ed-body:empty:before{content:attr(placeholder);color:var(--ink2);}
 /* 日期折叠 */
 .datefold{margin:14px 0 6px;display:flex;align-items:center;gap:8px;cursor:pointer;
   font-weight:800;font-size:14px;color:var(--ink2);}
@@ -2050,7 +2076,7 @@ async function bmAnalyze(id){
 /* ============ 文档库 ============ */
 function docsHTML(){
   return '<div class="page-title">📚 文档库</div><div class="page-sub">3份作战文档已内置 · 可导入任意文件 · 可在线写文档</div>'
-    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
+    +'<div style="display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'
     +'<button class="btn pri" id="docImport" style="flex:0;padding:9px 16px;">＋ 导入文件</button>'
     +'<button class="btn ghost" id="docWrite" style="flex:0;padding:9px 16px;">✍️ 写文档</button></div>'
     +'<div class="note" style="font-size:12px;color:var(--ink2);line-height:1.7;">📱 <b>微信/QQ里的文件怎么导</b>：网页没权限直接进微信/QQ，但只差一步——在微信/QQ里点开那个文件 →「用其他应用打开 / 保存到手机(文件)」，再回这里点「导入文件」就能选到。HTML/图片/PDF/TXT 导入后都能直接看。</div>'
@@ -2061,17 +2087,71 @@ async function allDocsMerged(){
   DEFAULT_DOCS.forEach(d=>{if(!list.find(x=>x.id===d.id))list.push(d);});
   return list;
 }
+function fmtDate(ts){if(!ts)return "—";const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function pinTsOf(d){return (d&&d.pinned)?(d.pinTs||0):0;}
+async function togglePin(id){
+  const list=await allDocsMerged();
+  const d=list.find(x=>x.id===id);if(!d)return;
+  const pinnedCount=list.filter(x=>x.pinned).length;
+  if(!d.pinned && pinnedCount>=5){alert("置顶数量已达上限（5个）");return;}
+  d.pinned=!d.pinned;
+  d.pinTs=d.pinned?nowTs():0;
+  await putDoc(d);
+  loadDocs();
+}
+function bindSwipe(sw){
+  if(!sw)return;
+  let startX=0,moved=false,open=false;
+  sw.addEventListener('pointerdown',e=>{
+    if(open){sw.style.transform='translateX(0)';open=false;return;}
+    startX=e.clientX;moved=false;
+  });
+  sw.addEventListener('pointermove',e=>{
+    if(open)return;
+    const mx=e.clientX-startX;
+    if(!moved && Math.abs(mx)>6){moved=true;try{sw.setPointerCapture(e.pointerId);}catch(_){}}
+    if(moved){let nx=Math.max(-84,Math.min(0,mx));sw.style.transform='translateX('+nx+'px)';}
+  });
+  sw.addEventListener('pointerup',()=>{
+    if(open)return;
+    if(moved){const cur=parseFloat(sw.style.transform.replace(/[^0-9.\-]/g,''))||0;
+      if(cur<-40){sw.style.transform='translateX(-84px)';open=true;}else{sw.style.transform='translateX(0)';open=false;}}
+  });
+  sw.addEventListener('pointercancel',()=>{if(!open){sw.style.transform='translateX(0)';}});
+}
 async function loadDocs(){
   const box=document.getElementById("docList");if(!box)return;
-  const list=await allDocsMerged();
+  let list=await allDocsMerged();
+  // 排序：置顶优先（按置顶时间升序：先置顶在前），其余按创建时间升序（最早创建在最上）
+  list.sort((a,b)=>{
+    const pa=pinTsOf(a),pb=pinTsOf(b);
+    if(pa&&pb)return pa-pb;
+    if(pa&&!pb)return -1;
+    if(!pa&&pb)return 1;
+    return (a.createdAt||0)-(b.createdAt||0);
+  });
   if(!list.length){box.innerHTML='<div class="empty"><div class="big">📂</div>还没有文档<br>点「导入文件」或「✍️ 写文档」开始</div>';return;}
   box.innerHTML=list.map(d=>{
     const icon=d.isNote?"✍️":((d.mime||"").indexOf("image")===0?"🖼":((d.mime||"")==="application/pdf"?"📕":"📄"));
-    return '<div class="note blue" data-doc="'+d.id+'"><div class="mh">'+icon+' '+esc(d.name)+'</div><div class="acts"><button data-act="open">打开</button><button data-act="del">删除</button></div></div>';
+    const pinned=!!d.pinned;
+    const ct=d.createdAt?fmtDate(d.createdAt):"—";
+    return '<div class="doc-item'+(pinned?' pinned':'')+'" data-doc="'+d.id+'">'
+      +'<div class="doc-del" data-del="'+d.id+'">删除</div>'
+      +'<div class="doc-swipe" data-doc="'+d.id+'">'
+        +'<div class="doc-pin" data-pin="'+d.id+'" title="置顶/取消置顶">'+(pinned?'📌':'📍')+'</div>'
+        +'<div class="doc-icon">'+icon+'</div>'
+        +'<div class="doc-info"><div class="doc-name">'+esc(d.name)+(pinned?'<span class="doc-pinflag">📌 已置顶</span>':'')+'</div>'
+        +'<div class="doc-meta">创建：'+ct+'</div></div>'
+        +'<div class="doc-open" data-open="'+d.id+'">打开</div>'
+      +'</div></div>';
   }).join("");
-  box.querySelectorAll(".note").forEach(el=>{
-    el.querySelector('[data-act="del"]').onclick=async(e)=>{e.stopPropagation();if(confirm("删除该文档？")){await delDoc(el.dataset.doc);loadDocs();}};
-    el.querySelector('[data-act="open"]').onclick=()=>openDoc(el.dataset.doc);
+  box.querySelectorAll(".doc-item").forEach(el=>{
+    const id=el.dataset.doc;
+    const pin=el.querySelector('[data-pin]');if(pin)pin.onclick=(e)=>{e.stopPropagation();togglePin(id);};
+    const openBtn=el.querySelector('[data-open]');if(openBtn)openBtn.onclick=(e)=>{e.stopPropagation();openDoc(id);};
+    const nameEl=el.querySelector('.doc-name');if(nameEl)nameEl.onclick=(e)=>{e.stopPropagation();openDoc(id);};
+    const del=el.querySelector('[data-del]');if(del)del.onclick=(e)=>{e.stopPropagation();if(confirm("确定删除该文档？此操作不可恢复。")){delDoc(id).then(loadDocs);}};
+    bindSwipe(el.querySelector('.doc-swipe'));
   });
 }
 function guessMime(n){n=(n||"").toLowerCase();
@@ -2158,18 +2238,89 @@ function closeDoc(){
 /* ---- 在线写文档 ---- */
 function openNoteEditor(d){
   const v=document.getElementById("view");
-  v.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><button class="btn ghost" id="noteBack" style="flex:0;padding:8px 16px;">← 返回</button><div style="font-weight:700;">✍️ 在线写文档</div></div>'
+  const fontOpts=['宋体','黑体','楷体','Microsoft YaHei','Arial','Georgia','Times New Roman'].map(f=>'<option value="'+f+'">'+f+'</option>').join('');
+  const sizeOpts=['12','14','16','18','20','24','28','32','36'].map(s=>'<option value="'+s+'">'+s+'px</option>').join('');
+  const tb='<div class="etb" id="etb">'
+    +'<select class="etb-sel" id="etbFont" title="字体">'+fontOpts+'</select>'
+    +'<select class="etb-sel" id="etbSize" title="字号">'+sizeOpts+'</select>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="bold" title="加粗"><b>B</b></button>'
+      +'<button class="etb-btn" data-cmd="italic" title="斜体"><i>I</i></button>'
+      +'<button class="etb-btn" data-cmd="underline" title="下划线"><u>U</u></button>'
+      +'<button class="etb-btn" data-cmd="strikeThrough" title="删除线"><s>S</s></button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<input type="color" id="etbColor" title="文字颜色" value="#5D4037">'
+      +'<button class="etb-btn" data-color="fore" title="应用文字色" style="color:#5D4037;font-weight:700;">A</button>'
+      +'<input type="color" id="etbBg" title="背景色" value="#FFF3D6">'
+      +'<button class="etb-btn" data-color="back" title="应用背景色" style="background:#FFF3D6;font-weight:700;">▣</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="justifyLeft" title="左对齐">⯇</button>'
+      +'<button class="etb-btn" data-cmd="justifyCenter" title="居中">≡</button>'
+      +'<button class="etb-btn" data-cmd="justifyRight" title="右对齐">⯈</button>'
+      +'<button class="etb-btn" data-cmd="justifyFull" title="两端对齐">☰</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="insertUnorderedList" title="无序列表">•—</button>'
+      +'<button class="etb-btn" data-cmd="insertOrderedList" title="有序列表">1.</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" id="etbImgUp" title="插入本地图片">🖼</button>'
+      +'<button class="etb-btn" id="etbImgUrl" title="插入图片链接">🔗图</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="undo" title="撤销">↶</button>'
+      +'<button class="etb-btn" data-cmd="redo" title="重做">↷</button>'
+      +'<button class="etb-btn" data-cmd="removeFormat" title="清除格式">⌫</button>'
+    +'</div>'
+    +'</div>';
+  v.innerHTML='<div style="display:flex;flex-direction:row;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<button class="btn ghost" id="noteBack" style="flex:0 0 auto;padding:8px 16px;">← 返回</button>'
+      +'<div style="font-weight:700;">✍️ 在线写文档</div></div>'
     +'<input id="noteTitle" placeholder="文档标题" value="'+esc(d?d.name:"")+'" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-weight:700;background:#fff;margin-bottom:8px;">'
-    +'<textarea id="noteBody" placeholder="开始写吧…（保存在你手机/电脑本地，离线也能看）" style="width:100%;box-sizing:border-box;min-height:52vh;padding:12px;border:1px solid var(--line);border-radius:12px;font-size:14px;line-height:1.9;background:#fff;resize:vertical;">'+esc(d?(d.text||""):"")+'</textarea>'
-    +'<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn pri" id="noteSave" style="flex:0;padding:10px 22px;">💾 保存</button><button class="btn ghost" id="noteCopy" style="flex:0;padding:10px 18px;">📋 复制全文</button></div>';
+    +tb
+    +'<div class="ed-body" id="noteBody" contenteditable="true" placeholder="开始写吧…（富文本，保存在本地，离线也能看）">'+(d?(d.html||esc(d.text||"")):"")+'</div>'
+    +'<div style="display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;margin-top:10px;">'
+      +'<button class="btn pri" id="noteSave" style="flex:0 0 auto;padding:10px 22px;">💾 保存</button>'
+      +'<button class="btn ghost" id="noteCopy" style="flex:0 0 auto;padding:10px 18px;">📋 复制全文</button>'
+      +'<button class="btn ghost" id="noteExport" style="flex:0 0 auto;padding:10px 18px;">⬇️ 导出</button></div>';
+  const ed=document.getElementById("noteBody");
+  const run=cmd=>{ed.focus();try{document.execCommand(cmd,false,null);}catch(e){}};
+  document.getElementById("etb").querySelectorAll('[data-cmd]').forEach(b=>{
+    b.onmousedown=e=>e.preventDefault();
+    b.onclick=()=>run(b.dataset.cmd);
+  });
+  document.querySelectorAll('[data-color]').forEach(b=>{
+    b.onmousedown=e=>e.preventDefault();
+    b.onclick=()=>{ed.focus();const c=b.dataset.color==="fore"?document.getElementById("etbColor").value:document.getElementById("etbBg").value;
+      try{document.execCommand(b.dataset.color==="fore"?"foreColor":"hiliteColor",false,c);}catch(e){}};
+  });
+  document.getElementById("etbFont").onchange=function(){ed.focus();try{document.execCommand("fontName",false,this.value);}catch(e){}};
+  document.getElementById("etbSize").onchange=function(){
+    const px=this.value;ed.focus();const sel=window.getSelection();
+    if(!sel||!sel.rangeCount){ed.style.fontSize=px+'px';return;}
+    const range=sel.getRangeAt(0);
+    if(range.collapsed){ed.style.fontSize=px+'px';return;}
+    try{const span=document.createElement("span");span.style.fontSize=px+'px';range.surroundContents(span);}catch(_){}
+  };
+  const fu=document.createElement("input");fu.type="file";fu.accept="image/*";
+  fu.onchange=async()=>{const f=fu.files[0];if(!f)return;const url=await new Promise(r=>{const r2=new FileReader();r2.onload=()=>r(r2.result);r2.readAsDataURL(f);});ed.focus();try{document.execCommand("insertImage",false,url);}catch(e){}};
+  document.getElementById("etbImgUp").onclick=()=>fu.click();
+  document.getElementById("etbImgUrl").onclick=()=>{const u=prompt("粘贴图片链接（http/https）：");if(u)try{document.execCommand("insertImage",false,u);}catch(e){}};
   document.getElementById("noteBack").onclick=()=>renderView();
   document.getElementById("noteSave").onclick=async()=>{
     const t=(document.getElementById("noteTitle").value||"").trim()||("未命名文档 "+today());
-    const body=document.getElementById("noteBody").value||"";
-    const rec={id:d?d.id:genId(),name:t,isNote:true,text:body,createdAt:(d&&d.createdAt)||nowTs(),updatedAt:nowTs()};
+    const html=ed.innerHTML;const text=ed.innerText||"";
+    const rec={id:d?d.id:genId(),name:t,isNote:true,html:html,text:text,createdAt:(d&&d.createdAt)||nowTs(),updatedAt:nowTs()};
     await putDoc(rec);d=rec;flashSave();alert("已保存 ✅（在文档库列表里随时打开继续写）");
   };
-  document.getElementById("noteCopy").onclick=()=>copyText(document.getElementById("noteBody").value||"");
+  document.getElementById("noteCopy").onclick=()=>copyText(ed.innerText||"");
+  document.getElementById("noteExport").onclick=()=>{
+    const t=(document.getElementById("noteTitle").value||"文档");
+    const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(t)+'</title></head><body style="font-family:sans-serif;padding:24px;line-height:1.8;color:#333;">'+ed.innerHTML+'</body></html>';
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download=t+".html";a.click();
+  };
 }
 
 /* ============ 英语学习（零基础词汇） ============ */
