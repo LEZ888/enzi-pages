@@ -1238,16 +1238,21 @@ async function loadHot(){
   box.innerHTML='<div class="empty">加载中…</div>';
   const key=STATE.netType;
   const apis=NET_API[key]||[];
+  console.log("[热点速览] 当前标签:",key,"| 候选接口数:",apis.length,apis.map(a=>a[0]));
   let items=null;
   for(const [url,map] of apis){
     try{
+      console.log("[热点速览] 请求接口:",url);
       const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),6000);
       const res=await fetch(url,{signal:ctrl.signal});clearTimeout(t);
-      if(!res.ok)continue;
+      console.log("[热点速览] 响应 status:",res.status,"ok:",res.ok,"url:",url);
+      if(!res.ok){console.warn("[热点速览] 非200，跳过该接口");continue;}
       const data=await res.json();
+      console.log("[热点速览] 原始返回(前600字):",JSON.stringify(data).slice(0,600));
       const got=map(data);
+      console.log("[热点速览] 映射后条数:",(got||[]).length);
       if(got&&got.length){items=got;break;}
-    }catch(e){/* 试下一个 */}
+    }catch(e){console.error("[热点速览] 请求/解析异常:",e,"url:",url);/* 试下一个 */}
   }
   if(items&&items.length){hotCacheSet(key,items);renderHot(items.slice(0,20),false);return;}
   // 全部接口失败 → 回退到上次成功缓存，绝不再显示「接口失效」
@@ -1447,6 +1452,7 @@ function bindView(){
   if(STATE.board==="hot"){
     document.querySelectorAll('.net-tabs button').forEach(b=>b.onclick=()=>{STATE.hotType=b.dataset.nt;renderView();loadHotV2();});
     const mo=document.getElementById("hotMatch");if(mo)mo.onclick=()=>{STATE.hotMatch=!STATE.hotMatch;renderView();loadHotV2();};
+    const rf=document.getElementById("hotRefresh");if(rf)rf.onclick=()=>loadHotV2();
     const sm=document.getElementById("hotSaveMatch");if(sm)sm.onclick=saveHotMatches;
     loadHotV2();
   }
@@ -2537,12 +2543,16 @@ async function fetchDef(w,boxId){
 /* ============ 爆款热点（抖音/小红书/B站） ============ */
 function biliHot(d){const arr=(d.data&&d.data.trending&&d.data.trending.list)||(d.data&&d.data.list)||[];return arr.map(function(x){return {title:x.keyword||x.word||x.title||"",hot:x.hot_score||""};});}
 const NET_HOT={
-  douyin:[["https://api.vvhan.com/api/hotlist?type=douyinHot",d=>d.data||[]]],
-  xhs:[["https://api.vvhan.com/api/hotlist?type=xhsHot",d=>d.data||[]]],
-  bili:[["https://api.bilibili.com/x/web-interface/wbi/search/top",biliHot]]
+  douyin:[["https://60s.viki.moe/v2/douyin",d=>(d.data||[]).map(x=>({title:x.title,hot:x.hot_value||x.hot||""}))],
+          ["https://60s.viki.moe/v2/60s",d=>(d.data&&d.data.news||[]).map(s=>({title:String(s)}))]],
+  weibo:[["https://60s.viki.moe/v2/weibo",d=>(d.data||[]).map(x=>({title:x.title,hot:x.hot_value||x.hot||""}))],
+         ["https://60s.viki.moe/v2/60s",d=>(d.data&&d.data.news||[]).map(s=>({title:String(s)}))]],
+  bili:[["https://60s.viki.moe/v2/bili",d=>(d.data||[]).map(x=>({title:x.title,hot:x.hot_value||""}))],
+        ["https://60s.viki.moe/v2/weibo",d=>(d.data||[]).map(x=>({title:x.title,hot:x.hot_value||""}))],
+        ["https://60s.viki.moe/v2/60s",d=>(d.data&&d.data.news||[]).map(s=>({title:String(s)}))]],
 };
-const HOT_NAME={douyin:"抖音",xhs:"小红书",bili:"B站"};
-const HOT_LINK={douyin:"https://www.douyin.com/hot",xhs:"https://www.xiaohongshu.com/explore",bili:"https://www.bilibili.com/v/popular/all/"};
+const HOT_NAME={douyin:"抖音",weibo:"微博",bili:"B站"};
+const HOT_LINK={douyin:"https://www.douyin.com/hot",weibo:"https://s.weibo.com/top/summary",bili:"https://www.bilibili.com/v/popular/all/"};
 function matchTest(title,niches){if(!niches.length)return false;return niches.some(n=>title.indexOf(n)>=0);}
 function hotHTML(){
   let tabs='<div class="net-tabs">';
@@ -2551,28 +2561,33 @@ function hotHTML(){
   const links='<div class="hot-links">'
     +'<a href="'+HOT_LINK[STATE.hotType]+'" target="_blank" rel="noopener">↗ 打开'+HOT_NAME[STATE.hotType]+'官方榜</a>'
     +'<a href="https://www.douyin.com/hot" target="_blank" rel="noopener">↗ 抖音热榜</a>'
-    +'<a href="https://www.xiaohongshu.com/explore" target="_blank" rel="noopener">↗ 小红书发现</a>'
-    +'<a href="https://www.douyin.com/challenge" target="_blank" rel="noopener">↗ 抖音挑战榜</a>'
+    +'<a href="https://s.weibo.com/top/summary" target="_blank" rel="noopener">↗ 微博热搜</a>'
+    +'<a href="https://www.bilibili.com/v/popular/all/" target="_blank" rel="noopener">↗ B站热门</a>'
     +'</div>';
-  const note='<div class="hot-note">🔥 爆款热点：实时榜依赖公开接口。抖音/小红书<strong>无官方个人接口</strong>，连不上时请用上方官方链接查看。带 🎯 的是<strong>与你赛道标签匹配</strong>的（关键词匹配，非算法）。可在「我的」设置赛道标签。</div>';
-  const matchBtn='<div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn ghost" id="hotMatch" style="flex:1;">'+(STATE.hotMatch?'✅ 显示全部':'🎯 只看匹配')+'</button><button class="btn pri" id="hotSaveMatch" style="flex:1;">⭐ 收藏匹配项到选题</button></div>';
-  return '<div class="page-title">🔥 爆款热点</div><div class="page-sub">抖音 / 小红书 / B站 最新热点 · 二创选题灵感</div>'
+  const note='<div class="hot-note">🔥 爆款热点：实时榜来自 60s 公开接口（抖音/微博/B站）。带 🎯 的是<strong>与你赛道标签匹配</strong>的（关键词匹配，非算法）。可在「我的」设置赛道标签。接口偶发波动时点「🔄 刷新」。</div>';
+  const matchBtn='<div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn ghost" id="hotMatch" style="flex:1;">'+(STATE.hotMatch?'✅ 显示全部':'🎯 只看匹配')+'</button><button class="btn ghost" id="hotRefresh" style="flex:0 0 auto;">🔄 刷新</button><button class="btn pri" id="hotSaveMatch" style="flex:1;">⭐ 收藏匹配项到选题</button></div>';
+  return '<div class="page-title">🔥 爆款热点</div><div class="page-sub">抖音 / 微博 / B站 最新热点 · 二创选题灵感</div>'
     +links+note+tabs+matchBtn+'<div id="hotBox"><div class="empty">点击平台加载热点</div></div>';
 }
 async function loadHotV2(){
   const box=document.getElementById("hotBox");if(!box)return;
   box.innerHTML='<div class="empty">加载中…</div>';
   const apis=NET_HOT[STATE.hotType]||[];
+  console.log("[爆款热点] 当前标签:",STATE.hotType,"| 候选接口数:",apis.length,apis.map(a=>a[0]));
   for(const [url,map] of apis){
     try{
+      console.log("[爆款热点] 请求接口:",url);
       const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),6000);
       const res=await fetch(url,{signal:ctrl.signal});clearTimeout(t);
+      console.log("[爆款热点] 响应 status:",res.status,"ok:",res.ok,"url:",url);
       const data=await res.json();
+      console.log("[爆款热点] 原始返回(前600字):",JSON.stringify(data).slice(0,600));
       const items=map(data).filter(x=>x&&x.title).map(x=>({title:String(x.title),hot:x.hot?String(x.hot):""}));
+      console.log("[爆款热点] 映射后条数:",items.length);
       if(items.length){renderHotV2(items);return;}
-    }catch(e){/* 试下一个 */}
+    }catch(e){console.error("[爆款热点] 请求/解析异常:",e,"url:",url);/* 试下一个 */}
   }
-  box.innerHTML='<div class="empty"><div class="big">📡</div>该平台实时接口暂连不上<br>（免费接口可能失效）<br><button class="btn ghost" style="margin-top:8px;" onclick="loadHotV2()">🔄 重试</button><br>或点上方「打开官方榜」查看</div>';
+  box.innerHTML='<div class="empty"><div class="big">📡</div>该平台实时接口暂连不上<br>（免费接口可能波动）<br><button class="btn ghost" style="margin-top:8px;" onclick="loadHotV2()">🔄 重试</button><br>或点上方「打开官方榜」查看</div>';
 }
 function renderHotV2(items){
   const box=document.getElementById("hotBox");if(!box)return;
