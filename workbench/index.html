@@ -668,6 +668,7 @@ const BOARDS=[
   {id:"period",name:"经期记录",icon:"🩸",color:"pink"},
   /* 联网已与实时新闻合并为「热点资讯」*/
   {id:"docs",name:"文档库",icon:"📚"},
+  {id:"books",name:"好书阅读",icon:"📖"},
   {id:"english",name:"英语学习",icon:"🔤",color:"blue"},
   {id:"hot",name:"爆款热点",icon:"🔥",color:"orange"},
   {id:"aicmd",name:"AI指令库",icon:"📜",color:"purple"},
@@ -981,7 +982,7 @@ function go(board){STATE.board=board;renderNav();renderView();closeSidebar();}
 function renderNav(){
   const nav=$("#nav");
   const groups=[
-    ["总览",["home","todo","weekplan","stats","me","secretary","hotnews","quotes"]],
+    ["总览",["home","todo","weekplan","stats","me","secretary","hotnews","quotes","books"]],
     ["自媒体",["docs","create","shoot","accountRecord","accountAI","topicReview","viral","hot","aicmd","benchmark"]],
     ["生活记录",["mood","english","cost","weight","exercise","supplement","period","sleep"]]];
   const hiddenIds=["idea","copy","review"]; /* v5：已并入 创作中心 / 恩子的号 / 时事新闻；quotes(每日一句)已按需求移回总览第9位 */
@@ -1006,6 +1007,7 @@ function renderView(){
   else if(STATE.board==="me")h=meHTML();
   else if(STATE.board==="hotnews")h=hotnewsHTML();
   else if(STATE.board==="quotes")h=quotesHTML();
+  else if(STATE.board==="books")h=booksSectionHTML();
   else if(STATE.board==="docs")h=docsHTML();
   else if(STATE.board==="english")h=englishHTML();
   else if(STATE.board==="hot")h=hotHTML();
@@ -1063,8 +1065,7 @@ function homeHTML(){
     +quickCard("docs","📚 文档库")+quickCard("hot","🔥 热点爆款")
     +quickCard("accountRecord","📱 恩子的号")+quickCard("treasure","💎 恩子宝藏库")
     +quickCard("sleep","😴 睡眠记录")+quickCard("mood","😊 心情日记")
-    +'</div>'
-    +booksSectionHTML();
+    +'</div>';
 }
 /* 拖延症提醒语库（≥30 条·纯激励行动/克服拖延主题） */
 const DELAY_LIST=[
@@ -1695,7 +1696,9 @@ function bindView(){
       rec.done=!!c.checked;rec.updatedAt=nowTs();   // 切换完成态
       await putRec(rec);flashSave();renderView();    // 持久化并重渲染（完成态划线/排序即时更新）
     });
-    // 好书阅读（仅总览页）
+  }else if(STATE.quoteTimer){clearInterval(STATE.quoteTimer);STATE.quoteTimer=null;}
+  // 好书阅读（独立板块，位于导航「总览」分组）
+  if(STATE.board==="books"){
     const bt=document.getElementById("bookTabs");
     if(bt){
       bt.querySelectorAll(".btab").forEach(t=>t.onclick=()=>switchBookCat(t.dataset.cat));
@@ -1709,7 +1712,7 @@ function bindView(){
       if(!(STATE.bookShown[STATE.bookCat]&&STATE.bookShown[STATE.bookCat].length))loadBooks(STATE.bookCat,false);
       else renderBookGrid(STATE.bookCat);
     }
-  }else if(STATE.quoteTimer){clearInterval(STATE.quoteTimer);STATE.quoteTimer=null;}
+  }
   // 每日一句
   if(STATE.board==="quotes"){
     document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{STATE.quoteMode=b.dataset.qm;renderView();});
