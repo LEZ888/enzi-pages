@@ -95,9 +95,9 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .stat .n{font-size:26px;font-weight:800;color:var(--accent-d);}
 .stat .l{font-size:12px;color:var(--ink2);margin-top:2px;}
 .q-badge{position:absolute;top:-9px;right:-9px;min-width:20px;height:20px;padding:0 6px;border-radius:50%;background:#ff4d4f;color:#fff;font-size:12px;line-height:20px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(255,77,79,.55);box-sizing:border-box;}
-.delay-sec{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.55;}
-.delay-p{flex:0 0 auto;font-weight:800;color:#ff4d4f;}
-.delay-t{flex:1;color:var(--ink2);}
+.delay-one{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font-size:14px;line-height:1.6;color:var(--ink);}
+.delay-one .ic{flex:0 0 auto;font-size:15px;line-height:1.4;}
+.delay-one .dt{flex:1;min-width:0;}
 .hero{background:linear-gradient(135deg,#FFF6D8,#EAF6D8);border-radius:20px;padding:18px;margin-bottom:16px;}
 .hero .hi{font-size:22px;font-weight:800;}
 .hero .dt{color:var(--ink2);margin-top:3px;}
@@ -922,19 +922,59 @@ function homeHTML(){
     +quickCard("sleep","😴 睡眠记录")+quickCard("mood","😊 心情日记")
     +'</div>';
 }
-function homeDelayHTML(){
-  const t=pickDelay3();
-  const sec='<div class="delay-sec"><span class="delay-p">🌅 早上</span><span class="delay-t">'+esc(t[0])+'</span></div>'
-    +'<div class="delay-sec"><span class="delay-p">☀️ 中午</span><span class="delay-t">'+esc(t[1])+'</span></div>'
-    +'<div class="delay-sec"><span class="delay-p">🌙 晚上</span><span class="delay-t">'+esc(t[2])+'</span></div>';
-  return '<div class="stat" style="margin:14px 0;border:1px solid rgba(255,77,79,.35);background:linear-gradient(135deg,#FFF6F6,#FFFDF6);"><div class="l" style="font-weight:800;color:#ff4d4f;">⏰ 恩子今日防拖延提醒</div>'+sec+'</div>';
-}
+/* 拖延症提醒语库（≥30 条·纯激励行动/克服拖延主题） */
+const DELAY_LIST=[
+ "先动起来，哪怕只做一分钟，最难的就是开始。",
+ "拖延不是没时间，是等一个永远不会来的「完美状态」。",
+ "今天的事今天做，明天的你会感谢现在的自己。",
+ "打开文件，写下第一行，最难的一步就过去了。",
+ "想，都是问题；做，才有答案。",
+ "别让「等会儿」变成「再也不」。",
+ "完成比完美更重要，先做完再做好。",
+ "你不需要准备好才开始，开始就是准备。",
+ "把大任务拆成小步骤，每一步都不吓人。",
+ "现在就做，是对未来自己最大的温柔。",
+ "五分钟能开始的事，别拖成一整天。",
+ "行动是治愈焦虑的良药。",
+ "最难的就是开始，开始了就赢了一半。",
+ "别和「待会儿」谈恋爱，它最会放鸽子。",
+ "把「我明天再弄」换成「我现在就弄一点」。",
+ "拖延是借明天的轻松，还今天的焦虑。",
+ "一鼓作气比反复纠结省十倍力气。",
+ "手机放下、网页关掉，专注二十分钟再说。",
+ "别等「有状态」才做，做着做着就有状态了。",
+ "把「太难了」换成「先做最容易的那一步」。",
+ "列好今天的三件要事，先吃掉那只青蛙。",
+ "两分钟能做完的事，立刻做，别进清单。",
+ "你不是懒，你只是还没迈出第一步。",
+ "把目标写下来，看不见的目标最容易拖。",
+ "给每件事一个截止时间，否则它会无限延后。",
+ "与其后悔没做，不如现在就动。",
+ "进度慢没关系，停在原地才可怕。",
+ "把「等我有空」改成「现在抽十分钟」。",
+ "先完成一个粗版本，再迭代，别卡在开头。",
+ "别让完美主义成为不动的借口。",
+ "今天的拖延，是明天更重的负担。",
+ "哪怕只做五分钟，也胜过想一整天。",
+ "把「大工程」拆成「今天先做这一点」。",
+ "决定做了就立刻前三步，别再纠结。",
+ "你拖延的往往是最重要的事，先拿下它。"];
+function curDelayPeriod(){const h=new Date().getHours();if(h>=6&&h<12)return 0;if(h>=12&&h<18)return 1;return 2;}
 function pickDelay3(){
-  /* 从纯拖延语库 QUOTE_DELAY 中，按日期稳定取 3 句分配给早/中/晚（每天自动换，同一天不变） */
-  const seed=dayIdx()*131+1;const arr=QUOTE_DELAY.slice();let s=seed;
+  /* 每天按日期种子稳定洗牌，取前 3 句分配给 早/中/晚；同日不变、隔天自动换 */
+  const arr=DELAY_LIST.slice();let s=dayIdx()*131+7;
   const rnd=()=>{s=(s*9301+49297)%233280;return s/233280;};
-  for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;}
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;}
   return [arr[0],arr[1],arr[2]];
+}
+function homeDelayHTML(){
+  /* 仅按当前时段渲染对应的一条提醒（另外两条不渲染）；文本用主题默认文字色，不醒目 */
+  const p=curDelayPeriod();
+  const t=pickDelay3()[p];
+  const ic=p===0?'🌅':p===1?'☀️':'🌙';
+  return '<div class="stat" data-delay-open style="margin:14px 0;cursor:pointer;">'
+    +'<div class="l" style="font-weight:800;color:var(--ink);">⏰ 今日防拖延提醒</div>'
+    +'<div class="delay-one"><span class="ic">'+ic+'</span><span class="dt">'+esc(t)+'</span></div></div>';
 }
 function statCard(n,l,sub){return '<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'+(sub?'<div class="l">'+esc(sub)+'</div>':'')+'</div>';}
 /* 快速入口角标·模拟数据（对接真实数据前测试用）。
@@ -1299,6 +1339,7 @@ function bindView(){
   // 首页：每日不拖延句子（随机轮播）
   if(STATE.board==="home"){
     if(!STATE.quoteTimer){STATE.quoteTimer=setInterval(rotateQuote,8000);}
+    const dOpen=document.querySelector('[data-delay-open]');if(dOpen)dOpen.onclick=()=>{/* 预留：点击进入「今日防拖延提醒」详情页，暂未实现 */};
   }else if(STATE.quoteTimer){clearInterval(STATE.quoteTimer);STATE.quoteTimer=null;}
   // 每日一句
   if(STATE.board==="quotes"){
