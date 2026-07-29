@@ -1887,6 +1887,7 @@ function bindView(){
     const nc=document.getElementById("crNewCat");if(nc)nc.onclick=async()=>{const n=prompt("新分类名（如：思路开窍 / 故事罐头）");if(!n||!n.trim())return;const cats=STATE.settings.createCats||[];if(cats.indexOf(n.trim())<0)cats.push(n.trim());STATE.settings.createCats=cats;await setSet("createCats",cats);renderView();};
     document.querySelectorAll('[data-crcopy]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.crcopy);if(r)copyText((r.title||"")+"\n"+(r.content||r.note||""));});
     document.querySelectorAll('[data-crtele]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.crtele);if(r)openTele((r.title?r.title+"\n\n":"")+(r.content||r.note||r.title||""));});
+    document.querySelectorAll('[data-credit]').forEach(b=>b.onclick=()=>{const r=STATE.recs.find(x=>x.id===b.dataset.credit);if(r)openCreatorEditor(r);});
   }
   // 恩子的号（记录+复盘 合并）
   if(STATE.board==="accountRecord"){
@@ -3626,6 +3627,7 @@ function createHTML(){
       +'<div class="acts"><button data-act="edit">✏️</button><button data-act="del">🗑</button></div>'
       +body+img
       +'<div class="cr-actions" style="margin-top:8px;">'
+      +'<button class="btn ghost" data-credit="'+r.id+'">👁 查看</button>'
       +'<button class="btn ghost" data-crcopy="'+r.id+'">📋 一键复制</button>'
       +'<button class="btn pri" data-crtele="'+r.id+'">🖥 大字报</button></div></div>';
   }).join(""):'<div class="empty"><div class="big">'+(tab==="idea"?"💡":"🎙")+'</div>还没有'+(tab==="idea"?"选题":"文案")+'<br>点右下角 ＋ 添加（可选分类、加图片）</div>';
@@ -3664,6 +3666,96 @@ function closeTele(){
   if(STATE.teleTimer){clearInterval(STATE.teleTimer);STATE.teleTimer=null;}
   const m=document.getElementById("teleMask");if(m)m.classList.remove("show");
   const p=document.getElementById("telePlay");if(p)p.textContent="▶ 滚动";
+}
+
+/* ---- 创作中心·查看/编辑（富文本） ---- */
+function openCreatorEditor(r){
+  const v=document.getElementById("view");
+  const fontOpts=['宋体','黑体','楷体','Microsoft YaHei','Arial','Georgia','Times New Roman'].map(f=>'<option value="'+f+'">'+f+'</option>').join('');
+  const sizeOpts=['12','14','16','18','20','24','28','32','36'].map(s=>'<option value="'+s+'">'+s+'px</option>').join('');
+  const tb='<div class="etb" id="cetb">'
+    +'<select class="etb-sel" id="cetbFont" title="字体">'+fontOpts+'</select>'
+    +'<select class="etb-sel" id="cetbSize" title="字号">'+sizeOpts+'</select>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="bold" title="加粗"><b>B</b></button>'
+      +'<button class="etb-btn" data-cmd="italic" title="斜体"><i>I</i></button>'
+      +'<button class="etb-btn" data-cmd="underline" title="下划线"><u>U</u></button>'
+      +'<button class="etb-btn" data-cmd="strikeThrough" title="删除线"><s>S</s></button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<input type="color" id="cetbColor" title="文字颜色" value="#5D4037">'
+      +'<button class="etb-btn" data-color="fore" title="应用文字色" style="color:#5D4037;font-weight:700;">A</button>'
+      +'<input type="color" id="cetbBg" title="背景色" value="#FFF3D6">'
+      +'<button class="etb-btn" data-color="back" title="应用背景色" style="background:#FFF3D6;font-weight:700;">▣</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="justifyLeft" title="左对齐">⯇</button>'
+      +'<button class="etb-btn" data-cmd="justifyCenter" title="居中">≡</button>'
+      +'<button class="etb-btn" data-cmd="justifyRight" title="右对齐">⯈</button>'
+      +'<button class="etb-btn" data-cmd="justifyFull" title="两端对齐">☰</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="insertUnorderedList" title="无序列表">•—</button>'
+      +'<button class="etb-btn" data-cmd="insertOrderedList" title="有序列表">1.</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" id="cetbImgUp" title="插入本地图片">🖼</button>'
+      +'<button class="etb-btn" id="cetbImgUrl" title="插入图片链接">🔗图</button>'
+    +'</div>'
+    +'<div class="etb-group">'
+      +'<button class="etb-btn" data-cmd="undo" title="撤销">↶</button>'
+      +'<button class="etb-btn" data-cmd="redo" title="重做">↷</button>'
+      +'<button class="etb-btn" data-cmd="removeFormat" title="清除格式">⌫</button>'
+    +'</div>'
+    +'</div>';
+  const initHtml=r?(r.html||esc((r.type==="copy"?r.content:r.note)||"")):"";
+  v.innerHTML='<div style="display:flex;flex-direction:row;align-items:center;gap:10px;margin-bottom:8px;">'
+      +'<button class="btn ghost" id="crEditBack" style="flex:0 0 auto;padding:8px 16px;">← 返回</button>'
+      +'<div style="font-weight:700;">👁 查看 / 编辑</div></div>'
+    +'<input id="crEditTitle" placeholder="标题" value="'+esc(r.title||"")+'" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font-size:14px;font-weight:700;background:#fff;margin-bottom:8px;">'
+    +tb
+    +'<div class="ed-body" id="crEditBody" contenteditable="true" placeholder="开始编辑内容…（支持字号、字体、颜色、图片、复制粘贴等办公功能）">'+initHtml+'</div>'
+    +'<div class="doc-actions" style="margin-top:10px;">'
+      +'<button class="btn pri" id="crEditSave">💾 保存</button>'
+      +'<button class="btn ghost" id="crEditCopy">📋 复制全文</button>'
+      +'<button class="btn ghost" id="crEditExport">⬇️ 导出</button></div>';
+  const ed=document.getElementById("crEditBody");
+  const run=cmd=>{ed.focus();try{document.execCommand(cmd,false,null);}catch(e){}};
+  document.getElementById("cetb").querySelectorAll('[data-cmd]').forEach(b=>{
+    b.onmousedown=e=>e.preventDefault();
+    b.onclick=()=>run(b.dataset.cmd);
+  });
+  document.getElementById("cetb").querySelectorAll('[data-color]').forEach(b=>{
+    b.onmousedown=e=>e.preventDefault();
+    b.onclick=()=>{ed.focus();const c=b.dataset.color==="fore"?document.getElementById("cetbColor").value:document.getElementById("cetbBg").value;
+      try{document.execCommand(b.dataset.color==="fore"?"foreColor":"hiliteColor",false,c);}catch(e){}};
+  });
+  document.getElementById("cetbFont").onchange=function(){ed.focus();try{document.execCommand("fontName",false,this.value);}catch(e){}};
+  document.getElementById("cetbSize").onchange=function(){
+    const px=this.value;ed.focus();const sel=window.getSelection();
+    if(!sel||!sel.rangeCount){ed.style.fontSize=px+'px';return;}
+    const range=sel.getRangeAt(0);
+    if(range.collapsed){ed.style.fontSize=px+'px';return;}
+    try{const span=document.createElement("span");span.style.fontSize=px+'px';range.surroundContents(span);}catch(_){}
+  };
+  const fu=document.createElement("input");fu.type="file";fu.accept="image/*";
+  fu.onchange=async()=>{const f=fu.files[0];if(!f)return;const url=await new Promise(res=>{const r2=new FileReader();r2.onload=()=>res(r2.result);r2.readAsDataURL(f);});ed.focus();try{document.execCommand("insertImage",false,url);}catch(e){}};
+  document.getElementById("cetbImgUp").onclick=()=>fu.click();
+  document.getElementById("cetbImgUrl").onclick=()=>{const u=prompt("粘贴图片链接（http/https）：");if(u)try{document.execCommand("insertImage",false,u);}catch(e){}};
+  document.getElementById("crEditBack").onclick=()=>renderView();
+  document.getElementById("crEditSave").onclick=async()=>{
+    const t=(document.getElementById("crEditTitle").value||"").trim()||r.title||"未命名";
+    r.title=t;r.html=ed.innerHTML;const plain=ed.innerText||"";
+    if(r.type==="copy")r.content=plain;else r.note=plain;
+    r.updatedAt=nowTs();
+    await putRec(r);flashSave();renderView();
+  };
+  document.getElementById("crEditCopy").onclick=()=>copyText(ed.innerText||"");
+  document.getElementById("crEditExport").onclick=()=>{
+    const t=(document.getElementById("crEditTitle").value||"文档");
+    const html='<!doctype html><html><head><meta charset="utf-8"><title>'+esc(t)+'</title></head><body style="font-family:sans-serif;padding:24px;line-height:1.8;color:#333;">'+ed.innerHTML+'</body></html>';
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download=t+".html";a.click();
+  };
 }
 
 /* ============ v5：本周计划（分类+周期+联动） ============ */
