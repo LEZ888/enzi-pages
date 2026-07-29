@@ -1000,23 +1000,36 @@ function homeTodoHTML(){
   return '<div class="stat" style="margin-bottom:14px;"><div class="l" style="font-weight:800;color:var(--ink);">✅ 今日待办 <span style="font-weight:400;color:var(--ink2);">'+done+'/'+total+'</span></div>'+rows+'</div>';
 }
 function statCard(n,l,sub){return '<div class="stat"><div class="n">'+esc(n)+'</div><div class="l">'+esc(l)+'</div>'+(sub?'<div class="l">'+esc(sub)+'</div>':'')+'</div>';}
-/* 快速入口角标·模拟数据（对接真实数据前测试用）。
-   键=入口名称，值=未读/待办数字；>0 显示红色数字角标，0 或不填则不显示。
-   后续接真实数据时：把这里的数字改成真实计算结果，或删掉对应键走下方 realUnDone 真实逻辑。*/
-const badgeData = {'今日待办':3,'恩子的号':1,'热点爆款':5,'本周计划':0,'拍摄安排':0,'创作中心':0,'文档库':0,'恩子宝藏库':0,'睡眠记录':0,'心情日记':0};
+/* 快速入口角标·统一真实数据计算（无任何硬编码演示数字）。
+   每次 renderView 都会实时重算，因此新增/完成/已读后角标会自动更新。
+   规则：
+     今日待办 todo    → 今日待办中未完成(done=false)的数量
+     本周计划 weekplan → 本周计划中未完成的数量
+     拍摄安排 shoot   → 状态不为「已发布」的安排数量
+     睡眠记录 sleep   → 今天没记 → 1（提醒），记了 → 0
+     心情日记 mood    → 今天没记 → 1（提醒），记了 → 0
+   以下模块暂无内置数据源，默认 0；接入真实 API 后改 EXT_COUNT.xxx 即可（见注释）。*/
 const QE_NAMES = {todo:'今日待办',weekplan:'本周计划',shoot:'拍摄安排',create:'创作中心',docs:'文档库',hot:'热点爆款',accountRecord:'恩子的号',treasure:'恩子宝藏库',sleep:'睡眠记录',mood:'心情日记'};
-function realUnDone(id){const r=STATE.recs;
-  if(id==="todo")return r.filter(x=>x.type==="todo"&&x.date===today()&&!x.done).length;
-  if(id==="weekplan")return r.filter(x=>x.type==="weekplan"&&!x.done).length;
-  if(id==="shoot")return r.filter(x=>x.type==="shoot"&&(x.status||"")!=="已发布").length;
-  if(id==="sleep")return r.some(x=>x.type==="sleep"&&x.date===today())?0:1;   // 今天没记睡眠 → 提醒
-  if(id==="mood")return r.some(x=>x.type==="mood"&&x.date===today())?0:1;     // 今天没记心情 → 提醒
-  return 0;}
+
+/* 预留：暂无真实接口的模块。默认必须为 0（禁止写死数字）。
+   接入真实数据时，把对应变量替换成你的接口返回值，例如：
+     EXT_COUNT.hot = (await fetchHotList()).filter(x=>!x.read).length;  // 此处替换为真实API返回数据
+   */
+let EXT_COUNT = { create:0, docs:0, hot:0, accountRecord:0, treasure:0 };
+
 function unDone(id){
-  /* 模拟数据优先：badgeData 已写死示例，便于测试；键为入口名称 */
-  const nm=QE_NAMES[id];
-  if(nm!==undefined && badgeData[nm]!==undefined) return Number(badgeData[nm])||0;
-  return realUnDone(id); /* 未列入 badgeData 的入口走真实数据 */
+  const r=STATE.recs;
+  if(id==="todo")        return r.filter(x=>x.type==="todo"&&x.date===today()&&!x.done).length;            // 今日待办未完成
+  if(id==="weekplan")    return r.filter(x=>x.type==="weekplan"&&!x.done).length;                          // 本周计划未完成
+  if(id==="shoot")       return r.filter(x=>x.type==="shoot"&&(x.status||"")!=="已发布").length;            // 待拍摄/未确认
+  if(id==="sleep")       return r.some(x=>x.type==="sleep"&&x.date===today())?0:1;                          // 今天没记睡眠 → 提醒
+  if(id==="mood")        return r.some(x=>x.type==="mood"&&x.date===today())?0:1;                           // 今天没记心情 → 提醒
+  if(id==="create")      return EXT_COUNT.create;        // 此处替换为真实API返回数据（草稿/待发布内容数量）
+  if(id==="docs")        return EXT_COUNT.docs;          // 此处替换为真实API返回数据（未读/待处理文档数量）
+  if(id==="hot")         return EXT_COUNT.hot;           // 此处替换为真实API返回数据（未读热点资讯数量）
+  if(id==="accountRecord")return EXT_COUNT.accountRecord; // 此处替换为真实API返回数据（未读消息/新互动数量）
+  if(id==="treasure")    return EXT_COUNT.treasure;      // 此处替换为真实API返回数据（未查看收藏/更新数量）
+  return 0;
 }
 function quickCard(id,txt){const n=unDone(id);return '<div class="stat" data-q="'+id+'" style="cursor:pointer;text-align:center;position:relative;">'+esc(txt)+(n>0?'<span class="q-badge" title="'+n+' 条待处理">'+n+'</span>':'')+'</div>';}
 function weekStart(){const d=new Date();const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");}
