@@ -534,7 +534,7 @@ const BOARDS=[
   {id:"create",name:"创作中心",icon:"🎨",color:"orange"},
   {id:"treasure",name:"恩子宝藏库",icon:"💎",color:"purple"},
   {id:"idea",name:"选题灵感",icon:"💡",color:"orange"},
-  {id:"news",name:"实时新闻",icon:"📰",color:"red"},
+  {id:"hotnews",name:"热点资讯",icon:"📡",color:"red"},
   {id:"quotes",name:"每日一句",icon:"💡"},
   {id:"copy",name:"口播文案",icon:"🎙",color:"purple"},
   {id:"weight",name:"今日体重",icon:"⚖️",color:"blue"},
@@ -544,7 +544,7 @@ const BOARDS=[
   {id:"mood",name:"心情记录",icon:"😊",color:"purple"},
   {id:"sleep",name:"睡眠记录",icon:"😴",color:"blue"},
   {id:"period",name:"经期记录",icon:"🩸",color:"pink"},
-  {id:"net",name:"联网",icon:"🌐"},
+  /* 联网已与实时新闻合并为「热点资讯」*/
   {id:"docs",name:"文档库",icon:"📚"},
   {id:"english",name:"英语学习",icon:"🔤",color:"blue"},
   {id:"hot",name:"爆款热点",icon:"🔥",color:"orange"},
@@ -848,7 +848,7 @@ function go(board){STATE.board=board;renderNav();renderView();closeSidebar();}
 function renderNav(){
   const nav=$("#nav");
   const groups=[
-    ["总览",["home","todo","weekplan","stats","me","secretary","net","news","quotes"]],
+    ["总览",["home","todo","weekplan","stats","me","secretary","hotnews","quotes"]],
     ["自媒体",["docs","create","shoot","accountRecord","accountAI","topicReview","viral","hot","aicmd","benchmark"]],
     ["生活记录",["mood","english","cost","weight","exercise","supplement","period","sleep"]]];
   const hiddenIds=["idea","copy","review"]; /* v5：已并入 创作中心 / 恩子的号 / 时事新闻；quotes(每日一句)已按需求移回总览第9位 */
@@ -871,13 +871,13 @@ function renderView(){
   if(STATE.board==="home")h=homeHTML();
   else if(STATE.board==="stats")h=statsHTML();
   else if(STATE.board==="me")h=meHTML();
-  else if(STATE.board==="net")h=netHTML();
+  else if(STATE.board==="hotnews")h=hotnewsHTML();
   else if(STATE.board==="quotes")h=quotesHTML();
   else if(STATE.board==="docs")h=docsHTML();
   else if(STATE.board==="english")h=englishHTML();
   else if(STATE.board==="hot")h=hotHTML();
   else if(STATE.board==="secretary")h=secretaryHTML();
-  else if(STATE.board==="news")h=newsHTML();
+  else if(STATE.board==="news"){/* 已并入 热点资讯 */}
   else if(STATE.board==="aicmd")h=aicmdHTML();
   else if(STATE.board==="accountRecord")h=accountRecordHTML();
   else if(STATE.board==="accountAI")h=accountAIHTML();
@@ -1221,17 +1221,14 @@ function meHTML(){
 }
 
 /* ============ 联网 ============ */
-function netHTML(){
+function hotnewsHTML(){
   let tabs='<div class="net-tabs">';
   Object.keys(NET_NAME).forEach(k=>{tabs+='<button data-nt="'+k+'"'+(STATE.netType===k?" class=\"on\"":"")+'>'+NET_NAME[k]+'</button>';});
   tabs+='</div>';
-  let eng=ENG[STATE.engIdx%ENG.length];
-  const engCard='<div class="eng-card"><div class="en" id="engWordText">'+esc(eng.en)+'</div><div class="ph">'+esc(eng.ph)+'</div><div class="zh">'+esc(eng.zh)+'</div>'
-    +'<div class="acts"><button id="engSpeak">🔊 朗读</button><button id="engNext">换一句</button><button class="s2" id="engSave">收藏到选题</button></div></div>';
-  return '<div class="page-title">🌐 联网</div><div class="page-sub">离线英语永久可用 · 热点来自 60s 公开接口（自动兜底，不影响本地）</div>'
-    +'<div style="font-weight:700;margin:6px 0;">📖 每日英语</div>'+engCard
+  return '<div class="page-title">📡 热点资讯</div><div class="page-sub">热点速览 + 实时新闻已合并 · 数据来自 60s 公开接口（自动兜底，不影响本地）</div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px;"><span style="font-weight:700;">🔥 热点速览</span><button class="btn ghost" style="padding:4px 10px;font-size:12px;" onclick="loadHot()">🔄 刷新</button></div>'+tabs
-    +'<div id="hotBox"><div class="empty">正在加载热点…</div></div>';
+    +'<div id="hotBox"><div class="empty">正在加载热点…</div></div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;"><button class="btn ghost" id="newsFav" style="flex:1;padding:8px 14px;">⭐ 关注头条到第1条</button><button class="btn ghost" style="flex:1;padding:8px 14px;" onclick="saveHotManual()">✍️ 手动记这条热点</button></div>';
 }
 async function loadHot(){
   const box=$("#hotBox");if(!box)return;
@@ -1254,10 +1251,10 @@ async function loadHot(){
       if(got&&got.length){items=got;break;}
     }catch(e){console.error("[热点速览] 请求/解析异常:",e,"url:",url);/* 试下一个 */}
   }
-  if(items&&items.length){hotCacheSet(key,items);renderHot(items.slice(0,20),false);return;}
+  if(items&&items.length){STATE.hotItems=items;hotCacheSet(key,items);renderHot(items.slice(0,20),false);return;}
   // 全部接口失败 → 回退到上次成功缓存，绝不再显示「接口失效」
   const cached=hotCacheGet(key);
-  if(cached&&cached.length){renderHot(cached.slice(0,20),true);return;}
+  if(cached&&cached.length){STATE.hotItems=cached;renderHot(cached.slice(0,20),true);return;}
   box.innerHTML='<div class="empty"><div class="big">📡</div>暂时连不上热点接口<br>（免费接口可能临时波动，不影响本地）<br>可点上方「🔄 刷新」重试，或点右下角 ＋ 手动记</div>';
 }
 function hotCacheKey(k){return "hotCache_"+k;}
@@ -1381,12 +1378,10 @@ function bindView(){
   });
   // 快捷卡
   document.querySelectorAll("[data-q]").forEach(el=>el.onclick=()=>go(el.dataset.q));
-  // 联网
-  if(STATE.board==="net"){
+  // 热点资讯（联网 + 实时新闻 合并）
+  if(STATE.board==="hotnews"){
     document.querySelectorAll(".net-tabs button").forEach(b=>b.onclick=()=>{STATE.netType=b.dataset.nt;renderView();loadHot();});
-    const en=document.getElementById("engNext");if(en)en.onclick=()=>{STATE.engIdx++;renderView();};
-    const esp=document.getElementById("engSpeak");if(esp)esp.onclick=()=>{const w=(document.getElementById("engWordText")||{}).textContent||"";if(w)speakWord(w);};
-    const es=document.getElementById("engSave");if(es)es.onclick=async()=>{const e=ENG[STATE.engIdx%ENG.length];await putRec({id:genId(),type:"idea",title:e.en,platform:"每日英语",angle:"学英语",note:e.zh,createdAt:nowTs(),updatedAt:nowTs(),done:false,date:today()});flashSave();await reload();alert("已收藏到选题灵感 ✅");};
+    const fm=document.getElementById("newsFav");if(fm)fm.onclick=async()=>{const it=(STATE.hotItems||[])[0];if(it)saveNewsFav(it);};
     loadHot();
   }
   // 我的
@@ -1447,6 +1442,10 @@ function bindView(){
     const qb=document.getElementById("engBack");if(qb)qb.onclick=()=>{STATE.engMode="learn";STATE.engQuiz=null;renderView();};
     const qq=document.getElementById("engQuit");if(qq)qq.onclick=()=>{STATE.engMode="learn";STATE.engQuiz=null;renderView();};
     document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>quizAnswer(+o.dataset.opt));
+    // 每日英语（已从「联网」板迁入）
+    const en=document.getElementById("engNext");if(en)en.onclick=()=>{STATE.engIdx++;renderView();};
+    const esp=document.getElementById("engSpeak");if(esp)esp.onclick=()=>{const w=(document.getElementById("engWordText")||{}).textContent||"";if(w)speakWord(w);};
+    const es=document.getElementById("engSave");if(es)es.onclick=async()=>{const e=ENG[STATE.engIdx%ENG.length];await putRec({id:genId(),type:"idea",title:e.en,platform:"每日英语",angle:"学英语",note:e.zh,createdAt:nowTs(),updatedAt:nowTs(),done:false,date:today()});flashSave();await reload();alert("已收藏到选题灵感 ✅");};
   }
   // 爆款热点
   if(STATE.board==="hot"){
@@ -1474,7 +1473,7 @@ function bindView(){
     document.querySelectorAll('[data-remdel]').forEach(b=>b.onclick=async()=>{const id=b.dataset.remdel;const rems=(STATE.settings.reminders||[]).filter(x=>x.id!==id);STATE.settings.reminders=rems;await setSet("reminders",rems);renderView();});
     document.querySelectorAll('[data-cidx]').forEach(b=>b.onclick=()=>{const i=+b.dataset.cidx;copyText((STATE.aiMsgs[i]||{}).text||"");});
   }
-  // 实时新闻
+  // 实时新闻（已与联网合并为「热点资讯」，此分支不再触发）
   if(STATE.board==="news"){
     document.querySelectorAll('.net-tabs button').forEach(b=>b.onclick=()=>{STATE.newsType=b.dataset.nt;renderView();loadNews();});
     const fm=document.getElementById("newsFav");if(fm)fm.onclick=async()=>{const it=STATE.newsItems&&STATE.newsItems[0];if(it)saveNewsFav(it);};
@@ -1604,7 +1603,7 @@ function bindView(){
     document.querySelectorAll('.trea-img').forEach(im=>im.onclick=()=>{const w=window.open("");if(w){w.document.write('<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="'+im.src+'" style="max-width:100%;max-height:100vh;"></body>');}});
   }
   // 每日一句（总览首页 / 独立板块 / 实时新闻板 都生效）
-  if(STATE.board==="quotes"||STATE.board==="news"||STATE.board==="home"){
+  if(STATE.board==="quotes"||STATE.board==="home"){
     document.querySelectorAll('[data-qm]').forEach(b=>b.onclick=()=>{STATE.quoteMode=b.dataset.qm;renderView();});
     document.querySelectorAll('[data-qc]').forEach(b=>b.onclick=()=>{STATE.quoteCat=b.dataset.qc;renderView();});
     document.querySelectorAll('[data-qcopy]').forEach(b=>b.onclick=()=>copyText(b.dataset.qcopy));
@@ -1728,13 +1727,13 @@ function bindChrome(){
   $("#collapseBtn").onclick=()=>{STATE.collapsed=!STATE.collapsed;$("#sidebar").classList.toggle("collapsed",STATE.collapsed);};
   $("#hamburger").onclick=()=>{$("#sidebar").classList.add("open");$("#overlay").classList.add("show");};
   $("#overlay").onclick=closeSidebar;
-  $("#addBtn").onclick=()=>{if(STATE.board==="net"){openAdd("idea");return;}
+  $("#addBtn").onclick=()=>{if(STATE.board==="hotnews"){openAdd("idea");return;}
     if(STATE.board==="docs"){importDoc();return;}
     if(STATE.board==="quotes"){openAdd("idea");return;}
     if(STATE.board==="hot"){openAdd("idea");return;}
     if(STATE.board==="english"){return;}
     if(STATE.board==="secretary"){openAdd("todo");return;}
-    if(STATE.board==="news"){openAdd("idea",{platform:"实时新闻",angle:"关注"});return;}
+    if(STATE.board==="hotnews"){openAdd("idea",{platform:"热点资讯",angle:"关注"});return;}
     if(STATE.board==="aicmd"){const t=document.getElementById("cmdIdea");if(t)t.focus();return;}
     if(STATE.board==="review"){openAdd("review");return;}
     if(STATE.board==="accountRecord"){ if((STATE.arTab||"log")==="review")openAdd("review",{account:STATE.curAccount||""}); else openAccountPost(); return;}
@@ -2440,6 +2439,12 @@ function engCardInner(wd){
     +'<div class="wacts"><button class="b1" data-online="'+esc(wd.w)+'">🌐 联网释义</button><button class="b2" data-fav="'+esc(wd.w)+'">⭐收藏</button></div>'
     +(ms!=null?'<div class="wmast">掌握度 '+ms+'%</div>':'')+'<div class="wdef" id="def_'+esc(wd.w)+'"></div></div>';
 }
+function engDailyHTML(){
+  const eng=ENG[STATE.engIdx%ENG.length];
+  return '<div style="font-weight:700;margin:18px 0 6px;">📖 每日英语</div>'
+    +'<div class="eng-card"><div class="en" id="engWordText">'+esc(eng.en)+'</div><div class="ph">'+esc(eng.ph)+'</div><div class="zh">'+esc(eng.zh)+'</div>'
+    +'<div class="acts"><button id="engSpeak">🔊 朗读</button><button id="engNext">换一句</button><button class="s2" id="engSave">收藏到选题</button></div></div>';
+}
 function englishHTML(){
   if(STATE.engMode==="quiz")return engQuizHTML();
   if(STATE.engMode==="review")return engReviewHTML();
@@ -2458,7 +2463,7 @@ function englishHTML(){
       +'<button class="btn pri" id="engQuiz">🎯 去考核</button>'
       +'<button class="btn ghost" id="engReview">🔁 复习</button>'
       +'<button class="btn ghost" id="engAll">📚 全部单词</button>'
-      +'<button class="btn ghost" id="engSum">📊 学习汇总</button></div></div>';
+      +'<button class="btn ghost" id="engSum">📊 学习汇总</button></div></div>'+engDailyHTML();
   }
   const wd=tw[step];const py=PY[wd.w]||"";const ms=mastery(wd.w);const read=STATE.engRead[wd.w];
   return '<div class="page-title">🔤 英语学习（零基础·跟读）</div><div class="page-sub">先选想学的分类 · 每天5词 · 开口读通过才能进下一个</div>'+engCatTabs()
@@ -2480,7 +2485,7 @@ function englishHTML(){
     +'</div>'
     +(read?'<div class="rw-ok">✅ 已读通过</div>':'')
     +(ms!=null?'<div class="wmast">掌握度 '+ms+'%</div>':'')
-    +'<div class="wdef" id="def_'+esc(wd.w)+'"></div></div>';
+    +'<div class="wdef" id="def_'+esc(wd.w)+'"></div></div>'+engDailyHTML();
 }
 function engSummaryHTML(){
   const cat=curEngCat();
@@ -3342,7 +3347,7 @@ async function aiTryTask(q){
 /* ============ 启动 ============ */
 async function reload(){
   STATE.recs=await allRecs();
-  if(STATE.board==="home"||STATE.board==="stats"||STATE.board==="me"||STATE.board==="net")renderView();
+  if(STATE.board==="home"||STATE.board==="stats"||STATE.board==="me"||STATE.board==="hotnews")renderView();
   else renderView();
 }
 /* ============ 英语：语音读通过 + 复习 ============ */
