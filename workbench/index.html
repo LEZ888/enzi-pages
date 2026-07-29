@@ -151,6 +151,9 @@ input,textarea,select{font-family:inherit;font-size:15px;color:var(--ink);}
 .doc-del:active{filter:brightness(.92);}
 .doc-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;margin-bottom:8px;}
 .doc-actions .btn{flex:1 1 0;width:auto;min-width:120px;padding:11px 16px;}
+/* 创作中心：按钮强制横向（覆盖 .btn 的 flex:1 1 auto，避免竖向堆叠） */
+.cr-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;align-items:center;}
+.cr-actions .btn{flex:1 1 0;width:auto;min-width:120px;padding:9px 14px;}
 /* 通用确认弹窗（贴合当前主题） */
 .modal-mask{position:fixed;inset:0;background:rgba(120,90,40,.45);display:none;align-items:center;justify-content:center;z-index:200;}
 .modal-box{width:min(320px,86vw);background:var(--paper);border-radius:16px;padding:22px 18px 18px;box-shadow:0 12px 44px rgba(120,90,40,.32);}
@@ -3623,12 +3626,12 @@ function createHTML(){
     return '<div class="note '+(tab==="idea"?"orange":"purple")+'" data-id="'+r.id+'">'
       +'<div class="acts"><button data-act="edit">✏️</button><button data-act="del">🗑</button></div>'
       +body+img
-      +'<div style="display:flex;gap:8px;margin-top:8px;">'
-      +'<button class="btn ghost" data-crcopy="'+r.id+'" style="flex:0;padding:7px 14px;">📋 一键复制</button>'
-      +'<button class="btn pri" data-crtele="'+r.id+'" style="flex:0;padding:7px 14px;">🖥 大字报</button></div></div>';
+      +'<div class="cr-actions" style="margin-top:8px;">'
+      +'<button class="btn ghost" data-crcopy="'+r.id+'">📋 一键复制</button>'
+      +'<button class="btn pri" data-crtele="'+r.id+'">🖥 大字报</button></div></div>';
   }).join(""):'<div class="empty"><div class="big">'+(tab==="idea"?"💡":"🎙")+'</div>还没有'+(tab==="idea"?"选题":"文案")+'<br>点右下角 ＋ 添加（可选分类、加图片）</div>';
   return '<div class="page-title">🎨 创作中心</div><div class="page-sub">选题灵感 + 口播文案合并管理 · 自建分类 · 一键复制 · 大字报提词</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn ghost" id="crTele" style="flex:0;padding:8px 14px;">🖥 大字报提词</button></div>'
+    +'<div class="cr-actions" style="margin-bottom:10px;"><button class="btn ghost" id="crTele">🖥 大字报提词</button></div>'
     +tabs+cats+cards;
 }
 /* ---- 大字报提词器 ---- */
