@@ -1,0 +1,16 @@
+{
+  "name": "LESLEY公司仓储",
+  "short_name": "LESLEY仓储",
+  "description": "移动端仓库库存管理：模块、物品、出入库、消耗登记、记录统计、到期提醒",
+  "lang": "zh-CN",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff9ed",
+  "theme_color": "#fff9ed",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
