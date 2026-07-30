@@ -361,26 +361,26 @@ img{max-width:100%;display:block}
 .stock-alert-badge{position:absolute;top:6px;right:42px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;z-index:2}
 .stock-alert-badge:empty{display:none}
 
-/* ===== New Product Card Layout (参考图样式) ===== */
-.prod-card{background:var(--white);border-radius:var(--radius);padding:14px;margin-bottom:10px;display:flex;gap:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative}
-.prod-card:active{transform:scale(.98)}
-.prod-card-img{width:72px;height:72px;border-radius:var(--radius);object-fit:cover;background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* ===== Product Card Layout v5 (参考用户设计稿 Image 3) ===== */
+.prod-card{background:var(--white);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;display:flex;gap:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative;border:1px solid var(--gray-100)}
+.prod-card:active{transform:scale(.98);background:var(--gray-50)}
+.prod-card-img{width:80px;height:80px;border-radius:var(--radius);object-fit:cover;background:linear-gradient(135deg,var(--gray-100),var(--gray-50));flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid var(--gray-200)}
 .prod-card-img img{width:100%;height:100%;object-fit:cover}
-.prod-card-img .placeholder-icon{font-size:32px;color:var(--gray-300)}
-.prod-card-body{flex:1;min-width:0;display:flex;flex-direction-column;gap:3px}
-.prod-card-name{font-size:16px;font-weight:700;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prod-card-sku{font-size:12px;color:var(--gray-400);font-family:monospace}
-.prod-card-cat-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-top:2px}
-.prod-card-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:2px}
-.prod-card-qty{font-size:24px;font-weight:800;line-height:1.1}
-.prod-card-qty.normal{color:var(--blue)}.prod-card-qty.low{color:#E07050}.prod-card-qty-unit{font-size:12px;color:var(--gray-400);font-weight:500}
-.prod-card-status{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}
-.prod-card-status.ok{background:var(--green-light);color:var(--green)}
-.prod-card-status.warn{background:var(--yellow-badge);color:#B8860B}
-.prod-card-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.prod-card-status-dot.ok{background:var(--green)}.prod-card-status-dot.warn{background:#E07050}
-.prod-card-location{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:4px}
-.prod-card-arrow{color:var(--gray-300);margin-left:auto;flex-shrink:0}
+.prod-card-img .placeholder-icon{font-size:36px;opacity:.6}
+.prod-card-body{flex:1;min-width:0;display:flex;flex-direction-column;gap:6px;padding-top:2px}
+.prod-card-name{font-size:16px;font-weight:700;color:var(--gray-900);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;word-break:break-word}
+.prod-card-sku{font-size:12px;color:var(--gray-400);font-family:monospace;margin-top:1px}
+.prod-card-cat-tag{display:inline-block;font-size:11px;padding:3px 10px;border-radius:12px;font-weight:600;margin-top:2px;align-self:flex-start}
+.prod-card-right{text-align:right;flex-shrink:0;display:flex;flex-direction-column;align-items:flex-end;justify-content:flex-start;gap:2px;padding-top:2px;min-width:72px}
+.prod-card-qty-label{font-size:11px;color:var(--gray-400);margin-bottom:-2px}
+.prod-card-qty{font-size:28px;font-weight:800;line-height:1.1;letter-spacing:-.5px}
+.prod-card-qty.normal{color:var(--blue)}.prod-card-qty.low{color:#E07050}.prod-card-qty-unit{font-size:12px;color:var(--gray-400);font-weight:500;margin-left:1px}
+.prod-card-status{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;margin-top:4px}
+.prod-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.prod-status-dot.ok{background:var(--green)}.status-text.ok{color:var(--green)}
+.prod-status-dot.warn{background:#E07050}.status-text.warn{color:#E07050}
+.prod-card-location{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:8px;border-top:1px solid var(--gray-100)}
+.prod-card-arrow{color:var(--gray-300);margin-left:auto;flex-shrink:0;font-size:14px}
 
 /* ===== Scan UI ===== */
 .scan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:2000;display:none;flex-direction:column}
@@ -529,7 +529,7 @@ const App = (() => {
     consumeViewDate: '',
     addItemNameSuggest: '',
     exportFormat: 'json',
-    homeSections: ['modules','expiryAlert'], // customizable homepage sections
+    homeSections: ['todayActivity','stockAlert','modules','expiryAlert'], // customizable homepage sections (今日动态+库存预警默认开启)
     searchHistory: [],
     lowStockThreshold: 10, // default low stock alert threshold
     stockFilterStatus: '', // '' | 'normal' | 'warn' — for module page filter
@@ -1134,13 +1134,14 @@ const App = (() => {
             <div class="prod-card-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}" alt="">`:`<div class="placeholder-icon">📦</div>`}</div>
             <div class="prod-card-body">
               <div class="prod-card-name">${escapeHtml(item.name)}</div>
-              <div class="prod-card-sku">${item.barcode?('条码 '+escapeHtml(item.barcode)):(item.id?('ID '+item.id.slice(0,8)):'')}</div>
+              <div class="prod-card-sku">${item.barcode?escapeHtml(item.barcode):(item.id?'ID '+item.id.slice(0,8):'')}</div>
               <div class="prod-card-cat-tag ${catCls}">${escapeHtml(catName)}</div>
-              <div class="prod-card-location">📍 ${item.location?escapeHtml(item.location):'未设置位置'}</div>
+              <div class="prod-card-location">📍 ${item.location?escapeHtml(item.location):'未设置位置'}<span class="prod-card-arrow">›</span></div>
             </div>
             <div class="prod-card-right">
-              <div class="prod-card-qty ${low?'low':'normal'}">${item.quantity}<span class="prod-card-qty-unit"> 件</span></div>
-              <div class="prod-card-status ${low?'warn':'ok'}"><div class="prod-card-status-dot ${low?'warn':'ok'}"></div>${low?'预警':'充足'}</div>
+              <div class="prod-card-qty-label">库存</div>
+              <div class="prod-card-qty ${low?'low':'normal'}">${item.quantity}<span class="prod-card-qty-unit">件</span></div>
+              <div class="prod-card-status"><div class="prod-status-dot ${low?'warn':'ok'}"></div><span class="status-text ${low?'warn':'ok'}">${low?'预警':'充足'}</span></div>
             </div>
           </div>`;
         }).join('')}
