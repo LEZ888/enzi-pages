@@ -1,251 +1,2272 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#fff9ed" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="LESLEY公司仓储" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <title>LESLEY公司仓储</title>
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: #fff5e6; color: #5d4e37; font-size: 15px; line-height: 1.5;
-      -webkit-text-size-adjust: 100%;
-    }
-    #root { max-width: 560px; margin: 0 auto; }
-    .app { min-height: 100vh; display: flex; flex-direction: column; background: #fff5e6; }
-    .content { flex: 1; padding: 12px; padding-bottom: 84px; }
-    .loading { padding: 40px; text-align: center; color: #9c8c76; }
-    .toast {
-      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
-      background: rgba(93,78,55,.92); color: #fff; padding: 10px 18px; border-radius: 12px;
-      font-size: 14px; z-index: 999; max-width: 80%; text-align: center;
-    }
-    .img-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 1000;
-      display: flex; align-items: center; justify-content: center; flex-direction: column;
-    }
-    .img-overlay img { max-width: 96%; max-height: 82%; border-radius: 8px; }
-    .img-overlay-tip { color: #f0e6d3; font-size: 12px; margin-top: 10px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#D4453A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LESLEY公司仓储">
+<title>LESLEY公司仓储</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/jpeg" href="logo.jpg">
+<style>
+:root{
+  --red:#D4453A;--red-light:#F5E6E4;--blue:#4A90C8;--blue-light:#E4EFF7;
+  --green:#6BAF5A;--green-light:#EDF5EA;--yellow:#F0C848;--yellow-light:#FCF5E4;
+  --yellow-badge:#FFF3CD;--purple:#9B7BC0;--purple-light:#F0EBF7;
+  --cream:#FAF6EE;--white:#FFF;--gray-50:#F9FAFB;--gray-100:#F3F4F6;
+  --gray-200:#E5E7EB;--gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+  --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+  --danger:#EF4444;--danger-light:#FEE2E2;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05);--shadow:0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-xl:20px
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--gray-800);background:var(--cream);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+input,textarea,select,button{font-family:inherit;font-size:inherit;outline:none;border:none}
+img{max-width:100%;display:block}
+#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--cream);position:relative;padding-bottom:70px}
+.page{display:none;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-    /* 顶栏 / 底栏 */
-    .topbar { background: #fff9ed; color: #5d4e37; padding: 16px; text-align: center; border-bottom: 1px solid #f0e6d3; }
-    .brand { font-weight: 800; letter-spacing: .5px; font-size: 17px; }
-    .subbar { background: #fff9ed; color: #5d4e37; display: flex; align-items: center; padding: 12px 12px; border-bottom: 1px solid #f0e6d3; }
-    .subbar .back { background: none; border: none; color: #5d4e37; font-size: 16px; cursor: pointer; font-weight: 600; }
-    .subbar .subtitle { flex: 1; text-align: center; font-weight: 700; }
-    .subbar .subspacer { width: 48px; }
-    .bottom-tabs { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px;
-      display: flex; background: #fff; border-top: 1px solid #f0e6d3; padding: 6px 0; z-index: 50; }
-    .tab { flex: 1; background: none; border: none; display: flex; flex-direction: row; align-items: center; justify-content: center;
-      padding: 6px 0; color: #9c8c76; font-size: 12px; cursor: pointer; gap: 4px; }
-    .tab.active { color: #8fcb9b; }
-    .tab-ico { font-size: 18px; line-height: 1; }
-    .tab-tx { margin-top: 0; }
+/* Header */
+.app-header{background:linear-gradient(135deg,var(--red),#E85A4F);padding:16px 16px 20px;color:#fff;position:relative;overflow:hidden}
+.app-header::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)}
+.app-header::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05)}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative;z-index:1}
+.header-title{font-size:18px;font-weight:700;letter-spacing:.5px}
+.header-actions{display:flex;gap:8px}
+.header-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;border:none;transition:background .2s}
+.header-btn:active{background:rgba(255,255,255,.35)}
 
-    /* 通用卡片 */
-    .card { background: #fff; border-radius: 18px; padding: 14px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(93,78,55,.06); }
-    .card-title { font-weight: 700; margin: 4px 0 10px; color: #5d4e37; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .badge.overdue { background: #fceae8; color: #c0392b; }
-    .badge.soon { background: #fff4e0; color: #b7791f; }
-    .badge.ok { background: #e8f5e9; color: #2e7d32; }
+/* Search */
+.search-bar{position:relative;z-index:1}
+.search-input{width:100%;height:40px;border-radius:20px;background:rgba(255,255,255,.95);padding:0 16px 0 38px;font-size:14px;color:var(--gray-800);transition:all .2s}
+.search-input::placeholder{color:var(--gray-400)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:16px;pointer-events:none}
 
-    /* 按钮 — 默认横向 */
-    .btn-primary { background: #8fcb9b; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .btn-warn { background: #f9c784; color: #5d4e37; border: none; border-radius: 12px; padding: 11px 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .btn-ghost { background: #fff; color: #5d4e37; border: 1px solid #f0e6d3; border-radius: 12px; padding: 10px 14px; font-size: 14px; cursor: pointer; font-weight: 600; }
-    .btn-danger { background: #e86a5c; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-size: 15px; font-weight: 700; cursor: pointer; }
-    .btn-mini { background: #fff4e6; border: none; border-radius: 8px; padding: 5px 12px; font-size: 13px; margin-left: 6px; cursor: pointer; color: #5d4e37; font-weight: 600; }
-    .btn-mini.danger { background: #fceae8; color: #c0392b; }
-    .btn-block { display: block; width: 100%; margin-top: 8px; text-align: center; }
-    .block { width: 100%; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .form-actions { margin-top: 12px; display: flex; flex-direction: row; gap: 10px; flex-wrap: wrap; }
-    .form-actions button { flex: 1; min-width: 80px; }
-    .row-btns { display: flex; flex-direction: row; gap: 6px; }
-    .settings-actions { display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-    .settings-actions button { flex: 1; min-width: 90px; }
-    .backup-actions { display: flex; flex-direction: row; gap: 10px; margin-top: 10px; }
-    .backup-actions button { flex: 1; }
-    .sheet-actions { display: flex; flex-direction: row; gap: 10px; margin-top: 12px; }
-    .sheet-actions button { flex: 1; }
+/* Alert Banner */
+.alert-banner{margin:12px 16px 0;border-radius:var(--radius);overflow:hidden;display:none}
+.alert-banner.show{display:block}
+.alert-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.alert-header.expired{background:var(--danger-light);border-left:4px solid var(--danger)}
+.alert-header.warning{background:var(--yellow-badge);border-left:4px solid var(--yellow)}
+.alert-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.alert-title.expired{color:var(--danger)}.alert-title.warning{color:#B8860B}
+.alert-count{font-size:12px;background:rgba(0,0,0,.06);padding:2px 8px;border-radius:10px}
+.alert-list{padding:0 14px 10px;background:var(--white)}
+.alert-item{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer}
+.alert-item:last-child{border-bottom:none}
+.alert-dot{width:8px;height:8px;border-radius:50%;margin-right:10px;flex-shrink:0}
+.alert-dot.red{background:var(--danger)}.alert-dot.yellow{background:var(--yellow)}
+.alert-info{flex:1;min-width:0}
+.alert-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.alert-days{font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px}
+.alert-days.red{color:var(--danger)}.alert-days.yellow{color:#B8860B}
 
-    /* 输入控件 */
-    .inp { width: 100%; border: 1px solid #f0e6d3; border-radius: 12px; padding: 10px 12px; font-size: 15px; background: #fff; font-family: inherit; color: #5d4e37; }
-    textarea.inp { resize: vertical; }
-    .form-section { margin-bottom: 12px; }
-    .form-row { display: flex; gap: 12px; }
-    .form-row .form-section { flex: 1; }
-    .lbl { display: block; font-size: 13px; color: #7d6e57; margin-bottom: 5px; font-weight: 700; }
+/* Module Grid */
+.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+.module-card{background:var(--white);border-radius:var(--radius-lg);padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.module-card:active{transform:scale(.96)}
+.module-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
+.module-icon.m1{background:linear-gradient(135deg,var(--red),#E85A4F)}.module-icon.m2{background:linear-gradient(135deg,var(--blue),#6AAAD9)}
+.module-icon.m3{background:linear-gradient(135deg,var(--green),#8BC77A)}.module-icon.m4{background:linear-gradient(135deg,var(--yellow),#F5DB6A)}
+.module-icon.m5{background:linear-gradient(135deg,var(--purple),#B59BD4)}.module-icon.m6{background:linear-gradient(135deg,#E07050,#F09868)}
+.module-icon.m7{background:linear-gradient(135deg,#50B8D0,#70D0E8)}.module-icon.m8{background:linear-gradient(135deg,#7B68A0,#9B88C0)}
+.module-icon.m9{background:linear-gradient(135deg,#608060,#80A080)}
+.module-name{font-size:12px;font-weight:600;color:var(--gray-700);text-align:center}
+.module-count{font-size:11px;color:var(--gray-400);background:var(--gray-100);padding:1px 8px;border-radius:10px}
 
-    /* 首页 */
-    .home .stat-row { display: flex; gap: 10px; margin-bottom: 12px; }
-    .stat { flex: 1; background: #fff; border-radius: 18px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(93,78,55,.06); }
-    .stat-n { font-size: 22px; font-weight: 800; color: #5d4e37; }
-    .stat-l { font-size: 12px; color: #9c8c76; margin-top: 2px; }
-    .remind-card { border-left: 4px solid #f9c784; }
-    .remind-item { display: flex; align-items: center; padding: 8px 0; border-top: 1px solid #f9f2e7; gap: 8px; }
-    .remind-item:first-of-type { border-top: none; }
-    .remind-name { flex: 1; font-weight: 700; }
-    .remind-meta { flex: 2; font-size: 12px; color: #9c8c76; }
-    .remind-item.overdue { background: #fff5f4; border-radius: 10px; padding-left: 6px; }
-    .module-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .module-card { border: none; border-radius: 18px; padding: 16px 8px; text-align: center;
-      box-shadow: 0 3px 10px rgba(93,78,55,.12); cursor: pointer; color: #fff; }
-    .mc-name { font-weight: 800; font-size: 15px; text-shadow: 0 1px 2px rgba(0,0,0,.15); }
-    .mc-count { font-size: 12px; margin-top: 4px; opacity: .92; }
-    /* 高对比模块色（与奶油底色明显区分） */
-    .module-card.c-red { background: linear-gradient(135deg, #ff8a80 0%, #ff5252 100%); }
-    .module-card.c-blue { background: linear-gradient(135deg, #81d4fa 0%, #29b6f6 100%); }
-    .module-card.c-green { background: linear-gradient(135deg, #a5d6a7 0%, #66bb6a 100%); }
-    .module-card.c-yellow { background: linear-gradient(135deg, #fff59d 0%, #ffee58 100%); color: #5d4e37; }
-    .module-card.c-purple { background: linear-gradient(135deg, #ce93d8 0%, #ab47bc 100%); }
-    .module-card.c-orange { background: linear-gradient(135deg, #ffcc80 0%, #ffa726 100%); color: #5d4e37; }
-    .module-card.c-teal { background: linear-gradient(135deg, #80cbc4 0%, #26a69a 100%); }
-    .module-card.c-pink { background: linear-gradient(135deg, #f48fb1 0%, #ec407a 100%); }
-    .module-card.c-brown { background: linear-gradient(135deg, #bcaaa4 0%, #8d6e63 100%); }
-    .module-card.consume-entry { background: linear-gradient(135deg, #ff7043 0%, #f4511e 100%); }
-    .home-actions { display: flex; gap: 10px; margin-bottom: 12px; }
-    .home-actions .btn-ghost, .home-actions .btn-primary { flex: 1; text-align: center; padding: 11px 0; }
-    .footer-note { font-size: 12px; color: #9c8c76; text-align: center; padding: 14px 6px; line-height: 1.6; }
-    .consume-banner { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #ff7043 0%, #f4511e 100%); color: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; box-shadow: 0 3px 10px rgba(244,81,30,.25); cursor: pointer; }
-    .consume-banner .cb-ico { font-size: 32px; }
-    .consume-banner .cb-title { font-weight: 800; font-size: 16px; }
-    .consume-banner .cb-sub { font-size: 12px; opacity: .9; margin-top: 2px; }
+/* Quick Add FAB on Home */
+.home-fab-row{display:flex;justify-content:center;padding:8px 16px 4px;gap:10px}
+.mini-fab{height:38px;padding:0 18px;border-radius:19px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;border:none;transition:all .2s;color:#fff}
+.mini-fab.primary{background:linear-gradient(135deg,var(--red),#E85A4F);box-shadow:0 2px 10px rgba(212,69,58,.35)}
+.mini-fab.success{background:linear-gradient(135deg,var(--green),#8BC77A);box-shadow:0 2px 10px rgba(107,175,90,.35)}
+.mini-fab:active{transform:scale(.95)}
 
-    /* 模块页 */
-    .mp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .mp-title { font-size: 18px; font-weight: 800; color: #5d4e37; }
-    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px; }
-    .cat-tab { border: none; background: #fff; padding: 6px 14px; border-radius: 20px; font-size: 13px; color: #7d6e57; white-space: nowrap; cursor: pointer; }
-    .cat-tab.active { background: #8fcb9b; color: #fff; }
-    .item-list { display: flex; flex-direction: column; gap: 8px; }
-    .item-card { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 10px; box-shadow: 0 2px 8px rgba(93,78,55,.05); cursor: pointer; }
-    .ic-thumb { width: 46px; height: 46px; border-radius: 10px; background-size: cover; background-position: center; background-color: #f9f2e7; flex-shrink: 0; }
-    .ic-body { flex: 1; min-width: 0; }
-    .ic-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #5d4e37; }
-    .ic-meta { font-size: 12px; color: #9c8c76; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ic-qty { font-size: 18px; font-weight: 800; color: #8fcb9b; padding: 0 4px; }
-    .empty { text-align: center; color: #9c8c76; padding: 24px; font-size: 13px; }
-    .fab { position: fixed; bottom: 76px; left: 50%; transform: translateX(calc(280px - 28px)); width: 56px; height: 56px;
-      border-radius: 50%; background: #f9c784; color: #5d4e37; border: none; font-size: 28px; box-shadow: 0 4px 12px rgba(249,199,132,.5);
-      cursor: pointer; z-index: 60; max-width: calc(560px - 24px); }
+/* Category Tabs */
+.category-bar{display:flex;gap:8px;padding:12px 16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.category-bar::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent;white-space:nowrap}
+.cat-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.cat-tab:not(.active){background:var(--white);color:var(--gray-600);border-color:var(--gray-200)}
+.cat-add{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--white);border:2px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:16px;cursor:pointer;align-self:center}
 
-    /* 底部弹层 */
-    .sheet-mask { position: fixed; inset: 0; background: rgba(93,78,55,.35); z-index: 200; display: flex; align-items: flex-end; }
-    .sheet { background: #fff; width: 100%; max-width: 560px; margin: 0 auto; border-radius: 20px 20px 0 0; padding: 16px; max-height: 85vh; overflow-y: auto; }
-    .sheet-tall { max-height: 92vh; }
-    .sheet-title { font-weight: 800; margin-bottom: 12px; color: #5d4e37; }
-    .form-scroll { max-height: 62vh; overflow-y: auto; padding-right: 4px; }
-    .cat-add { display: flex; gap: 8px; margin-bottom: 12px; align-items: stretch; }
-    .cat-add .inp { flex: 1; min-width: 0; }
-    .cat-add .btn-primary { flex-shrink: 0; border-radius: 12px; padding: 10px 18px; }
-    .cat-manage-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-    .cat-manage-item { display: flex; justify-content: space-between; align-items: center; background: #fff9ed; padding: 10px 12px; border-radius: 10px; }
+/* Item List */
+.item-list{padding:12px 16px}
+.item-card{background:var(--white);border-radius:var(--radius);padding:12px;margin-bottom:10px;display:flex;gap:12px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative}
+.item-card:active{transform:scale(.98)}
+.item-img{width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-img .placeholder-icon{font-size:28px;color:var(--gray-300)}
+.item-body{flex:1;min-width:0;display:flex;flex-direction-column;gap:4px}
+.item-name-row{display:flex;align-items:center;justify-content:space-between}
+.item-name{font-size:15px;font-weight:600;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.item-qty{font-size:15px;font-weight:700;color:var(--red)}
+.item-location{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px}
+.item-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.tag-expired{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--danger-light);color:var(--danger);font-weight:600}
+.tag-warning{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--yellow-badge);color:#B8860B;font-weight:600}
+.tag-cat{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gray-100);color:var(--gray-500)}
 
-    /* 媒体 */
-    .media-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-    .media-thumb { position: relative; width: 74px; height: 74px; border-radius: 10px; overflow: hidden; background: #f9f2e7; }
-    .media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; }
-    .media-del { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; background: rgba(93,78,55,.6); color: #fff; border: none; font-size: 14px; line-height: 1; cursor: pointer; }
-    .media-add { width: 74px; height: 74px; border: 2px dashed #e0d4c0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #b0a08a; cursor: pointer; }
+/* FAB Button */
+.fab-btn{position:fixed;right:20px;bottom:80px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--red),#E85A4F);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(212,69,58,.4);cursor:pointer;border:none;z-index:100;transition:transform .2s}
+.fab-btn:active{transform:scale(.92)}
 
-    /* 详情 */
-    .carousel { position: relative; background: #3a322a; border-radius: 14px; overflow: hidden; margin-bottom: 12px; }
-    .carousel .slide { display: none; }
-    .carousel .slide.active { display: block; }
-    .carousel .slide img, .carousel .slide video { width: 100%; max-height: 320px; object-fit: contain; background: #2a231d; }
-    .carousel-nav { position: absolute; bottom: 8px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 16px; color: #fff; }
-    .carousel-nav button { background: rgba(0,0,0,.4); color: #fff; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 18px; cursor: pointer; }
-    .detail-noimg { background: #f9f2e7; border-radius: 14px; padding: 30px; text-align: center; color: #9c8c76; margin-bottom: 12px; cursor: pointer; }
-    .detail-card { background: #fff; border-radius: 18px; padding: 14px; margin-bottom: 12px; }
-    .detail-name { font-size: 19px; font-weight: 800; margin-bottom: 4px; color: #5d4e37; }
-    .detail-qty { font-size: 15px; color: #7d6e57; margin-bottom: 8px; }
-    .kv { display: flex; padding: 6px 0; border-top: 1px solid #f9f2e7; font-size: 14px; }
-    .kv span { width: 84px; color: #9c8c76; flex-shrink: 0; }
-    .kv b { font-weight: 700; flex: 1; word-break: break-word; color: #5d4e37; }
-    .detail-actions { display: flex; gap: 8px; margin-bottom: 14px; }
-    .detail-actions .btn-primary, .detail-actions .btn-warn, .detail-actions .btn-ghost { flex: 1; }
+/* Detail Page */
+.detail-header{position:relative}
+.detail-images{width:100%;height:260px;background:var(--gray-100);position:relative;overflow:hidden}
+.detail-images img{width:100%;height:100%;object-fit:cover}
+.image-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.image-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)}
+.image-dot.active{background:#fff;width:18px;border-radius:3px}
+.detail-back{position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;z-index:2}
+.detail-info{padding:16px;background:var(--white);margin-top:-20px;border-radius:var(--radius-xl) var(--radius-xl) 0 0;position:relative;z-index:1}
+.detail-name{font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:4px}
+.detail-qty-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.detail-qty{font-size:28px;font-weight:800;color:var(--red)}
+.detail-qty-label{font-size:13px;color:var(--gray-500)}
+.detail-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-field{padding:8px 0;border-bottom:1px solid var(--gray-100)}
+.field-label{font-size:11px;color:var(--gray-400);margin-bottom:2px}
+.field-value{font-size:14px;color:var(--gray-700)}
+.field-value.expiry-expired{color:var(--danger);font-weight:600;background:var(--danger-light);padding:2px 6px;border-radius:4px}
+.field-value.expiry-warning{color:#B8860B;font-weight:600;background:var(--yellow-badge);padding:2px 6px;border-radius:4px}
+.detail-actions{display:flex;gap:8px;padding:16px;background:var(--white);margin-top:8px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:calc(50% - 4px);height:44px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .2s;border:none}
+.action-btn.primary{background:var(--red);color:#fff}.action-btn.success{background:var(--green);color:#fff}
+.action-btn.warning{background:var(--yellow);color:var(--gray-800)}.action-btn.default{background:var(--gray-100);color:var(--gray-700)}
+.action-btn.danger{background:var(--danger-light);color:var(--danger)}
 
-    /* 消耗登记 */
-    .mode-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-    .mode-tab { flex: 1; border: none; background: #f9f2e7; padding: 8px; border-radius: 12px; font-size: 14px; color: #7d6e57; cursor: pointer; font-weight: 600; }
-    .mode-tab.active { background: #f4b9b2; color: #fff; }
-    .match-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
-    .match-item { background: #f9f2e7; border-radius: 12px; padding: 8px 10px; cursor: pointer; }
-    .match-item.active { background: #e8f5e9; border: 1px solid #8fcb9b; }
-    .match-name { font-weight: 700; color: #5d4e37; }
-    .match-meta { font-size: 12px; color: #9c8c76; }
-    .selected-item { background: #e8f5e9; border-radius: 12px; padding: 10px; margin-bottom: 12px; color: #2e7d32; font-weight: 700; }
-    .selected-stock { font-size: 13px; color: #7d6e57; font-weight: 600; }
+/* Record List */
+.record-section{background:var(--white);margin-top:8px;padding:16px}
+.record-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer}
+.record-title{font-size:16px;font-weight:700;color:var(--gray-800)}
+.record-toggle{color:var(--gray-400);font-size:12px;transition:transform .3s}
+.record-toggle.open{transform:rotate(180deg)}
+.record-list{display:none}.record-list.show{display:block}
+.record-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.record-item:last-child{border-bottom:none}
+.record-type{width:44px;height:24px;border-radius:12px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.record-type.in{background:var(--green-light);color:var(--green)}.record-type.out{background:var(--red-light);color:var(--red)}
+.record-type.consume{background:var(--yellow-badge);color:#B8860B}
+.record-detail{flex:1;margin-left:10px}
+.record-qty-change{font-size:14px;font-weight:600}
+.record-qty-change.in{color:var(--green)}.record-qty-change.out{color:var(--red)}.record-qty-change.consume{color:#B8860B}
+.record-note{font-size:11px;color:var(--gray-400);margin-top:2px}
+.record-time{font-size:11px;color:var(--gray-400);flex-shrink:0}
+.record-after{font-size:12px;color:var(--gray-500);flex-shrink:0;margin-left:8px;font-weight:500}
 
-    /* 记录 / 统计 */
-    .range-tabs { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; }
-    .range-tab { border: none; background: #fff; padding: 7px 12px; border-radius: 20px; font-size: 13px; color: #7d6e57; white-space: nowrap; cursor: pointer; }
-    .range-tab.active { background: #8fcb9b; color: #fff; }
-    .range-custom { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-    .summary { display: flex; gap: 8px; margin-bottom: 12px; }
-    .sum { flex: 1; background: #fff; border-radius: 14px; padding: 10px; text-align: center; }
-    .sum-n { font-size: 18px; font-weight: 800; }
-    .sum-n.in { color: #8fcb9b; } .sum-n.out { color: #e86a5c; } .sum-n.consume { color: #f9a825; }
-    .sum-l { font-size: 11px; color: #9c8c76; margin-top: 2px; }
-    .chart { background: #fff; border-radius: 14px; padding: 8px; margin-bottom: 12px; }
-    .cat-summary { background: #fff; border-radius: 14px; padding: 10px; margin-bottom: 12px; }
-    .cat-sum-row { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px solid #f9f2e7; }
-    .cat-sum-row:first-child { border-top: none; }
-    .rec-list { display: flex; flex-direction: column; gap: 6px; }
-    .rec-item { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 12px; padding: 8px 10px; }
-    .rec-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
-    .rec-tag.in { background: #e8f5e9; color: #2e7d32; }
-    .rec-tag.out { background: #fceae8; color: #c0392b; }
-    .rec-tag.consume { background: #fff8e1; color: #f57f17; }
-    .rec-qty { font-weight: 800; }
-    .rec-time { font-size: 12px; color: #9c8c76; flex: 1; }
+/* Form Page */
+.form-page{padding:16px;background:var(--cream);min-height:100vh}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;display:block}
+.form-label .required{color:var(--red);margin-left:2px}
+.form-input,.form-textarea,.form-select{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--white);border:1.5px solid var(--gray-200);font-size:14px;color:var(--gray-800);transition:border-color .2s}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--red)}
+.form-textarea{min-height:80px;resize:vertical}
+.form-hint{font-size:11px;color:var(--gray-400);margin-top:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.submit-btn{width:100%;height:50px;border-radius:var(--radius);background:linear-gradient(135deg,var(--red),#E85A4F);color:#fff;font-size:16px;font-weight:700;cursor:pointer;border:none;margin-top:8px;transition:all .2s}
+.submit-btn:active{opacity:.9}
+.cancel-btn{width:100%;height:44px;border-radius:var(--radius);background:var(--white);color:var(--gray-600);font-size:14px;cursor:pointer;border:1.5px solid var(--gray-200);margin-top:8px}
 
-    /* 备份 */
-    .fmt-tabs { display: flex; gap: 8px; margin-bottom: 10px; }
-    .fmt-tab { flex: 1; border: none; background: #f9f2e7; padding: 8px; border-radius: 12px; font-size: 14px; color: #7d6e57; cursor: pointer; font-weight: 600; }
-    .fmt-tab.active { background: #a7c7e7; color: #fff; }
-    .file-btn { display: block; text-align: center; cursor: pointer; }
-    .preview-sheet .preview-body { max-height: 60vh; overflow: auto; background: #fff9ed; border-radius: 12px; padding: 10px; }
-    .preview-body pre { white-space: pre-wrap; font-size: 12px; color: #5d4e37; margin: 0; }
-    .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .preview-table td { border: 1px solid #f0e6d3; padding: 4px; color: #5d4e37; }
-    .preview-html table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .preview-html th, .preview-html td { border: 1px solid #f0e6d3; padding: 6px; text-align: left; }
+/* Media Upload */
+.media-upload{border:2px dashed var(--gray-300);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.media-upload:active{border-color:var(--red);background:var(--red-light)}
+.media-upload-icon{font-size:32px;color:var(--gray-300);margin-bottom:8px}
+.media-upload-text{font-size:13px;color:var(--gray-400)}
+.media-preview{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.media-thumb{width:72px;height:72px;border-radius:var(--radius-sm);object-fit:cover;position:relative;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:cover}
+.media-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-    /* 设置 */
-    .sync-steps { background: #fff9ed; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
-    .sync-step { font-size: 13px; color: #7d6e57; padding: 5px 0; }
-    .sync-step b { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; background: #f4b9b2; color: #fff; border-radius: 50%; margin-right: 6px; font-size: 12px; }
-    .backup-page .card, .settings-page .card { margin-bottom: 12px; }
-    mark { background: #fff9c4; color: inherit; padding: 0 2px; border-radius: 3px; }
-    .hint { font-size: 13px; color: #9c8c76; margin: 0 0 10px; line-height: 1.5; }
-    .chk { display: flex; align-items: center; gap: 6px; font-size: 14px; margin-bottom: 10px; color: #5d4e37; }
-    .history-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .history-tag { display: inline-flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #f0e6d3; border-radius: 20px; padding: 5px 10px; font-size: 13px; color: #5d4e37; cursor: pointer; }
-    .history-tag button { background: none; border: none; color: #9c8c76; font-size: 14px; cursor: pointer; padding: 0 0 0 4px; }
-  </style>
+/* Stats Page */
+.stats-page{padding:16px;background:var(--cream);min-height:100vh}
+.time-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.time-filters::-webkit-scrollbar{display:none}
+.time-filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+.time-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+.time-filter-btn.custom{padding:0;overflow:hidden}
+.time-filter-date{border:none;background:transparent;font-size:13px;color:inherit;padding:6px 10px;width:100%;outline:none;font-family:inherit}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-num{font-size:22px;font-weight:800}
+.stat-num.in{color:var(--green)}.stat-num.out{color:var(--red)}.stat-num.net{color:var(--blue)}.stat-num.consume{color:#B8860B}
+.stat-label{font-size:11px;color:var(--gray-400);margin-top:2px}
+.chart-container{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:700;color:var(--gray-700);margin-bottom:12px}
+.chart-canvas{width:100%;height:200px}
+
+/* Records / Stats Detail Filters */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-select{flex:1;min-width:120px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--white);border:1.5px solid var(--gray-200);font-size:13px;color:var(--gray-700)}
+
+/* Settings Page */
+.settings-page{padding:16px;background:var(--cream);min-height:100vh}
+.setting-group{background:var(--white);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--gray-100);cursor:pointer}
+.setting-item:last-child{border-bottom:none}
+.setting-item:active{background:var(--gray-50)}
+.setting-left{display:flex;align-items:center;gap:12px}
+.setting-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff}
+.setting-name{font-size:14px;font-weight:500;color:var(--gray-700)}
+.setting-desc{font-size:11px;color:var(--gray-400);margin-top:1px}
+.setting-arrow{color:var(--gray-300);font-size:14px}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--white);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:20px 16px 30px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:17px;font-weight:700;text-align:center;margin-bottom:20px;color:var(--gray-800)}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-btn{flex:1;height:44px;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;border:none}
+.modal-btn-cancel{background:var(--gray-100);color:var(--gray-600)}.modal-btn-confirm{background:var(--red);color:#fff}
+.modal-input{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--gray-50);border:1.5px solid var(--gray-200);font-size:14px;margin-bottom:12px}
+
+/* Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:13px;z-index:2000;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:56px;margin-bottom:12px;opacity:.3}
+.empty-text{font-size:15px;color:var(--gray-400)}
+.empty-sub{font-size:12px;color:var(--gray-300);margin-top:4px}
+
+/* Tab Bar */
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);display:flex;border-top:1px solid var(--gray-200);z-index:99;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;cursor:pointer;transition:all .2s;position:relative}
+.tab-icon{font-size:22px;color:var(--gray-400);transition:color .2s}
+.tab-label{font-size:10px;color:var(--gray-400);transition:color .2s}
+.tab-item.active .tab-icon{color:var(--red)}.tab-item.active .tab-label{color:var(--red);font-weight:600}
+.tab-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--red);border-radius:0 0 3px 3px}
+
+/* Category Management Modal */
+.cat-modal-list{margin-bottom:16px}
+.cat-modal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.cat-modal-name{font-size:14px;color:var(--gray-700)}
+.cat-modal-actions{display:flex;gap:8px}
+.cat-modal-btn{padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+.cat-modal-btn.delete{color:var(--danger);border-color:var(--danger-light);background:var(--danger-light)}
+
+/* Stock Action Modal */
+.stock-action-tabs{display:flex;margin-bottom:16px;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--gray-200)}
+.stock-action-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.stock-action-tab.active.in{background:var(--green-light);color:var(--green);border:1.5px solid var(--green)}
+.stock-action-tab.active.out{background:var(--red-light);color:var(--red);border:1.5px solid var(--red)}
+.stock-action-tab:not(.active){background:var(--white);color:var(--gray-500)}
+
+/* Confirm Dialog */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1100;display:none;align-items:center;justify-content:center}
+.confirm-overlay.show{display:flex}
+.confirm-box{background:var(--white);border-radius:var(--radius-lg);width:280px;padding:24px 20px;text-align:center}
+.confirm-msg{font-size:15px;color:var(--gray-700);line-height:1.5;margin-bottom:20px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btn{flex:1;height:40px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none}
+
+/* ===== NEW: Export Preview Modal ===== */
+.export-preview{max-height:50vh;overflow-y:auto;background:var(--gray-50);border-radius:var(--radius);padding:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;word-break:break-all;color:var(--gray-700)}
+.export-format-btns{display:flex;gap:8px;margin-bottom:16px}
+.export-format-btn{flex:1;padding:10px;border-radius:var(--radius);text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--gray-200);background:var(--white);color:var(--gray-700);transition:all .2s}
+.export-format-btn.active{border-color:var(--red);color:var(--red);background:var(--red-light)}
+.export-image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.export-image-item{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;cursor:pointer}
+.export-image-item img{width:100%;height:100%;object-fit:cover}
+
+/* ===== NEW: Search History ===== */
+.search-history{padding:12px 16px 0}
+.search-history-title{font-size:12px;color:var(--gray-400);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.search-history-tags{display:flex;gap:6px;flex-wrap:wrap}
+.search-history-tag{padding:4px 12px;border-radius:14px;font-size:12px;background:var(--white);color:var(--gray-600);border:1px solid var(--gray-200);cursor:pointer;transition:all .2s}
+.search-history-tag:active{background:var(--red);color:#fff;border-color:var(--red)}
+.search-clear-btn{font-size:11px;color:var(--gray-400);cursor:pointer}
+
+/* ===== NEW: Consume (Daily Usage) Page ===== */
+.consume-form{background:var(--white);border-radius:var(--radius-lg);padding:16px;margin:12px 16px;box-shadow:var(--shadow)}
+.consume-search-result{max-height:200px;overflow-y:auto;margin-top:8px}
+.consume-match-item{display:flex;align-items:center;padding:10px 8px;border-bottom:1px solid var(--gray-100);cursor:pointer;gap:10px}
+.consume-match-item:last-child{border-bottom:none}
+.consume-match-item:active{background:var(--gray-50)}
+.consume-match-img{width:40px;height:40px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);flex-shrink:0}
+.consume-match-info{flex:1;min-width:0}
+.consume-match-name{font-size:14px;font-weight:600;color:var(--gray-800)}
+.consume-match-meta{font-size:11px;color:var(--gray-400)}
+.consume-match-qty{font-size:14px;font-weight:700;color:var(--red)}
+
+/* ===== NEW: Homepage Section Management ===== */
+.section-manage-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.section-manage-name{font-size:14px;color:var(--gray-700)}
+.section-manage-actions{display:flex;gap:6px}
+.section-manage-btn{padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+
+/* ===== Region Manager (rename/add/remove areas) ===== */
+.region-manage-list{max-height:260px;overflow-y:auto;margin:4px 0}
+.region-manage-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.region-manage-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
+.region-manage-body{flex:1;min-width:0}
+.region-manage-name{font-size:14px;font-weight:600;color:var(--gray-800)}
+.region-manage-actions{display:flex;gap:6px;flex-shrink:0}
+.region-btn{padding:5px 12px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-700)}
+.region-btn.delete{color:var(--red);border-color:#f3c0bd}
+.region-btn.add{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ===== Consume date bar ===== */
+.consume-date-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);
+  margin:0 16px;border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.consume-date-label{font-size:13px;color:var(--gray-600);font-weight:600}
+.consume-date-input{flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-800)}
+.consume-date-today{padding:8px 14px;border:none;border-radius:var(--radius-sm);background:var(--red);color:#fff;font-size:13px;cursor:pointer}
+
+/* ===== Consume record table ===== */
+.consume-cat-summary{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.consume-cat-chip{display:flex;align-items:center;gap:5px;background:var(--yellow-light);color:#8a6d1a;
+  padding:4px 10px;border-radius:12px;font-size:12px}
+.consume-cat-chip strong{font-weight:700}
+.consume-table{border:1px solid var(--gray-100);border-radius:var(--radius);overflow:hidden}
+.consume-row{display:grid;grid-template-columns:1.4fr 1fr 0.6fr 0.7fr;align-items:center;gap:6px;
+  padding:9px 10px;border-bottom:1px solid var(--gray-100);font-size:12px}
+.consume-row:last-child{border-bottom:none}
+.consume-row.consume-head{background:var(--gray-50);font-weight:700;color:var(--gray-500);font-size:11px}
+.consume-name{font-size:13px;font-weight:600;color:var(--gray-800);display:flex;flex-direction:column}
+.consume-note{font-size:11px;font-weight:400;color:var(--gray-400);margin-top:2px}
+.consume-meta{font-size:12px;color:var(--gray-500)}
+.consume-qty{font-size:14px;font-weight:700;color:var(--red)}
+.consume-time{font-size:12px;color:var(--gray-400);text-align:right}
+
+/* ===== Name suggestion dropdown (add item) ===== */
+.name-suggest{position:relative}
+.suggest-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--gray-200);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow);z-index:30;max-height:200px;overflow-y:auto;margin-top:2px}
+.suggest-item{padding:10px 12px;font-size:14px;color:var(--gray-800);cursor:pointer;border-bottom:1px solid var(--gray-100)}
+.suggest-item:last-child{border-bottom:none}
+.suggest-item:active{background:var(--gray-50)}
+.suggest-item .suggest-qty{float:right;font-size:12px;color:var(--gray-400)}
+
+/* ===== Today's Activity Card (今日动态) ===== */
+.today-activity{background:var(--white);border-radius:var(--radius-lg);margin:12px 16px;padding:16px;box-shadow:var(--shadow-sm)}
+.today-activity-title{font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:12px}
+.today-stats-row{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--gray-600);flex-wrap:wrap;line-height:1.8}
+.today-stat-num{font-weight:700;font-size:16px}
+.today-stat-num.in{color:var(--green)}.today-stat-num.out{color:var(--red)}
+.today-stat-num.new{color:var(--blue)}.today-stat-num.alert{color:var(--danger)}
+.today-stat-sep{color:var(--gray-300);margin:0 4px}
+
+/* ===== Stock Alert Badge on Header ===== */
+.stock-alert-badge{position:absolute;top:6px;right:42px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;z-index:2}
+.stock-alert-badge:empty{display:none}
+
+/* ===== New Product Card Layout (参考图样式) ===== */
+.prod-card{background:var(--white);border-radius:var(--radius);padding:14px;margin-bottom:10px;display:flex;gap:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative}
+.prod-card:active{transform:scale(.98)}
+.prod-card-img{width:72px;height:72px;border-radius:var(--radius);object-fit:cover;background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.prod-card-img img{width:100%;height:100%;object-fit:cover}
+.prod-card-img .placeholder-icon{font-size:32px;color:var(--gray-300)}
+.prod-card-body{flex:1;min-width:0;display:flex;flex-direction-column;gap:3px}
+.prod-card-name{font-size:16px;font-weight:700;color:var(--gray-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-card-sku{font-size:12px;color:var(--gray-400);font-family:monospace}
+.prod-card-cat-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600;margin-top:2px}
+.prod-card-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:2px}
+.prod-card-qty{font-size:24px;font-weight:800;line-height:1.1}
+.prod-card-qty.normal{color:var(--blue)}.prod-card-qty.low{color:#E07050}.prod-card-qty-unit{font-size:12px;color:var(--gray-400);font-weight:500}
+.prod-card-status{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}
+.prod-card-status.ok{background:var(--green-light);color:var(--green)}
+.prod-card-status.warn{background:var(--yellow-badge);color:#B8860B}
+.prod-card-status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.prod-card-status-dot.ok{background:var(--green)}.prod-card-status-dot.warn{background:#E07050}
+.prod-card-location{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:4px}
+.prod-card-arrow{color:var(--gray-300);margin-left:auto;flex-shrink:0}
+
+/* ===== Scan UI ===== */
+.scan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:2000;display:none;flex-direction:column}
+.scan-overlay.show{display:flex}
+.scan-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,.7);color:#fff;z-index:1}
+.scan-header-title{font-size:16px;font-weight:600}
+.scan-close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.scan-video-container{flex:1;position:relative;overflow:hidden}
+.scan-video{width:100%;height:100%;object-fit:cover}
+.scan-hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;text-align:center;background:rgba(0,0,0,.5);padding:8px 20px;border-radius:20px;pointer-events:none}
+.scan-result-bar{padding:12px 16px;background:var(--white);display:none;align-items:center;gap:10px}
+.scan-result-bar.show{display:flex}
+.scan-result-text{flex:1;font-size:14px;color:var(--gray-800)}
+.scan-btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none}
+.scan-btn-primary{background:var(--red);color:#fff}
+.scan-btn-cancel{background:var(--gray-100);color:var(--gray-600)}
+
+/* ===== Settings: Alert Threshold ===== */
+.threshold-setting{display:flex;align-items:center;gap:10px;padding:14px 16px}
+.threshold-input{width:80px;padding:8px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--gray-200);font-size:15px;text-align:center;font-weight:700;color:var(--red)}
+
+/* ===== Module Page Filter Tabs (全部/正常/预警) ===== */
+.stock-filter-tabs{display:flex;gap:8px;padding:8px 16px 0}
+.stock-tab{flex-shrink:0;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-600);transition:all .2s}
+.stock-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.stock-tab.warn-active{background:var(--yellow);color:#8a6d1a;border-color:var(--yellow)}
+</style>
+<!-- 扫码识别库（条码/QR），部署到 HTTPS 后可用；离线预览(file://)不可用会优雅降级 -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="vendor/react.js"></script>
-  <script src="vendor/react-dom.js"></script>
-  <script src="vendor/htm.umd.js"></script>
-  <script src="app.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function (e) { console.log('SW 注册失败（不影响使用）:', e); });
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box" id="modalBox"></div></div>
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn modal-btn-cancel" onclick="App._resolveConfirm(false)">取消</button>
+      <button class="confirm-btn modal-btn-confirm" id="confirmOkBtn" onclick="App._resolveConfirm(true)">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 扫码层 -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-header">
+    <div class="scan-header-title">📷 扫码</div>
+    <button class="scan-close-btn" onclick="App.stopScan()">✕</button>
+  </div>
+  <div class="scan-video-container">
+    <div id="scanReader" style="width:100%;height:100%"></div>
+    <div class="scan-hint" id="scanHint">将条码/二维码对准取景框…</div>
+  </div>
+  <div class="scan-result-bar" id="scanResultBar">
+    <div class="scan-result-text" id="scanResultText"></div>
+    <button class="scan-btn scan-btn-primary" onclick="App.useScanResult()">使用</button>
+  </div>
+</div>
+
+<script>
+const App = (() => {
+  // ---- Constants ----
+  let MODULES = [
+    {id:'finished',name:'成品区',icon:'📦',cls:'m1'},
+    {id:'semi',name:'半成品区',icon:'🔧',cls:'m2'},
+    {id:'packing',name:'包材区',icon:'🎁',cls:'m3'},
+    {id:'boxes',name:'盒子区',icon:'📦',cls:'m4'},
+    {id:'labels',name:'标签区',icon:'🏷️',cls:'m5'},
+    {id:'parts',name:'配件区',icon:'⚙️',cls:'m6'},
+    {id:'other',name:'其他区',icon:'📋',cls:'m7'},
+    {id:'tools',name:'工具区',icon:'🛠️',cls:'m8'},
+    {id:'misc',name:'杂物区',icon:'🗄️',cls:'m9'}
+  ];
+  const MODULE_CLASSES = ['m1','m2','m3','m4','m5','m6','m7','m8','m9','m1','m2','m3','m4','m5','m6','m7','m8','m9'];
+  const MODULE_ICONS = ['📦','🔧','🎁','📦','🏷️','⚙️','📋','🛠️','🗄️','📊','📁','🗃️','🔩','🧰','📦','🍱','📦','💼'];
+  const DEFAULT_MODULES = JSON.parse(JSON.stringify(MODULES));
+
+  // ---- Modules (regions) persistence: editable + rename/add/remove ----
+  async function loadModules(){
+    try{ const saved=await dbOp('modules','readonly',s=>s.getAll()); if(saved&&saved.length) return saved; }catch(e){}
+    try{ const ls=JSON.parse(localStorage.getItem('lw_modules')||'null'); if(ls&&ls.length) return ls; }catch(e){}
+    return DEFAULT_MODULES.map(m=>({...m}));
+  }
+  async function saveModules(){
+    try{
+      await dbOp('modules','readwrite',s=>s.clear());
+      for(const m of MODULES) await dbOp('modules','readwrite',s=>s.put(m));
+    }catch(e){}
+    try{ localStorage.setItem('lw_modules', JSON.stringify(MODULES)); }catch(e){}
+  }
+  async function addModule(name, icon){
+    name=(name||'').trim(); if(!name) return;
+    const cls=MODULE_CLASSES[MODULES.length % MODULE_CLASSES.length];
+    const m={id:'mod_'+makeId(), name, icon:icon||'📦', cls};
+    MODULES.push(m); await saveModules();
+  }
+  async function renameModule(id, name){
+    name=(name||'').trim(); if(!name) return;
+    const m=MODULES.find(x=>x.id===id); if(m){ m.name=name; await saveModules(); }
+  }
+  async function removeModule(id){
+    MODULES=MODULES.filter(m=>m.id!==id);
+    // cascade: delete items, categories, records of this module
+    for(const it of state.items.filter(i=>i.moduleId===id)){ try{ await deleteItem(it.id); }catch(e){} }
+    const cats=await getCategories(id); for(const c of cats){ try{ await deleteCategory(c.id); }catch(e){} }
+    await saveModules();
+  }
+
+  const DB_NAME = 'LesleyWarehouseDB';
+  const DB_VERSION = 3;
+  let db = null;
+
+  // ---- localStorage fallback (when IndexedDB is unavailable, e.g. file:// preview / private mode) ----
+  const LW_KEYS = { items:'lw_items', records:'lw_records', categories:'lw_categories', homeSections:'lw_homeSections', modules:'lw_modules' };
+  const _loadLS = (s) => { try { return JSON.parse(localStorage.getItem(LW_KEYS[s]) || '[]'); } catch(e) { return []; } };
+  const _saveLS = (s, a) => { try { localStorage.setItem(LW_KEYS[s], JSON.stringify(a)); } catch(e) {} };
+
+  // ---- State ----
+  let state = {
+    currentPage: 'home',
+    currentModule: null,
+    currentItem: null,
+    currentCategory: null,
+    searchQuery: '',
+    items: [],
+    records: [],
+    editingItem: null,
+    statsTimeRange: 'month',
+    statsCustomDate: '',
+    statsCustomDate: '',
+    recordFilterMod: '',
+    recordFilterType: '',
+    recordFilterCat: '',
+    searchFilterMod: '',
+    searchFilterCat: '',
+    consumeModuleId: '',
+    consumeCategoryId: '',
+    consumeSearchQuery: '',
+    consumeViewDate: '',
+    addItemNameSuggest: '',
+    exportFormat: 'json',
+    homeSections: ['modules','expiryAlert'], // customizable homepage sections
+    searchHistory: [],
+    lowStockThreshold: 10, // default low stock alert threshold
+    stockFilterStatus: '', // '' | 'normal' | 'warn' — for module page filter
+    scanMode: '', // 'quick-add' | 'consume' — which page initiated scan
+    scanResult: null, // last scanned barcode text
+  };
+
+  let _confirmResolve = null;
+
+  // ---- IndexedDB Setup (v2 adds homeSections & searchHistory stores) ----
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains('items')) {
+          const s = d.createObjectStore('items', {keyPath: 'id'});
+          s.createIndex('moduleId','moduleId',{unique:false});
+          s.createIndex('categoryId','categoryId',{unique:false});
+          s.createIndex('name','name',{unique:false});
+          s.createIndex('expiryDate','expiryDate',{unique:false});
+        }
+        if (!d.objectStoreNames.contains('records')) {
+          const s = d.createObjectStore('records', {keyPath: 'id'});
+          s.createIndex('itemId','itemId',{unique:false});
+          s.createIndex('moduleId','moduleId',{unique:false});
+          s.createIndex('timestamp','timestamp',{unique:false});
+          s.createIndex('type','type',{unique:false});
+        }
+        if (!d.objectStoreNames.contains('categories')) {
+          d.createObjectStore('categories', {keyPath: 'id'});
+        }
+        if (!d.objectStoreNames.contains('homeSections')) {
+          d.createObjectStore('homeSections', {keyPath: 'id'});
+        }
+        if (!d.objectStoreNames.contains('modules')) {
+          d.createObjectStore('modules', {keyPath: 'id'});
+        }
+      };
+      req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function dbOp(storeName, mode, fn) {
+    // ---- IndexedDB path ----
+    if (db) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, mode);
+        const store = tx.objectStore(storeName);
+        const result = fn(store);
+        if (result && result.request) {
+          result.request.onsuccess = () => resolve(result.request.result);
+          result.request.onerror = () => reject(result.request.error);
+        } else if (result instanceof IDBRequest) {
+          result.onsuccess = () => resolve(result.result);
+          result.onerror = () => reject(result.error);
+        } else {
+          tx.oncomplete = () => resolve(result);
+          tx.onerror = () => reject(tx.error);
+        }
       });
     }
-  </script>
+    // ---- localStorage fallback path ----
+    return new Promise((resolve, reject) => {
+      const working = _loadLS(storeName);
+      const mkReq = (value) => ({ result: value, onsuccess: null, onerror: null, error: null });
+      const fakeStore = {
+        getAll: () => mkReq(working.slice()),
+        get: (id) => mkReq(working.find(x => x.id === id)),
+        add: (val) => { working.push(val); return mkReq(val); },
+        put: (val) => { const i = working.findIndex(x => x.id === val.id); if (i >= 0) working[i] = val; else working.push(val); return mkReq(val); },
+        delete: (id) => { const i = working.findIndex(x => x.id === id); if (i >= 0) working.splice(i, 1); return mkReq(undefined); },
+        index: (name) => ({ getAll: (val) => mkReq(working.filter(x => x[name] === val)), openCursor: () => mkReq(null) })
+      };
+      let req;
+      try { req = fn(fakeStore); } catch (e) { reject(e); return; }
+      const finalReq = (req && req.request) ? req.request : req;
+      Promise.resolve().then(() => {
+        _saveLS(storeName, working);
+        if (finalReq && typeof finalReq.onsuccess === 'function') {
+          finalReq.onsuccess({ target: { result: finalReq.result } });
+        }
+        resolve(finalReq ? finalReq.result : undefined);
+      });
+    });
+  }
+
+  async function getAllItems() { return dbOp('items','readonly',s=>s.getAll()); }
+  async function getItem(id) { return dbOp('items','readonly',s=>s.get(id)); }
+
+  function makeId() { return Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+
+  async function addItem(item) {
+    item.id = makeId(); item.createdAt = new Date().toISOString(); item.updatedAt = item.createdAt;
+    return dbOp('items','readwrite',s=>s.add(item));
+  }
+  async function updateItem(item) { item.updatedAt = new Date().toISOString(); return dbOp('items','readwrite',s=>s.put(item)); }
+
+  async function deleteItem(id) {
+    const recs = await getAllRecords();
+    for (const r of recs.filter(r => r.itemId === id)) {
+      await dbOp('records','readwrite', s => s.delete(r.id));
+    }
+    return dbOp('items','readwrite', s => s.delete(id));
+  }
+
+  async function addRecord(record) {
+    record.id = makeId(); record.timestamp = new Date().toISOString();
+    return dbOp('records','readwrite',s=>s.add(record));
+  }
+
+  async function getRecordsByItemId(itemId) {
+    const all = await getAllRecords();
+    return all.filter(r => r.itemId === itemId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  }
+  async function getAllRecords() { return dbOp('records','readonly',s=>s.getAll()); }
+
+  function indexGetAll(index,val){
+    if(index.getAll)return index.getAll(val);
+    const r=[];return new Promise((res,rej)=>{
+      const req=index.openCursor(IDBKeyRange.only(val));
+      req.onsuccess=e=>{const c=e.target.result;if(c){r.push(c.value);c.continue()}else res(r.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)))};
+      req.onerror=()=>rej(req.error);
+    });
+  }
+
+  // Categories
+  async function getCategories(moduleId) {
+    const all = await dbOp('categories','readonly',s=>s.getAll());
+    return all.filter(c=>c.moduleId===moduleId);
+  }
+  async function addCategory(moduleId,name) {
+    const c={id:makeId(),moduleId,name}; return dbOp('categories','readwrite',s=>s.add(c));
+  }
+  async function updateCategory(cat) { return dbOp('categories','readwrite',s=>s.put(cat)); }
+  async function deleteCategory(id) { return dbOp('categories','readwrite',s=>s.delete(id)); }
+
+  // Home Sections (customizable)
+  async function getHomeSections() {
+    try {
+      const all = await dbOp('homeSections','readonly',s=>s.getAll());
+      if(all.length === 0) return [{id:'default',sections:['modules','expiryAlert']}];
+      return all;
+    } catch(e) { return [{id:'default',sections:['modules','expiryAlert']}]; }
+  }
+  async function saveHomeSections(data) {
+    return dbOp('homeSections','readwrite',s=>s.put({id:'default',sections:data.sections}));
+  }
+
+  // ---- Search History (localStorage for simplicity) ----
+  function loadSearchHistory() {
+    try { return JSON.parse(localStorage.getItem('lw_search_history')||'[]'); } catch(e){return[];}
+  }
+  function saveSearchHistory(arr) {
+    localStorage.setItem('lw_search_history',JSON.stringify(arr.slice(0,30))); // keep last 30
+  }
+  function addSearchHistory(q) {
+    if(!q.trim())return;
+    const h=loadSearchHistory();
+    h.unshift(q.trim());
+    const filtered=[...new Set(h)]; // dedupe
+    saveSearchHistory(filtered);
+    state.searchHistory=filtered;
+  }
+
+  // ---- Data Export (multi-format + preview) ----
+  async function prepareExportData() {
+    const items=await getAllItems(), records=await getAllRecords(),
+          catsRaw=await dbOp('categories','readonly',s=>s.getAll());
+    return {version:2,exportTime:new Date().toISOString(),appName:'LESLEY公司仓储',items,records,categories:catsRaw};
+  }
+
+  async function showExportPreview() {
+    const data = await prepareExportData();
+    showModal(`
+      <div class="modal-title">备份数据导出</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:12px;text-align:center">选择导出格式，预览数据后下载</div>
+      <div class="export-format-btns">
+        <div class="export-format-btn ${state.exportFormat==='json'?'active':''}" onclick="App.state.exportFormat='json';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📄 JSON</div>
+        <div class="export-format-btn ${state.exportFormat==='csv'?'active':''}" onclick="App.state.exportFormat='csv';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📊 CSV</div>
+        <div class="export-format-btn ${state.exportFormat==='images'?'active':''}" onclick="App.state.exportFormat='images';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">🖼️ 图片</div>
+      </div>
+      <div class="form-label">数据预览（前500字符）</div>
+      <div class="export-preview">${escapeHtml(JSON.stringify(data,null,2).substring(0,500))}...</div>
+      <div style="font-size:12px;color:var(--gray-400);margin:8px 0">
+        📦 物品：${data.items.length}个 | 📋 记录：${data.records.length}条 | 🏷️ 分类：${data.categories.length}个
+      </div>
+      ${state.exportFormat==='images'?`
+        <div class="form-label">图片导出（共${data.items.filter(i=>i.images&&i.images.length).length}个有图物品）</div>
+        <div class="export-image-grid">${data.items.filter(i=>i.images&&i.images.length).slice(0,9).map(i=>`<div class="export-image-item"><img src="${i.images[0]}" alt="${escapeHtml(i.name)}"></div>`).join('')}</div>
+        <div style="font-size:11px;color:var(--gray-400)">点击下方导出将逐张下载所有物品图片</div>
+      `:''}
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.doExport()">下载导出文件</button>
+      </div>
+    `);
+  }
+
+  async function doExport() {
+    const data = await prepareExportData();
+    hideModal();
+
+    switch(state.exportFormat) {
+      case 'json': {
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        downloadBlob(blob,`LESLEY公司仓储备份_${formatDate(new Date(),'YYYYMMDD_HHmmss')}.json`);
+        toast('JSON备份已导出！');
+        break;
+      }
+      case 'csv': {
+        // Items CSV
+        let csv='\uFEFF物品名称,数量,存放位置,所属模块,分类,到货日期,到期时间,用途备注\n';
+        data.items.forEach(i=>{
+          const mod=MODULES.find(m=>m.id===i.moduleId)?.name||'';
+          csv+=`"${i.name}",${i.quantity},"${i.location||''}","${mod}","","${i.arrivalDate||''}","${i.expiryDate||''}","${(i.usageNote||'').replace(/"/g,'""')}"\n`;
+        });
+        downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`LESLEY公司仓储_物品列表_${formatDate(new Date(),'YYYYMMDD')}.csv`);
+        toast('CSV文件已导出！');
+        break;
+      }
+      case 'images': {
+        // Download each image individually
+        const itemsWithImages=data.items.filter(i=>i.images&&i.images.length);
+        if(itemsWithImages.length===0){toast('没有图片可导出');return;}
+        toast(`开始导出 ${itemsWithImages.length} 个物品的图片...`);
+        let delay=0;
+        itemsWithImages.forEach((item,idx)=>{
+          item.images.forEach((src,imgIdx)=>{
+            setTimeout(()=>{
+              fetch(src).then(r=>r.blob()).then(blob=>{
+                const ext=src.includes('data:image/png')?'.png':src.includes('data:image/webp')?'.webp':'.jpg';
+                const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+                a.download=`${item.name.replace(/[/\\?%*:|"<>]/g,'_')}_${imgIdx+1}${ext}`;a.click();
+                URL.revokeObjectURL(a.href);
+              }).catch(()=>{});
+            },delay);
+            delay+=300;
+          });
+        });
+        toast(`共触发 ${itemsWithImages.reduce((s,i)=>s+i.images.length,0)} 张图片下载`);
+        break;
+      }
+    }
+  }
+
+  function downloadBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Import
+  async function importData(file){
+    return new Promise((res,rej)=>{
+      const reader=new FileReader();
+      reader.onload=async(e)=>{
+        try{
+          const data=JSON.parse(e.target.result);
+          if(!data.items||!data.records)throw new Error('无效的备份文件');
+          await clearAllData();
+          const tx=db.transaction(['items','records','categories'],'readwrite');
+          data.items.forEach(i=>tx.objectStore('items').put(i));
+          data.records.forEach(r=>tx.objectStore('records').put(r));
+          if(data.categories)data.categories.forEach(c=>tx.objectStore('categories').put(c));
+          tx.oncomplete=()=>{toast(`恢复成功！${data.items.length}个物品，${data.records.length}条记录`);res();};
+          tx.onerror=()=>rej(tx.error);
+        }catch(err){rej(err);}
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  async function clearAllData(){
+    const tx=db.transaction(['items','records','categories','homeSections'],'readwrite');
+    tx.objectStore('items').clear();tx.objectStore('records').clear();
+    tx.objectStore('categories').clear();
+    return new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+  }
+
+  // ---- Utility ----
+  function formatDate(d,fmt='YYYY-MM-DD'){
+    if(!d)return '';
+    if(typeof d==='string')d=new Date(d);
+    const m={YYYY:d.getFullYear(),MM:String(d.getMonth()+1).padStart(2,'0'),DD:String(d.getDate()).padStart(2,'0'),HH:String(d.getHours()).padStart(2,'0'),mm:String(d.getMinutes()).padStart(2,'0'),ss:String(d.getSeconds()).padStart(2,'0')};
+    return fmt.replace(/YYYY|MM|DD|HH|mm|ss/g,k=>m[k]);
+  }
+  function daysUntil(ds){if(!ds)return null;return Math.ceil(new Date(ds)-new Date())/86400000;}
+  function getExpiryStatus(item){
+    if(!item.expiryDate)return null;
+    const days=daysUntil(item.expiryDate),warnDays=item.reminderDays||7;
+    if(days<=0)return{status:'expired',days,label:'已过期 '+Math.abs(days)+'天',cls:'expired'};
+    if(days<=warnDays)return{status:'warning',days,label:'即将到期 '+days+'天',cls:'warning'};
+    return null;
+  }
+  function escapeHtml(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  // Toast
+  let toastTimer=null;
+  function toast(msg,dur=2000){
+    const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur);
+  }
+
+  // Confirm
+  function confirm(msg,okText='确认'){
+    return new Promise(res=>{
+      _confirmResolve=res;
+      document.getElementById('confirmMsg').textContent=msg;
+      document.getElementById('confirmOkBtn').textContent=okText;
+      document.getElementById('confirmOverlay').classList.add('show');
+    });
+  }
+  function _resolveConfirm(v){
+    document.getElementById('confirmOverlay').classList.remove('show');
+    if(_confirmResolve){_confirmResolve(v);_confirmResolve=null;}
+  }
+
+  // Modal
+  function showModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').classList.add('show');}
+  function hideModal(){document.getElementById('modalOverlay').classList.remove('show');}
+
+  // Navigate
+  function navigate(page,params={}){state.currentPage=page;Object.assign(state,params);render();window.scrollTo(0,0);}
+
+  // ================================================================
+  // RENDER: HOME PAGE (v2 - customizable sections, no duplicate quick bar)
+  // ================================================================
+  async function renderHome(){
+    const items=state.items;
+    const expiredItems=[],warningItems=[];
+    items.forEach(item=>{const s=getExpiryStatus(item);if(s){if(s.status==='expired')expiredItems.push({...item,...s});else warningItems.push({...item,s});}});
+    const alerts=[...expiredItems,...warningItems].sort((a,b)=>{
+      if((a.status==='expired')!==(b.status==='expired'))return a.status==='expired'?-1:1;
+      return(a.days||a.s?.days)-(b.days||b.s?.days);
+    });
+
+    // ---- Low stock alerts ----
+    const threshold = state.lowStockThreshold || 10;
+    const lowStockItems = items.filter(i => i.quantity <= threshold).sort((a,b)=>a.quantity-b.quantity);
+    const lowStockCount = lowStockItems.length;
+
+    // ---- Today's activity stats ----
+    const now=new Date(), todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()), todayEnd=new Date(todayStart.getTime()+86400000);
+    const todayRecs = state.records.filter(r=>{const t=new Date(r.timestamp);return t>=todayStart&&t<todayEnd;});
+    const todayIn = todayRecs.filter(r=>r.type==='in').reduce((s,r)=>s+r.quantity,0);
+    const todayOut = todayRecs.filter(r=>r.type==='out').reduce((s,r)=>s+r.quantity,0);
+    const todayConsume = todayRecs.filter(r=>r.type==='consume').reduce((s,r)=>s+r.quantity,0);
+    // Count new items created today
+    const todayNewItems = items.filter(i=>{const d=i.createdAt?new Date(i.createdAt):null;return d&&d>=todayStart&&d<todayEnd;}).length;
+
+    // Load custom sections config
+    const sectionConfig = await getHomeSections();
+    const enabledSections = sectionConfig[0]?.sections || ['modules','expiryAlert'];
+
+    return `
+    <div class="page active" id="page-home">
+      <div class="app-header" style="position:relative">
+        ${lowStockCount > 0 ? `<div class="stock-alert-badge">${lowStockCount}</div>` : ''}
+        <div class="header-top">
+          <div class="header-title">🏠 LESLEY公司仓储</div>
+          <div class="header-actions">
+            <div class="header-btn" onclick="App.showRegionManager()">✏️</div>
+            <div class="header-btn" onclick="App.navigate('settings')">⚙️</div>
+          </div>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="text" placeholder="搜索物品名称、位置..." value="${escapeHtml(state.searchQuery)}"
+            oninput="App.state.searchQuery=this.value"
+            onkeydown="if(event.key==='Enter'){App.addSearchHistory(this.value);App.navigate('search')}">
+        </div>
+      </div>
+
+      ${enabledSections.includes('todayActivity') ? `
+      <!-- 今日动态 -->
+      <div class="today-activity">
+        <div class="today-activity-title">📊 今日动态</div>
+        <div class="today-stats-row">
+          入库 <span class="today-stat-num in">${todayIn}</span> 件
+          <span class="today-stat-sep">|</span>
+          出库 <span class="today-stat-num out">${todayOut}</span> 件
+          <span class="today-stat-sep">|</span>
+          消耗 <span class="today-stat-num out" style="color:#B8860B">${todayConsume}</span> 件
+          <span class="today-stat-sep">|</span>
+          新增 <span class="today-stat-num new">${todayNewItems}</span> 个商品
+          ${lowStockCount > 0 ? `<span class="today-stat-sep">|</span> 预警 <span class="today-stat-num alert">${lowStockCount}</span> 项` : ''}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('stockAlert') && lowStockCount > 0 ? `
+      <!-- 库存预警横幅 -->
+      <div class="alert-banner show" style="margin:12px 16px 0">
+        <div class="alert-header warning"
+          onclick="this.parentElement.querySelector('.alert-list').style.display=this.parentElement.querySelector('.alert-list').style.display==='block'?'none':'block'">
+          <div class="alert-title warning">
+            ⚠️ 库存预警（${lowStockCount}项低于${threshold}）<span class="alert-count">${lowStockCount}</span>
+          </div><span style="font-size:12px">▼</span>
+        </div>
+        <div class="alert-list" style="display:${lowStockCount<=5?'block':'none'}">
+          ${lowStockItems.slice(0,10).map(item=>{
+            const mod=MODULES.find(m=>m.id===item.moduleId);
+            return `<div class="alert-item" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+              <div class="alert-dot yellow"></div>
+              <div class="alert-info">
+                <div class="alert-name">${escapeHtml(item.name)}</div>
+                <div class="alert-meta">${mod?.name||''} · 库存仅剩 ${item.quantity} 件</div>
+              </div>
+              <div class="alert-days yellow" style="color:#E07050;font-weight:700">${item.quantity}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('expiryAlert') && alerts.length > 0 ? `
+      <div class="alert-banner show">
+        <div class="alert-header ${expiredItems.length>0?'expired':'warning'}"
+          onclick="this.parentElement.querySelector('.alert-list').style.display=this.parentElement.querySelector('.alert-list').style.display==='block'?'none':'block'">
+          <div class="alert-title ${expiredItems.length>0?'expired':'warning'}">
+            ${expiredItems.length>0?'🚨 到期提醒':'⚠️ 即将到期'}<span class="alert-count">${alerts.length}</span>
+          </div><span style="font-size:12px">▼</span>
+        </div>
+        <div class="alert-list" style="display:${alerts.length<=5?'block':'none'}">
+          ${alerts.slice(0,10).map(a=>`
+            <div class="alert-item" onclick="App.navigate('detail',{currentItem:'${a.id}'})">
+              <div class="alert-dot ${a.status==='expired'?'red':'yellow'}"></div>
+              <div class="alert-info">
+                <div class="alert-name">${escapeHtml(a.name)}</div>
+                <div class="alert-meta">${MODULES.find(m=>m.id===a.moduleId)?.name||''} · ${formatDate(a.expiryDate)}</div>
+              </div>
+              <div class="alert-days ${a.status==='expired'?'red':'yellow'}">${a.status==='expired'?a.label:a.s?.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('modules') ? `
+      <div class="module-grid">
+        ${MODULES.map(m=>{
+          const count=items.filter(i=>i.moduleId===m.id).length;
+          return `<div class="module-card" onclick="App.navigate('module',{currentModule:'${m.id}'})">
+            <div class="module-name">${m.name}</div>
+            <div class="module-icon ${m.cls}">${m.icon}</div>
+            <div class="module-count">${count} 件</div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+      <!-- Quick action buttons (only unique ones, not duplicating tab bar) -->
+      <div class="home-fab-row">
+        <button class="mini-fab primary" onclick="App.navigate('consume')">⚡ 每日消耗登记</button>
+        <button class="mini-fab success" onclick="App.navigate('quick-add')">➕ 快速添加</button>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+    // 进入首页时，若有低库存则弹窗提醒一次（避免每次渲染重复弹）
+    if(lowStockCount>0 && !state._stockPopupShown){
+      state._stockPopupShown=true;
+      setTimeout(()=>showStockAlertPopup(lowStockItems, threshold), 400);
+    }
+  }
+
+  // ================================================================
+  // HOME SECTION MANAGER (add/delete/rename areas)
+  // ================================================================
+  async function showRegionManager(){
+    const cfg = await getHomeSections();
+    const current = cfg[0]?.sections || ['modules','expiryAlert'];
+    const availableSections = [
+      {id:'todayActivity',name:'📊 今日动态'},
+      {id:'modules',name:'📦 区域宫格（首页模块）'},
+      {id:'stockAlert',name:'⚠️ 库存预警横幅'},
+      {id:'expiryAlert',name:'🚨 到期提醒横幅'},
+      {id:'quickConsume',name:'⚡ 每日消耗快捷入口'}
+    ];
+    const itemCounts = {};
+    for(const it of state.items){ itemCounts[it.moduleId]=(itemCounts[it.moduleId]||0)+1; }
+
+    showModal(`
+      <div class="modal-title">区域管理</div>
+      <div style="font-size:12px;color:var(--gray-400);margin-bottom:10px">修改区域名称、增删区域板块</div>
+
+      <div style="font-weight:600;font-size:13px;margin:6px 0">区域板块（${MODULES.length}）</div>
+      <div class="region-manage-list">
+        ${MODULES.map(m=>`
+          <div class="region-manage-item">
+            <div class="region-manage-icon ${m.cls}">${m.icon}</div>
+            <div class="region-manage-body">
+              <div class="region-manage-name">${escapeHtml(m.name)} <span style="color:var(--gray-400);font-size:11px">(${itemCounts[m.id]||0}件)</span></div>
+            </div>
+            <div class="region-manage-actions">
+              <button class="region-btn" onclick="App.renameRegion('${m.id}')">改名</button>
+              <button class="region-btn delete" onclick="App.removeRegion('${m.id}')">删除</button>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div style="display:flex;gap:8px;margin:12px 0">
+        <input class="modal-input" id="newRegionName" placeholder="新区域名称" style="flex:1">
+        <button class="region-btn add" onclick="App.addRegion()">+ 添加区域</button>
+      </div>
+
+      <div style="height:1px;background:var(--gray-100);margin:12px 0"></div>
+      <div style="font-weight:600;font-size:13px;margin:6px 0">首页板块显示</div>
+      ${availableSections.map(s=>`
+        <div class="section-manage-item">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" value="${s.id}" ${current.includes(s.id)?'checked':''}
+              onchange="App.toggleHomeSection('${s.id}',this.checked)"
+              style="width:18px;height:18px;accent-color:var(--red)">
+            <span class="section-manage-name">${s.name}</span>
+          </label>
+        </div>
+      `).join('')}
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">完成</button>
+      </div>
+    `);
+    setTimeout(()=>{const el=document.getElementById('newRegionName'); if(el) el.focus();},100);
+  }
+
+  async function renameRegion(id){
+    const m=MODULES.find(x=>x.id===id); if(!m)return;
+    const newName=prompt('修改区域名称：',m.name);
+    if(!newName||!newName.trim())return;
+    await renameModule(id,newName.trim());
+    toast('区域已改名'); showRegionManager();
+  }
+  async function removeRegion(id){
+    const m=MODULES.find(x=>x.id===id); if(!m)return;
+    const cnt=state.items.filter(i=>i.moduleId===id).length;
+    const ok=await confirm(`确定删除区域「${m.name}」？\n该区域下 ${cnt} 件物品及相关分类、记录也会被删除。`,'删除');
+    if(!ok)return;
+    await removeModule(id);
+    toast('区域已删除'); showRegionManager();
+  }
+  async function addRegion(){
+    const input=document.getElementById('newRegionName');
+    const name=(input?.value||'').trim();
+    if(!name){toast('请输入区域名称'); return;}
+    await addModule(name);
+    toast('区域已添加'); showRegionManager();
+  }
+
+  async function toggleHomeSection(sectionId,enabled){
+    const cfg = await getHomeSections();
+    let sections = [...(cfg[0]?.sections||[])];
+    if(enabled && !sections.includes(sectionId)) sections.push(sectionId);
+    else if(!enabled) sections = sections.filter(s=>s!==sectionId);
+    await saveHomeSections({sections});
+    showRegionManager();
+  }
+
+  // ================================================================
+  // RENDER: MODULE PAGE
+  // ================================================================
+  async function renderModule(){
+    const mod=MODULES.find(m=>m.id===state.currentModule);
+    if(!mod)return'<div class="page active"><div class="empty-state">模块不存在</div></div>';
+    const cats=await getCategories(state.currentModule);
+    const threshold=state.lowStockThreshold||10;
+    let items=state.items.filter(i=>i.moduleId===state.currentModule);
+    if(state.currentCategory) items=items.filter(i=>i.categoryId===state.currentCategory);
+
+    return `
+    <div class="page active" id="page-module">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">${mod.icon} ${mod.name}</div>
+          <div class="header-btn" onclick="App.showCatManager('${state.currentModule}')">🏷️</div>
+        </div>
+      </div>
+      <div class="category-bar">
+        <div class="cat-tab ${!state.currentCategory?'active':''}" onclick="App.state.currentCategory=null;App.render()">全部</div>
+        ${cats.map(c=>`<div class="cat-tab ${state.currentCategory===c.id?'active':''}" onclick="App.state.currentCategory='${c.id}';App.render()">${escapeHtml(c.name)}</div>`).join('')}
+        <div class="cat-add" onclick="App.showAddCategory('${state.currentModule}')">+</div>
+      </div>
+      <div class="stock-filter-tabs">
+        <div class="stock-tab ${!state.stockFilterStatus?'active':''}" onclick="App.state.stockFilterStatus='';App.render()">全部</div>
+        <div class="stock-tab ${state.stockFilterStatus==='normal'?'active':''}" onclick="App.state.stockFilterStatus='normal';App.render()">正常</div>
+        <div class="stock-tab ${state.stockFilterStatus==='warn'?'warn-active':''}" onclick="App.state.stockFilterStatus='warn';App.render()">⚠️ 预警</div>
+      </div>
+      <div class="item-list">
+        ${items.length===0?`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">暂无物品</div><div class="empty-sub">点击右下角按钮添加物品</div></div>`
+        :items.map(item=>{
+          const exp=getExpiryStatus(item);
+          const cat=cats.find(c=>c.id===item.categoryId);
+          const catName=cat?cat.name:'未分类';
+          const catCls=cat?cat.cls:'';
+          const low=(item.quantity<=state.lowStockThreshold);
+          // 库存筛选
+          if(state.stockFilterStatus==='normal'&&low) return '';
+          if(state.stockFilterStatus==='warn'&&!low) return '';
+          return `<div class="prod-card" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+            <div class="prod-card-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}" alt="">`:`<div class="placeholder-icon">📦</div>`}</div>
+            <div class="prod-card-body">
+              <div class="prod-card-name">${escapeHtml(item.name)}</div>
+              <div class="prod-card-sku">${item.barcode?('条码 '+escapeHtml(item.barcode)):(item.id?('ID '+item.id.slice(0,8)):'')}</div>
+              <div class="prod-card-cat-tag ${catCls}">${escapeHtml(catName)}</div>
+              <div class="prod-card-location">📍 ${item.location?escapeHtml(item.location):'未设置位置'}</div>
+            </div>
+            <div class="prod-card-right">
+              <div class="prod-card-qty ${low?'low':'normal'}">${item.quantity}<span class="prod-card-qty-unit"> 件</span></div>
+              <div class="prod-card-status ${low?'warn':'ok'}"><div class="prod-card-status-dot ${low?'warn':'ok'}"></div>${low?'预警':'充足'}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="fab-btn" onclick="App.navigate('add-item',{editingModule:'${state.currentModule}'})">+</button>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">📦</div><div class="tab-label">模块</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: ADD ITEM FORM (full version)
+  // ================================================================
+  function renderAddItemForm(){
+    const item=state.editingItem||{}, isEdit=!!item.id;
+    return `
+    <div class="page active" id="page-form">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('module',{currentModule:'${state.editingModule||item?.moduleId||'finished'}'})" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">${isEdit?'编辑物品':'添加物品'}</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <form class="form-page" onsubmit="return App.saveItem(event)" id="itemForm">
+        <input type="hidden" id="formItemId" value="${item.id||''}">
+        <div class="form-group name-suggest"><label class="form-label">物品名称 <span class="required">*</span></label>
+          <input class="form-input" type="text" id="itemName" value="${escapeHtml(item.name||'')}" placeholder="请输入物品名称（必填）" required
+            oninput="App.showNameSuggestions(this.value)" autocomplete="off">
+          <div id="nameSuggestBox"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">数量</label>
+          <input class="form-input" type="number" id="itemQty" value="${item.quantity||''}" placeholder="默认1" min="0"></div>
+          <div class="form-group"><label class="form-label">存放位置</label>
+          <input class="form-input" type="text" id="itemLocation" value="${escapeHtml(item.location||'')}" placeholder="如：A货架第2层"></div>
+        </div>
+        <div class="form-group"><label class="form-label">用途备注</label>
+          <textarea class="form-textarea" id="itemUsage" placeholder="物品用途说明...">${escapeHtml(item.usageNote||'')}</textarea></div>
+        <div class="form-group"><label class="form-label">供应商备注</label>
+          <textarea class="form-textarea" id="itemSupplier" placeholder="供应商信息、联系方式等...">${escapeHtml(item.supplierNote||'')}</textarea></div>
+        <div class="form-group"><label class="form-label">所属分类</label>
+          <select class="form-select" id="itemCategory"><option value="">不分类</option></select></div>
+        <div class="form-group"><label class="form-label">商品条码（选填，扫码自动填入）</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="itemBarcode" value="${escapeHtml(item.barcode||'')}" placeholder="如 SN123456（用于扫码录入/消耗）" style="flex:1">
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('add-item')" style="flex-shrink:0">📷 扫码</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">到货日期</label>
+            <input class="form-input" type="date" id="itemArrival" value="${item.arrivalDate||''}"></div>
+          <div class="form-group"><label class="form-label">到期时间</label>
+            <input class="form-input" type="date" id="itemExpiry" value="${item.expiryDate||''}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">提前提醒天数</label>
+          <input class="form-input" type="number" id="itemReminder" value="${item.reminderDays||7}" min="1" max="365">
+          <div class="form-hint">默认提前7天提醒</div></div>
+        <div class="form-group"><label class="form-label">图片/视频</label>
+          <div class="media-upload" onclick="document.getElementById('mediaInput').click()">
+            <div class="media-upload-icon">📷</div><div class="media-upload-text">点击上传图片或视频（可多选）</div>
+          </div>
+          <input type="file" id="mediaInput" accept="image/*,video*" multiple style="display:none" onchange="App.handleMediaUpload(event)">
+          <div class="media-preview" id="mediaPreview"></div>
+          ${(item.images||[]).map((src,i)=>`<div class="media-thumb" style="display:inline-block"><img src="${src}" alt=""><div class="media-remove" onclick="App.removeItemImage(${i})">✕</div></div>`).join('')}
+        </div>
+        <button type="submit" class="submit-btn">${isEdit?'保存修改':'添加物品'}</button>
+        <button type="button" class="cancel-btn" onclick="App.cancelAddItem()">取消</button>
+      </form>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: QUICK ADD FORM (minimal - only name required)
+  // ================================================================
+  function renderQuickAddForm(){
+    return `
+    <div class="page active" id="page-quick-add">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">➕ 快速添加</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <form class="form-page" onsubmit="return App.saveQuickItem(event)" id="quickAddForm">
+        <div class="form-group"><label class="form-label">物品名称 <span class="required">*</span></label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="quickName" placeholder="输入名称 / 点扫码自动填入" required autofocus style="flex:1">
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('quick-add')" style="flex-shrink:0">📷 扫码</button>
+          </div>
+          <input type="hidden" id="quickBarcode" value="">
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">数量</label>
+            <input class="form-input" type="number" id="quickQty" value="1" min="0" placeholder="默认1"></div>
+          <div class="form-group"><label class="form-label">选择区域</label>
+            <select class="form-select" id="quickModule">${MODULES.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+        </div>
+        <div class="form-group"><label class="form-label">选择分类</label>
+          <select class="form-select" id="quickCat"><option value="">暂无分类（将自动创建）</option></select></div>
+        <div class="form-group"><label class="form-label">存放位置（选填）</label>
+          <input class="form-input" type="text" id="quickLocation" placeholder="可选填"></div>
+        <div class="form-group"><label class="form-label">图片/视频（选填）</label>
+          <div class="media-upload" onclick="document.getElementById('quickMediaInput').click()">
+            <div class="media-upload-icon">📷</div><div class="media-upload-text">点击上传（可不传）</div>
+          </div>
+          <input type="file" id="quickMediaInput" accept="image/*,video*" multiple style="display:none" onchange="App.handleQuickMediaUpload(event)">
+          <div class="media-preview" id="quickMediaPreview"></div>
+        </div>
+        <button type="submit" class="submit-btn">💾 快速保存</button>
+        <button type="button" class="cancel-btn" onclick="App.navigate('home')">取消</button>
+      </form>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: DAILY CONSUME (消耗登记)
+  // ================================================================
+  async function renderConsumePage(){
+    // Get matched items based on search
+    let matchedItems=[];
+    const q=(state.consumeSearchQuery||'').toLowerCase().trim();
+    if(q){
+      matchedItems=state.items.filter(i=>(i.name||'').toLowerCase().includes(q));
+      // Filter by module if selected
+      if(state.consumeModuleId) matchedItems=matchedItems.filter(i=>i.moduleId===state.consumeModuleId);
+      // Filter by category if selected
+      if(state.consumeCategoryId) matchedItems=matchedItems.filter(i=>i.categoryId===state.consumeCategoryId);
+    }
+
+    // Load categories for selected module
+    let cats=[];
+    if(state.consumeModuleId) cats=await getCategories(state.consumeModuleId);
+
+    return `
+    <div class="page active" id="page-consume">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">⚡ 每日消耗登记</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+
+      <div class="consume-date-bar">
+        <span class="consume-date-label">📅 查看日期</span>
+        <input type="date" class="consume-date-input" value="${state.consumeViewDate||formatDate(new Date(),'YYYY-MM-DD')}"
+          onchange="App.state.consumeViewDate=this.value;App.render()">
+        <button class="consume-date-today" onclick="App.state.consumeViewDate='${formatDate(new Date(),'YYYY-MM-DD')}';App.render()">今天</button>
+      </div>
+
+      <div class="consume-form">
+        <div class="form-group"><label class="form-label">搜索或扫码选择产品</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="consumeSearch" value="${escapeHtml(state.consumeSearchQuery)}"
+              placeholder="输入关键词 / 扫码匹配产品..." oninput="App.state.consumeSearchQuery=this.value;App.render()"
+              style="flex:1" autofocus>
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('consume')" style="flex-shrink:0;height:40px">📷 扫码</button>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">筛选区域</label>
+            <select class="form-select" style="padding:8px" onchange="App.state.consumeModuleId=this.value;this.value?App.state.consumeCategoryId='':'';App.render()">
+              <option value="">全部区域</option>
+              ${MODULES.map(m=>`<option value="${m.id}" ${state.consumeModuleId===m.id?'selected':''}>${m.icon} ${m.name}</option>`).join('')}
+            </select></div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">筛选分类</label>
+            <select class="form-select" style="padding:8px" onchange="App.state.consumeCategoryId=this.value;App.render()" ${!state.consumeModuleId?'disabled':''}>
+              <option value="">全部分类</option>
+              ${cats.map(c=>`<option value="${c.id}" ${state.consumeCategoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+            </select></div>
+        </div>
+
+        ${q && matchedItems.length > 0 ? `
+          <div class="form-label" style="font-size:12px">匹配到 ${matchedItems.length} 个产品（点击选择）</div>
+          <div class="consume-search-result">
+            ${matchedItems.slice(0,10).map(item=>{
+              const mod=MODULES.find(m=>m.id===item.moduleId);
+              return `<div class="consume-match-item" onclick="App.selectConsumeItem('${item.id}')">
+                <div class="consume-match-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}">`:`<div class="placeholder-icon" style="font-size:20px">📦</div>`}</div>
+                <div class="consume-match-info">
+                  <div class="consume-match-name">${escapeHtml(item.name)}</div>
+                  <div class="consume-match-meta">${mod?.name||''} · 库存 <strong style="color:var(--red)">${item.quantity}</strong></div>
+                </div>
+                <div class="consume-match-qty">${item.quantity}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        ` : q ? `
+          <div class="empty-state" style="padding:30px"><div class="empty-text">未找到匹配产品</div><div class="empty-sub">试试其他关键词</div></div>
+        ` : !q ? `
+          <div class="empty-state" style="padding:30px"><div class="empty-icon">⚡</div><div class="empty-text">输入关键词搜索要消耗的产品</div><div class="empty-sub">或先选择上方区域和分类缩小范围</div></div>
+        ` : ''}
+
+        ${state.consumeSelectedItemId ? `
+          <div style="margin-top:12px;padding:12px;background:var(--green-light);border-radius:var(--radius);border:1.5px solid var(--green)">
+            <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px">✅ 已选择：${escapeHtml(state.items.find(i=>i.id===state.consumeSelectedItemId)?.name||'')}</div>
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">消耗数量</label>
+                <input class="form-input" type="number" id="consumeQty" value="1" min="1"></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">用途备注</label>
+                <input class="form-input" type="text" id="consumeNote" placeholder="用于什么..."></div>
+            </div>
+            <button class="submit-btn" style="margin-top:10px;background:linear-gradient(135deg,var(--green),#8BC77A)" onclick="App.doConsume()">✅ 确认登记</button>
+            <button class="cancel-btn" style="margin-top:6px" onclick="App.state.consumeSelectedItemId='';App.render()">取消选择</button>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Consumption record table (by selected date) -->
+      <div style="padding:0 16px 16px">
+        ${await renderConsumeRecords(state.consumeViewDate)}
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  async function renderConsumeRecords(viewDate){
+    const dateStr = viewDate || formatDate(new Date(),'YYYY-MM-DD');
+    const start = new Date(dateStr+'T00:00:00');
+    const end = new Date(start.getTime()+86400000);
+    const recs = state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end&&r.type==='consume';})
+                              .sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+
+    const isToday = dateStr === formatDate(new Date(),'YYYY-MM-DD');
+    const totalQty = recs.reduce((s,r)=>s+r.quantity,0);
+
+    // Resolve category names from the categories store
+    const allCats = await dbOp('categories','readonly',s=>s.getAll()).catch(()=>[]);
+    const catNameOf = (item) => {
+      if(!item || !item.categoryId) return '未分类';
+      const c = allCats.find(x=>x.id===item.categoryId);
+      return c ? c.name : '未分类';
+    };
+
+    // Group by category for summary header
+    const byCat={};
+    for(const r of recs){
+      const item=state.items.find(i=>i.id===r.itemId);
+      const catKey=item?.categoryId||'_nocat';
+      if(!byCat[catKey])byCat[catKey]={name:catNameOf(item),total:0,count:0};
+      byCat[catKey].total+=r.quantity; byCat[catKey].count++;
+    }
+
+    if(recs.length===0){
+      return `<div class="chart-container" style="margin-top:12px">
+        <div class="chart-title">📋 ${isToday?'今日':'当天'}消耗记录明细</div>
+        <div style="text-align:center;padding:18px;color:var(--gray-400);font-size:13px">${dateStr} 暂无消耗记录</div>
+      </div>`;
+    }
+
+    return `
+      <div class="chart-container" style="margin-top:12px">
+        <div class="chart-title">📋 ${isToday?'今日':'当天'}消耗记录明细（${dateStr} · 共 ${totalQty} 件）</div>
+        <!-- Category summary -->
+        <div class="consume-cat-summary">
+          ${Object.entries(byCat).map(([k,d])=>`
+            <div class="consume-cat-chip"><span>${escapeHtml(d.name||'未分类')}</span><strong>${d.total}件</strong></div>
+          `).join('')}
+        </div>
+        <!-- Detail table -->
+        <div class="consume-table">
+          <div class="consume-row consume-head"><div>物品</div><div>区域/分类</div><div>数量</div><div>时间</div></div>
+          ${recs.map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            const mod=MODULES.find(m=>m.id===r.moduleId);
+            return `<div class="consume-row" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''}>
+              <div class="consume-name">${escapeHtml(item?.name||'未知')}${r.note?`<span class="consume-note">📝${escapeHtml(r.note)}</span>`:''}</div>
+              <div class="consume-meta">${mod?.icon||''}${escapeHtml(mod?.name||'')}</div>
+              <div class="consume-qty">-${r.quantity}</div>
+              <div class="consume-time">${formatDate(r.timestamp,'HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function selectConsumeItem(itemId){state.consumeSelectedItemId=itemId;render();}
+
+  async function doConsume(){
+    const itemId=state.consumeSelectedItemId;
+    if(!itemId){toast('请先选择一个产品');return;}
+    const qty=parseInt(document.getElementById('consumeQty')?.value)||0;
+    if(qty<=0){toast('请输入有效数量');return;}
+    const note=document.getElementById('consumeNote')?.value.trim()||'';
+
+    const item=state.items.find(i=>i.id===itemId);
+    if(!item)return;
+
+    if(qty>item.quantity){
+      const ok=await confirm(`消耗数量（${qty}）超过当前库存（${item.quantity}），确定继续？`,'强制扣取');
+      if(!ok)return;
+    }
+
+    const newQty=Math.max(0,item.quantity-qty);
+    await updateItem({...item,quantity:newQty});
+    await addRecord({itemId, moduleId:item.moduleId, type:'consume', quantity:qty, note:note||undefined, remainingQty:newQty});
+
+    toast(`消耗成功！扣除 ${qty} 件`);
+    state.consumeSelectedItemId='';
+    state.consumeSearchQuery='';
+    render();
+  }
+
+  // ================================================================
+  // RENDER: DETAIL
+  // ================================================================
+  async function renderDetail(){
+    const item=state.items.find(i=>i.id===state.currentItem);
+    if(!item)return'<div class="page active"><div class="empty-state">物品不存在</div></div>';
+    const exp=getExpiryStatus(item);
+    const records=await getRecordsByItemId(item.id);
+    const cats=await getCategories(item.moduleId);
+    const catName=cats.find(c=>c.id===item.categoryId)?.name||'未分类';
+
+    return `
+    <div class="page active" id="page-detail">
+      <div class="detail-header">
+        <div class="detail-images">
+          ${(item.images&&item.images.length>0)?
+            item.images.map((src,i)=>`<img src="${src}" style="${i>0?'display:none':''}" id="detailImg${i}">`).join('')
+            +`<div class="image-dots">${item.images.map((_,i)=>`<div class="image-dot${i===0?' active':''}" id="dot${i}"></div>`).join('')}</div>`
+            :`<div class="image-placeholder"><img src="logo.jpg" style="width:80px;height:80px;opacity:.4"></div>`}
+          <div class="detail-back" onclick="App.navigate('module',{currentModule:'${item.moduleId}'})">←</div>
+        </div>
+      </div>
+      <div class="detail-info">
+        <div class="detail-name">${escapeHtml(item.name)}</div>
+        <div class="detail-qty-row"><div class="detail-qty">${item.quantity}</div><div class="detail-qty-label">当前库存</div></div>
+        <div class="detail-fields">
+          <div class="detail-field"><div class="field-label">📍 存放位置</div><div class="field-value">${item.location?escapeHtml(item.location):'—'}</div></div>
+          <div class="detail-field"><div class="field-label">🏷️ 所属分类</div><div class="field-value">${escapeHtml(catName)}</div></div>
+          <div class="detail-field"><div class="field-label">📅 到货日期</div><div class="field-value">${item.arrivalDate?formatDate(item.arrivalDate):'—'}</div></div>
+          <div class="detail-field"><div class="field-label">⏰ 到期时间</div>
+            <div class="field-value ${exp?`expiry-${exp.cls}`:''}">${item.expiryDate?formatDate(item.expiryDate)+' ('+(exp?exp.label:'未设置提醒')+')':'—'}</div></div>
+        </div>
+        ${item.usageNote?`<div class="detail-field" style="grid-column:1/-1"><div class="field-label">📝 用途备注</div><div class="field-value">${escapeHtml(item.usageNote)}</div></div>`:''}
+        ${item.supplierNote?`<div class="detail-field" style="grid-column:1/-1"><div class="field-label">🏭 供应商备注</div><div class="field-value">${escapeHtml(item.supplierNote)}</div></div>`:''}
+      </div>
+      <div class="detail-actions">
+        <button class="action-btn success" onclick="App.showStockAction('${item.id}','in')">+ 入库</button>
+        <button class="action-btn danger" onclick="App.showStockAction('${item.id}','out')">- 出库</button>
+        <button class="action-btn warning" onclick="App.selectConsumeItem('${item.id}');App.navigate('consume')">⚡ 消耗</button>
+        <button class="action-btn default" onclick="App.navigate('add-item',{editingItem:App.state.items.find(i=>i.id=='${item.id}')})">✏️ 编辑</button>
+        <button class="action-btn danger" onclick="App.handleDeleteItem('${item.id}')">🗑️ 删除</button>
+      </div>
+      <div class="record-section">
+        <div class="record-header" onclick="document.getElementById('recordList').classList.toggle('show');this.querySelector('.record-toggle').classList.toggle('open')">
+          <div class="record-title">📋 操作记录 (${records.length})</div>
+          <div class="record-toggle">▼</div>
+        </div>
+        <div class="record-list" id="recordList">
+          ${records.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-400);font-size:13px">暂无记录</div>'
+          :records.map(r=>`<div class="record-item">
+            <div class="record-type ${r.type}">${r.type==='in'?'+入库':r.type==='out'?'-出库':'-消耗'}</div>
+            <div class="record-detail">
+              <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+              ${r.note?`<div class="record-note">${escapeHtml(r.note)}</div>`:''}
+            </div>
+            <div class="record-after">剩余 ${r.remainingQty}</div>
+            <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: SEARCH (with history + area/category filters)
+  // ================================================================
+  function renderSearch(){
+    const q=(state.searchQuery||'').toLowerCase().trim();
+    let results=[];
+    if(q){
+      results=state.items.filter(i=>{
+        const matchQ=(i.name||'').toLowerCase().includes(q)||(i.location||'').toLowerCase().includes(q)||(i.usageNote||'').toLowerCase().includes(q)||(i.supplierNote||'').toLowerCase().includes(q);
+        if(!matchQ)return false;
+        if(state.searchFilterMod&&i.moduleId!==state.searchFilterMod)return false;
+        if(state.searchFilterCat&&i.categoryId!==state.searchFilterCat)return false;
+        return true;
+      });
+    }
+    const history=loadSearchHistory();
+
+    return `
+    <div class="page active" id="page-search">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">🔍 搜索</div>
+          <div style="width:36px"></div>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="text" placeholder="输入关键词搜索..." value="${escapeHtml(state.searchQuery)}"
+            oninput="App.state.searchQuery=this.value;App.render()" autofocus
+            onkeydown="if(event.key==='Enter'){App.addSearchHistory(this.value);App.render()}">
+        </div>
+      </div>
+
+      <!-- Area/Category filters -->
+      <div class="filter-bar" style="padding:12px 16px 0">
+        <select class="filter-select" onchange="App.state.searchFilterMod=this.value;App.render()">
+          <option value="">全部区域</option>
+          ${MODULES.map(m=>`<option value="${m.id}" ${state.searchFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+        </select>
+        <select class="filter-select" onchange="App.state.searchFilterCat=this.value;App.render()">
+          <option value="">全部分类</option>
+        </select>
+      </div>
+
+      <!-- Search History -->
+      ${!q && history.length > 0 ? `
+        <div class="search-history">
+          <div class="search-history-title">
+            <span>🕐 搜索历史</span>
+            <span class="search-clear-btn" onclick="localStorage.removeItem('lw_search_history');App.state.searchHistory=[];App.render()">清空</span>
+          </div>
+          <div class="search-history-tags">
+            ${history.map(h=>`<div class="search-history-tag" onclick="App.state.searchQuery='${escapeHtml(h)}';App.addSearchHistory('${escapeHtml(h)}');App.render()">${escapeHtml(h)}</div>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="item-list">
+        ${!q&&!history.length?`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">输入关键词或点击历史搜索</div><div class="empty-sub">支持按区域和分类筛选</div></div>`
+        :!q?``
+        :results.length===0?`<div class="empty-state"><div class="empty-icon">😕</div><div class="empty-text">未找到匹配结果</div><div class="empty-sub">尝试切换区域/分类筛选</div></div>`
+        :`<div style="font-size:13px;color:var(--gray-400);padding:8px 0;">找到 ${results.length} 个结果</div>`
+          +results.map(item=>{
+            const exp=getExpiryStatus(item);
+            return `<div class="item-card" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+              <div class="item-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}">`:`<div class="placeholder-icon">📦</div>`}</div>
+              <div class="item-body">
+                <div class="item-name-row"><div class="item-name">${escapeHtml(item.name)}</div><div class="item-qty">${item.quantity}</div></div>
+                <div class="item-location">📍 ${MODULES.find(m=>m.id===item.moduleId)?.name||''}${item.location?' · '+escapeHtml(item.location):''}</div>
+                <div class="item-tags">${exp?`<span class="tag-${exp.cls}">${exp.label}</span>`:''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: STATS (with module/category/time detail filters)
+  // ================================================================
+  function renderStats(){
+    const range=state.statsTimeRange, now=new Date();
+    let start,end,label;
+    switch(range){
+      case'today':start=new Date(now.getFullYear(),now.getMonth(),now.getDate());end=new Date(start.getTime()+86400000);label='今天';break;
+      case'yesterday':start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);end=new Date(start.getTime()+86400000);label='昨天';break;
+      case'week':{const d=now.getDay()||7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);label='本周';break;}
+      case'month':start=new Date(now.getFullYear(),now.getMonth(),1);end=new Date(now.getFullYear(),now.getMonth()+1,1);label='本月';break;
+      case'custom':{
+        const ds=state.statsCustomDate||formatDate(now,'YYYY-MM-DD');
+        start=new Date(ds+'T00:00:00');end=new Date(start.getTime()+86400000);
+        label=ds+'（单日）';break;
+      }
+      default:start=new Date(2020,0,1);end=new Date(2030,0,1);label='全部';
+    }
+
+    const filteredRecs=state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end;});
+
+    // Apply detail filters
+    let detailRecs=[...filteredRecs];
+    if(state.recordFilterMod) detailRecs=detailRecs.filter(r=>r.moduleId===state.recordFilterMod);
+    if(state.recordFilterType) detailRecs=detailRecs.filter(r=>r.type===state.recordFilterType);
+
+    const totalIn=filteredRecs.filter(r=>r.type==='in').reduce((s,r)=>s+r.quantity,0);
+    const totalOut=filteredRecs.filter(r=>r.type==='out').reduce((s,r)=>s+r.quantity,0);
+    const totalConsume=filteredRecs.filter(r=>r.type==='consume').reduce((s,r)=>s+r.quantity,0);
+    const net=totalIn-totalOut-totalConsume;
+
+    return `
+    <div class="page active" id="page-stats">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">📊 统计汇总</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="stats-page">
+        <div class="time-filters">
+          ${['today','yesterday','week','month'].map(r=>`
+            <div class="time-filter-btn ${state.statsTimeRange===r?'active':''}" onclick="App.state.statsTimeRange='${r}';App.render()">
+              ${{'today':'今天','yesterday':'昨天','week':'本周','month':'本月'}[r]}
+            </div>`).join('')}
+          <div class="time-filter-btn custom ${state.statsTimeRange==='custom'?'active':''}">
+            <input type="date" class="time-filter-date" value="${state.statsCustomDate||''}" placeholder="自定义"
+              onchange="App.state.statsTimeRange='custom';App.state.statsCustomDate=this.value;App.render()" onclick="event.stopPropagation()">
+          </div>
+        </div>
+
+        <div class="stat-cards">
+          <div class="stat-card"><div class="stat-num in">${totalIn}</div><div class="stat-label">总入库</div></div>
+          <div class="stat-card"><div class="stat-num out">${totalOut}</div><div class="stat-label">总出库</div></div>
+          <div class="stat-card"><div class="stat-num consume">${totalConsume}</div><div class="stat-label">总消耗</div></div>
+          <div class="stat-card"><div class="stat-num net">${net>=0?'+':''}${net}</div><div class="stat-label">净变化</div></div>
+        </div>
+
+        <div class="chart-container"><div class="chart-title">各模块出入库分布（${label}）</div><canvas id="statsChart" class="chart-canvas"></canvas></div>
+
+        <!-- Detail filters -->
+        <div class="filter-bar">
+          <select class="filter-select" onchange="App.state.recordFilterMod=this.value;App.render()">
+            <option value="">全部区域</option>
+            ${MODULES.map(m=>`<option value="${m.id}" ${state.recordFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+          </select>
+          <select class="filter-select" onchange="App.state.recordFilterType=this.value;App.render()">
+            <option value="">全部类型</option>
+            <option value="in" ${state.recordFilterType==='in'?'selected':''}>入库</option>
+            <option value="out" ${state.recordFilterType==='out'?'selected':''}>出库</option>
+            <option value="consume" ${state.recordFilterType==='consume'?'selected':''}>消耗</option>
+          </select>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-title">明细列表（${label}${state.recordFilterMod?' · '+MODULES.find(m=>m.id===state.recordFilterMod)?.name:''}${state.recordFilterType?' · '+{in:'入库',out:'出库',consume:'消耗'}[state.recordFilterType]:''}）</div>
+          ${detailRecs.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-400)">暂无数据</div>'
+          :detailRecs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,80).map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            return `<div class="record-item" style="padding:8px 0" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''}>
+              <div class="record-type ${r.type}" style="width:auto;padding:2px 8px;font-size:11px">${r.type==='in'?'+入库':r.type==='out'?'-出库':'-消耗'}</div>
+              <div class="record-detail">
+                <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+                <div class="record-note">${item?escapeHtml(item.name):'未知'} · ${MODULES.find(m=>m.id===r.moduleId)?.name||''}${r.note?' · '+escapeHtml(r.note):''}</div>
+              </div>
+              <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <!-- Backup button at bottom of stats page only -->
+        <div style="text-align:center;padding:16px 0">
+          <button class="mini-fab primary" style="margin:0 auto" onclick="App.showExportPreview()">💾 备份/导出数据</button>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item active"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: RECORDS (global, with filters)
+  // ================================================================
+  function renderRecords(){
+    const sorted=[...state.records].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+    let filtered=sorted;
+    if(state.recordFilterMod) filtered=filtered.filter(r=>r.moduleId===state.recordFilterMod);
+    if(state.recordFilterType) filtered=filtered.filter(r=>r.type===state.recordFilterType);
+
+    return `
+    <div class="page active" id="page-records">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">📋 全部记录</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="records-page">
+        <div class="filter-bar">
+          <select class="filter-select" onchange="App.state.recordFilterMod=this.value;App.render()">
+            <option value="">全部区域</option>
+            ${MODULES.map(m=>`<option value="${m.id}" ${state.recordFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+          </select>
+          <select class="filter-select" onchange="App.state.recordFilterType=this.value;App.render()">
+            <option value="">全部类型</option>
+            <option value="in" ${state.recordFilterType==='in'?'selected':''}>入库</option>
+            <option value="out" ${state.recordFilterType==='out'?'selected':''}>出库</option>
+            <option value="consume" ${state.recordFilterType==='consume'?'selected':''}>消耗</option>
+          </select>
+        </div>
+        <div class="item-list">
+          ${sorted.length===0?`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无记录</div></div>`
+          :filtered.map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            return `<div class="record-item" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''} style="cursor:${item?'pointer':'default'}">
+              <div class="record-type ${r.type}">${r.type==='in'?'+ 入库':r.type==='out'?'- 出库':'- 消耗'}</div>
+              <div class="record-detail">
+                <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+                <div class="record-note">${item?escapeHtml(item.name):'未知'} · ${MODULES.find(m=>m.id===r.moduleId)?.name||''}${r.note?' · '+escapeHtml(r.note):''}</div>
+              </div>
+              <div class="record-after">剩余 ${r.remainingQty}</div>
+              <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">📋</div><div class="tab-label">记录</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: SETTINGS
+  // ================================================================
+  function renderSettings(){
+    return `
+    <div class="page active" id="page-settings">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">⚙️ 设置</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="settings-page">
+        <div class="setting-group">
+          <div class="setting-item" onclick="App.showExportPreview()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--blue)">💾</div>
+              <div><div class="setting-name">备份数据</div><div class="setting-desc">多格式导出（JSON/CSV/图片）+ 预览</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+          <div class="setting-item" onclick="document.getElementById('importFile').click()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--green)">📥</div>
+              <div><div class="setting-name">恢复数据</div><div class="setting-desc">从备份文件导入</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="App.importData(this.files[0]).then(()=>{}).catch(e=>toast('导入失败:'+e.message))">
+        </div>
+        <div class="setting-group">
+          <div class="setting-item" onclick="App.clearAllDataConfirm()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--danger)">🗑️</div>
+              <div><div class="setting-name">清空所有数据</div><div class="setting-desc">删除全部物品、记录和分类（不可恢复）</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-item" style="cursor:default">
+            <div class="setting-left" style="flex:1">
+              <div class="setting-icon" style="background:var(--red)">⚠️</div>
+              <div style="flex:1"><div class="setting-name">库存预警阈值</div><div class="setting-desc">库存 ≤ 此数值时预警提醒</div></div>
+            </div>
+            <div class="threshold-setting" style="padding:0">
+              <input class="threshold-input" type="number" id="thresholdInput" value="${state.lowStockThreshold||10}" min="0" style="width:64px">
+              <span style="font-size:13px;color:var(--gray-500)">件</span>
+              <button class="region-btn add" onclick="App.saveLowStockThreshold(parseInt(document.getElementById('thresholdInput').value))">保存</button>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-item">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--purple)">ℹ️</div>
+              <div><div class="setting-name">关于</div><div class="setting-desc">LESLEY公司仓储 v2.0</div></div></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--gray-400)">📱</div>
+              <div><div class="setting-name">添加到主屏幕</div><div class="setting-desc">保存到桌面，全屏体验</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item active"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // MAIN RENDER
+  // ================================================================
+  async function render(){
+    try{state.items=await getAllItems();}catch(e){console.error(e);}
+    try{state.records=await getAllRecords();}catch(e){console.error(e);}
+    state.searchHistory=loadSearchHistory();
+    const app=document.getElementById('app');
+    switch(state.currentPage){
+      case'home':app.innerHTML=await renderHome();break;
+      case'module':app.innerHTML=await renderModule();break;
+      case'add-item':app.innerHTML=renderAddItemForm();break;
+      case'quick-add':app.innerHTML=renderQuickAddForm();break;
+      case'detail':app.innerHTML=await renderDetail();break;
+      case'search':app.innerHTML=renderSearch();break;
+      case'stats':app.innerHTML=renderStats();drawChart();break;
+      case'records':app.innerHTML=renderRecords();break;
+      case'settings':app.innerHTML=renderSettings();break;
+      case'consume':app.innerHTML=await renderConsumePage();break;
+      default:app.innerHTML=await renderHome();
+    }
+  }
+
+  // ================================================================
+  // CHART DRAWING
+  // ================================================================
+  function drawChart(){
+    setTimeout(()=>{
+      const canvas=document.getElementById('statsChart');if(!canvas)return;
+      const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;
+      canvas.width=canvas.offsetWidth*dpr;canvas.height=canvas.offsetHeight*dpr;ctx.scale(dpr,dpr);
+      const W=canvas.offsetWidth,H=canvas.offsetHeight;ctx.clearRect(0,0,W,H);
+      const range=state.statsTimeRange,now=new Date();let start,end;
+      switch(range){
+        case'today':start=new Date(now.getFullYear(),now.getMonth(),now.getDate());end=new Date(start.getTime()+86400000);break;
+        case'yesterday':start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);end=new Date(start.getTime()+86400000);break;
+        case'week':{const d=now.getDay()||7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);break;}
+        case'lastWeek':{const d=(now.getDay()||7)+7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);break;}
+        case'month':start=new Date(now.getFullYear(),now.getMonth(),1);end=new Date(now.getFullYear(),now.getMonth()+1,1);break;
+        case'lastMonth':start=new Date(now.getFullYear(),now.getMonth()-1,1);end=new Date(now.getFullYear(),now.getMonth(),1);break;
+        case'year':start=new Date(now.getFullYear(),0,1);end=new Date(now.getFullYear()+1,0,1);break;
+        default:start=new Date(2020,0,1);end=new Date(2030,0,1);
+      }
+      const filtered=state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end;});
+      const data={};MODULES.forEach(m=>{data[m.id]={name:m.name,in:0,out:0,consume:0};});
+      filtered.forEach(r=>{if(data[r.moduleId]){if(r.type==='in')data[r.moduleId].in+=r.quantity;else if(r.type==='out')data[r.moduleId].out+=r.quantity;else if(r.type==='consume')data[r.moduleId].consume+=r.quantity;}});
+      const values=Object.values(data),maxVal=Math.max(...values.flatMap(v=>[v.in,v.out,v.consume]),1);
+      const barW=Math.min(24,(W-60)/values.length/3-2),groupW=barW*3+4,startX=(W-groupW*values.length)/2,chartH=H-40,baseY=chartH-10;
+      ctx.strokeStyle='#E5E7EB';ctx.lineWidth=.5;
+      for(let i=0;i<=4;i++){const y=baseY-(chartH-20)*i/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(W-10,y);ctx.stroke();ctx.fillStyle='#9CA3AF';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(Math.round(maxVal*i/4),26,y+3);}
+      const colorsIn=['#6BAF5A','#4A90C8','#F0C848','#9B7BC0','#E07050','#50B8D0','#7B68A0','#608060','#D4453A'];
+      const colorsOut=['#D4453A','#E07050','#F0C848','#7B68A0','#4A90C8','#9B7BC0','#50B8D0','#D4453A','#6BAF5A'];
+      values.forEach((v,i)=>{
+        const cx=startX+i*groupW+groupW/2;
+        const hIn=Math.max(2,(v.in/maxVal)*(chartH-30)),hOut=Math.max(2,(v.out/maxVal)*(chartH-30)),hCon=Math.max(2,(v.consume/maxVal)*(chartH-30));
+        ctx.fillStyle=colorsIn[i%colorsIn.length];roundRect(ctx,cx-barW-3,baseY-hIn,barW,hIn,2);
+        ctx.fillStyle=colorsOut[i%colorsOut.length];roundRect(ctx,cx-barW*0.1,baseY-hOut,barW,hOut,2);
+        ctx.fillStyle='#F0C848';roundRect(ctx,cx+barW*0.8,baseY-hCon,barW,hCon,2);
+        ctx.fillStyle='#4B5563';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(v.name.length>3?v.name.substr(0,3):v.name,cx,H-3);
+      });
+      ctx.fillStyle='#6BAF5A';ctx.fillRect(W-110,4,8,8);ctx.fillStyle='#4B5563';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('入库',W-98,12);
+      ctx.fillStyle='#D4453A';ctx.fillRect(W-70,4,8,8);ctx.fillText('出库',W-58,12);
+      ctx.fillStyle='#F0C848';ctx.fillRect(W-34,4,8,8);ctx.fillText('消耗',W-22,12);
+    },50);
+  }
+  function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();}
+
+  // ================================================================
+  // ACTIONS
+  // ================================================================
+
+  // Save full item
+  // Cancel add/edit form — returns to module page or home
+  function cancelAddItem(){
+    const box=document.getElementById('nameSuggestBox'); if(box) box.innerHTML='';
+    const target=state.editingModule||(state.editingItem?.moduleId)||'finished';
+    if(state.editingItem) navigate('detail',{currentItem:state.editingItem.id});
+    else navigate('module',{currentModule:target});
+  }
+
+  // Name autosuggest: show existing products matching the typed keyword
+  function showNameSuggestions(val){
+    const box=document.getElementById('nameSuggestBox');
+    if(!box)return;
+    const q=(val||'').trim().toLowerCase();
+    if(!q){box.innerHTML='';return;}
+    const matches=state.items.filter(i=>(i.name||'').toLowerCase().includes(q)).slice(0,8);
+    if(matches.length===0){box.innerHTML='';return;}
+    box.innerHTML=`<div class="suggest-dropdown">${matches.map(m=>{
+      const mod=MODULES.find(x=>x.id===m.moduleId);
+      return `<div class="suggest-item" onclick="App.fillNameSuggestion('${escapeHtml(m.name).replace(/'/g,"\\'")}')">${escapeHtml(m.name)}<span class="suggest-qty">${mod?.name||''} · ${m.quantity}</span></div>`;
+    }).join('')}</div>`;
+  }
+  function fillNameSuggestion(name){
+    const input=document.getElementById('itemName');
+    if(input) input.value=name;
+    const box=document.getElementById('nameSuggestBox'); if(box) box.innerHTML='';
+    if(input) input.focus();
+  }
+
+  async function saveItem(e){
+    e.preventDefault();
+    const id=document.getElementById('formItemId').value;
+    const name=document.getElementById('itemName').value.trim();
+    const qtyRaw=document.getElementById('itemQty').value;
+    const quantity = qtyRaw==='' ? 1 : (parseInt(qtyRaw)||0);
+    const location=document.getElementById('itemLocation').value.trim();
+    const usage=document.getElementById('itemUsage').value.trim();
+    const supplier=document.getElementById('itemSupplier').value.trim();
+    const categoryId=document.getElementById('itemCategory').value||'';
+    const barcode=document.getElementById('itemBarcode').value.trim();
+    const arrival=document.getElementById('itemArrival').value;
+    const expiry=document.getElementById('itemExpiry').value;
+    const reminder=parseInt(document.getElementById('itemReminder').value)||7;
+    if(!name){toast('请输入物品名称');return;}
+    if(quantity<0){toast('数量不能为负数');return;}
+    const mediaPreviews=document.querySelectorAll('#mediaPreview .media-thumb img');
+    const images=Array.from(mediaPreviews).map(img=>img.src);
+    if(id&&state.editingItem){const existingImages=state.editingItem.images||[];images.unshift(...existingImages);}
+    const item={id:id||undefined,name,quantity,location,usageNote:usage,supplierNote:supplier,categoryId,moduleId:state.editingModule||(state.editingItem?.moduleId)||'finished',arrivalDate:arrival||null,expiryDate:expiry||null,reminderDays:reminder,barcode:barcode||undefined,images:images.length>0?images:[]};
+    try{
+      if(id){
+        await updateItem(item);toast('修改成功！');
+        const oldQty=state.editingItem?.quantity||0;
+        if(quantity!==oldQty){const diff=quantity-oldQty;await addRecord({itemId:item.id,moduleId:item.moduleId,type:diff>0?'in':'out',quantity:Math.abs(diff),note:'编辑时调整数量',remainingQty:quantity});}
+      } else {
+        await addItem(item);await addRecord({itemId:item.id,moduleId:item.moduleId,type:'in',quantity:quantity,note:'初始入库',remainingQty:quantity});toast('添加成功！');
+      }
+      navigate('module',{currentModule:item.moduleId});
+    }catch(err){console.error(err);toast('保存失败：'+err.message);}
+    return false;
+  }
+
+  // Save quick item (minimal fields)
+  async function saveQuickItem(e){
+    e.preventDefault();
+    const name=document.getElementById('quickName').value.trim();
+    if(!name){toast('请输入物品名称');return;}
+    const qty=parseInt(document.getElementById('quickQty').value)||1;
+    const modId=document.getElementById('quickModule').value;
+    const catId=document.getElementById('quickCat').value;
+    const location=document.getElementById('quickLocation').value.trim();
+    const barcode=document.getElementById('quickBarcode').value.trim();
+    const mediaPreviews=document.querySelectorAll('#quickMediaPreview .media-thumb img');
+    const images=Array.from(mediaPreviews).map(img=>img.src);
+
+    // If no category selected, auto-create one named "默认分类"
+    let finalCatId=catId;
+    if(!finalCatId){
+      const cats=await getCategories(modId);
+      if(cats.length===0){
+        finalCatId=makeId();
+        await addCategory(modId,'默认分类');
+      } else {
+        finalCatId=cats[0].id;
+      }
+    }
+
+    const item={name,quantity:qty,location,categoryId:finalCatId,moduleId:modId,barcode:barcode||undefined,images:images.length>0?images:[]};
+    try{
+      await addItem(item);
+      await addRecord({itemId:item.id,moduleId:modId,type:'in',quantity:qty,note:'快速添加入库',remainingQty:qty});
+      toast('✅ 快速添加成功！');
+      navigate('module',{currentModule:modId});
+    }catch(err){toast('保存失败：'+err.message);}
+    return false;
+  }
+
+  function handleMediaUpload(e){
+    Array.from(e.target.files).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        const div=document.createElement('div');div.className='media-thumb';div.style.display='inline-block';
+        div.innerHTML=`<img src="${ev.target.result}" alt=""><div class="media-remove" onclick="this.parentElement.remove()">✕</div>`;
+        document.getElementById('mediaPreview').appendChild(div);
+      };reader.readAsDataURL(file);
+    });e.target.value='';
+  }
+  function handleQuickMediaUpload(e){
+    Array.from(e.target.files).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        const div=document.createElement('div');div.className='media-thumb';div.style.display='inline-block';
+        div.innerHTML=`<img src="${ev.target.result}" alt=""><div class="media-remove" onclick="this.parentElement.remove()">✕</div>`;
+        document.getElementById('quickMediaPreview').appendChild(div);
+      };reader.readAsDataURL(file);
+    });e.target.value='';
+  }
+
+  // Stock action (in/out)
+  async function showStockAction(itemId,type){
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    showModal(`
+      <div class="modal-title">${type==='in'?'入库':'出库'} - ${escapeHtml(item.name)}</div>
+      <div class="stock-action-tabs">
+        <div class="stock-action-tab ${type==='in'?'active in':''}" onclick="this.parentElement.querySelector('.out').classList.remove('active','out');this.classList.add('active','in')">+ 入库</div>
+        <div class="stock-action-tab ${type==='out'?'active out':''}" onclick="this.parentElement.querySelector('.in').classList.remove('active','in');this.classList.add('active','out')">- 出库</div>
+      </div>
+      <div class="form-group"><label class="form-label">数量</label><input class="modal-input" type="number" id="stockQty" value="1" min="1"></div>
+      <div class="form-group"><label class="form-label">备注</label><input class="modal-input" type="text" id="stockNote" placeholder="选填"></div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">当前库存：<strong style="color:var(--red);font-size:16px">${item.quantity}</strong></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.doStockAction('${itemId}')">确认</button>
+      </div>`);
+  }
+
+  async function doStockAction(itemId){
+    const qty=parseInt(document.getElementById('stockQty').value)||0;if(qty<=0){toast('请输入有效数量');return;}
+    const note=document.getElementById('stockNote').value.trim();
+    const isActiveIn=document.querySelector('.stock-action-tab.active.in')!==null;
+    const type=isActiveIn?'in':'out';
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    if(type==='out'&&qty>item.quantity){const ok=await confirm(`出库数量（${qty}）超过当前库存（${item.quantity}），确定继续？`,'强制出库');if(!ok)return;}
+    const newQty=type==='in'?item.quantity+qty:item.quantity-qty;
+    await updateItem({...item,quantity:newQty});
+    await addRecord({itemId:item.id,moduleId:item.moduleId,type,quantity:qty,note:note||undefined,remainingQty:newQty});
+    hideModal();toast(type==='in'?'入库成功！':'出库成功！');navigate('detail',{currentItem:itemId});
+  }
+
+  async function handleDeleteItem(itemId){
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    const ok=await confirm(`确定删除「${item.name}」？\n此操作不可恢复，相关记录也会被删除。`,'删除');
+    if(!ok)return;await deleteItem(itemId);toast('已删除');navigate('module',{currentModule:item.moduleId});
+  }
+
+  // Category management
+  async function showCatManager(moduleId){
+    const cats=await getCategories(moduleId);
+    showModal(`<div class="modal-title">管理分类</div><div class="cat-modal-list">
+      ${cats.length===0?'<div style="text-align:center;color:var(--gray-400);padding:20px">暂无分类</div>'
+      :cats.map(c=>`<div class="cat-modal-item"><div class="cat-modal-name">${escapeHtml(c.name)}</div>
+        <div class="cat-modal-actions"><button class="cat-modal-btn" onclick="App.renameCategory('${c.id}','${escapeHtml(c.name)}')">重命名</button>
+        <button class="cat-modal-btn delete" onclick="App.deleteCategoryConfirm('${c.id}','${escapeHtml(c.name)}')">删除</button></div></div>`).join('')}
+      </div><div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">关闭</button>
+      <button class="modal-btn modal-btn-confirm" onclick="App.hideModal();App.showAddCategory('${moduleId}')">+ 添加分类</button></div>`);
+  }
+  function showAddCategory(moduleId){
+    showModal(`<div class="modal-title">添加分类</div><input class="modal-input" id="newCatName" placeholder="请输入分类名称" autofocus>
+      <div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+      <button class="modal-btn modal-btn-confirm" onclick="App.doAddCategory('${moduleId}')">添加</button></div>`);
+    setTimeout(()=>document.getElementById('newCatName').focus(),100);
+  }
+  async function doAddCategory(moduleId){
+    const name=document.getElementById('newCatName').value.trim();if(!name){toast('请输入分类名称');return;}
+    await addCategory(moduleId,name);hideModal();toast('分类已添加');render();
+  }
+  async function renameCategory(catId,oldName){
+    const newName=prompt('新名称：',oldName);if(!newName||!newName.trim())return;
+    const cats=await dbOp('categories','readonly',s=>s.getAll());const cat=cats.find(c=>c.id===catId);
+    if(cat){cat.name=newName.trim();await updateCategory(cat);toast('重命名成功');hideModal();render();}
+  }
+  async function deleteCategoryConfirm(catId,name){
+    const ok=await confirm(`确定删除「${name}」？该分类下物品不会删除但会失去分类归属。`);if(!ok)return;
+    await deleteCategory(catId);toast('分类已删除');hideModal();render();
+  }
+
+  async function clearAllDataConfirm(){
+    const ok=await confirm('⚠️ 确定清空所有数据？\n· 全部物品\n· 全部记录\n· 全部分类\n\n不可恢复！建议先备份。','确认清空');
+    if(!ok)return;await clearAllData();toast('已清空所有数据');navigate('home');
+  }
+
+  // Load categories into select
+  async function loadCategoriesIntoSelect(){
+    const sel=document.getElementById('itemCategory');if(!sel)return;
+    const quickSel=document.getElementById('quickCat');
+    const modId=state.editingModule||state.editingItem?.moduleId||'finished';
+    const quickModId=document.getElementById('quickModule')?.value||modId;
+    const cats=await getCategories(modId);
+    sel.innerHTML='<option value="">请选择分类</option>'+cats.map(c=>`<option value="${c.id}" ${state.editingItem?.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+    if(quickSel){
+      const quickCats=await getCategories(quickModId);
+      quickSel.innerHTML='<option value="">暂无分类（将自动创建）</option>'+quickCats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+  }
+
+  // ---- Init ----
+  async function init(){
+    try { await initDB(); }
+    catch(e){ db = null; console.warn('IndexedDB unavailable, falling back to localStorage:', e); }
+    try{MODULES=await loadModules();}catch(e){console.error('loadModules failed',e);}
+    try{state.items=await getAllItems();}catch(e){state.items=[];}
+    try{state.records=await getAllRecords();}catch(e){state.records=[];}
+    state.searchHistory=loadSearchHistory();
+    // 加载库存预警阈值（持久化）
+    try{ const t=parseInt(localStorage.getItem('lw_threshold')); if(!isNaN(t)&&t>0) state.lowStockThreshold=t; }catch(e){}
+    state._stockPopupShown=false;
+    if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+    render();
+    const observer=new MutationObserver(()=>{
+      if(document.getElementById('itemCategory')||document.getElementById('quickCat'))loadCategoriesIntoSelect();
+    });
+    observer.observe(document.getElementById('app'),{childList:true,subtree:true});
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+
+  // ================================================================
+  // STOCK ALERT POPUP (首页进入时弹窗提醒)
+  // ================================================================
+  function showStockAlertPopup(lowStockItems, threshold){
+    const list=lowStockItems.slice(0,12).map(item=>{
+      const mod=MODULES.find(m=>m.id===item.moduleId);
+      return `<div class="alert-item" style="cursor:default">
+        <div class="alert-dot yellow"></div>
+        <div class="alert-info">
+          <div class="alert-name">${escapeHtml(item.name)}</div>
+          <div class="alert-meta">${mod?.name||''} · 库存仅剩 ${item.quantity} 件</div>
+        </div>
+        <div class="alert-days yellow" style="color:#E07050;font-weight:700">${item.quantity}</div>
+      </div>`;
+    }).join('');
+    showModal(`
+      <div class="modal-title">⚠️ 库存预警提醒</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px">以下 ${lowStockItems.length} 项物品库存 ≤ ${threshold} 件，请及时补货：</div>
+      <div style="max-height:50vh;overflow:auto;border-radius:var(--radius-sm)">${list}</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-confirm" onclick="App.hideModal()">我知道了</button>
+      </div>`);
+  }
+
+  // ================================================================
+  // SCAN (扫码录入 / 扫码消耗)
+  // ================================================================
+  let _html5Qr=null;
+  function findItemByCode(code){
+    if(!code) return [];
+    const c=code.trim();
+    return state.items.filter(i=>
+      (i.barcode && i.barcode===c) ||
+      (i.name && (i.name===c || i.name.includes(c)))
+    );
+  }
+
+  function startScan(mode){
+    if(typeof Html5Qrcode==='undefined'){
+      toast('扫码功能需要联网加载识别库，或请在手机 HTTPS 环境下打开');
+      return;
+    }
+    state.scanMode=mode;
+    document.getElementById('scanResultBar').classList.remove('show');
+    document.getElementById('scanResultText').textContent='';
+    document.getElementById('scanHint').textContent='将条码/二维码对准取景框…';
+    document.getElementById('scanOverlay').classList.add('show');
+    try{
+      _html5Qr=new Html5Qrcode('scanReader',{verbose:false});
+    }catch(e){ toast('摄像头初始化失败：'+e.message); stopScan(); return; }
+    _html5Qr.start({facingMode:'environment'},{
+      fps:10, qrbox:{width:240,height:240}
+    },(decodedText)=>{
+      // 成功识别，停止并展示结果
+      try{ _html5Qr.stop(); }catch(e){}
+      document.getElementById('scanHint').textContent='✅ 识别成功：'+decodedText;
+      document.getElementById('scanResultText').textContent=decodedText;
+      document.getElementById('scanResultBar').classList.add('show');
+      state._lastScan=decodedText;
+    },(err)=>{ /* 持续识别中，忽略 */ }).catch(e=>{
+      toast('无法启动摄像头：'+e);
+      stopScan();
+    });
+  }
+
+  function useScanResult(){
+    const code=state._lastScan;
+    if(!code){ toast('未识别到内容'); return; }
+    const mode=state.scanMode;
+    stopScan();
+    if(mode==='quick-add' || mode==='add-item'){
+      if(mode==='quick-add'){
+        document.getElementById('quickName').value=code;
+        document.getElementById('quickBarcode').value=code;
+        // 若已有同条码/同名产品，预填区域与分类
+        const match=findItemByCode(code)[0];
+        if(match){
+          if(match.moduleId) document.getElementById('quickModule').value=match.moduleId;
+          toast('已匹配已有产品，可修改数量后保存');
+        }
+      } else {
+        const el=document.getElementById('itemBarcode'); if(el) el.value=code;
+        const nm=document.getElementById('itemName'); if(nm && !nm.value) nm.value=code;
+        toast('条码已填入');
+      }
+    } else if(mode==='consume'){
+      const matches=findItemByCode(code);
+      if(matches.length===0){
+        toast('未找到匹配产品：'+code);
+        return;
+      }
+      if(matches.length===1){
+        state.consumeSearchQuery=matches[0].name;
+        state.consumeSelectedItemId=matches[0].id;
+        render();
+      } else {
+        // 多个匹配，弹窗选择
+        const opts=matches.map(m=>{
+          const mod=MODULES.find(x=>x.id===m.moduleId);
+          return `<div class="consume-match-item" onclick="App.state.consumeSelectedItemId='${m.id}';App.state.consumeSearchQuery='${escapeHtml(m.name)}';App.hideModal();App.render()">
+            <div class="consume-match-img">${(m.images&&m.images.length>0)?`<img src="${m.images[0]}">`:`<div class="placeholder-icon" style="font-size:20px">📦</div>`}</div>
+            <div class="consume-match-info"><div class="consume-match-name">${escapeHtml(m.name)}</div><div class="consume-match-meta">${mod?.name||''} · 库存 ${m.quantity}</div></div>
+            <div class="consume-match-qty">${m.quantity}</div>
+          </div>`;
+        }).join('');
+        showModal(`<div class="modal-title">选择匹配产品（${matches.length}）</div><div class="consume-search-result">${opts}</div><div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button></div>`);
+      }
+    }
+  }
+
+  function stopScan(){
+    if(_html5Qr){ try{ _html5Qr.stop().catch(()=>{}); }catch(e){} _html5Qr=null; }
+    const ov=document.getElementById('scanOverlay'); if(ov) ov.classList.remove('show');
+  }
+
+  // ================================================================
+  // SETTINGS: 库存预警阈值保存
+  // ================================================================
+  function saveLowStockThreshold(val){
+    const t=parseInt(val);
+    if(isNaN(t)||t<0){ toast('请输入有效的阈值'); return; }
+    state.lowStockThreshold=t;
+    try{ localStorage.setItem('lw_threshold', String(t)); }catch(e){}
+    toast('✅ 阈值已保存：库存 ≤ '+t+' 件预警');
+    render();
+  }
+
+  // Public API
+  return {
+    state,navigate,render,toast,confirm,
+    exportData:showExportPreview,importData,saveItem,handleMediaUpload,
+    showStockAction,doStockAction,handleDeleteItem,
+    showCatManager,showAddCategory,doAddCategory,renameCategory,deleteCategoryConfirm,
+    clearAllDataConfirm,hideModal,showModal,_resolveConfirm,
+    loadCategoriesIntoSelect,addSearchHistory,saveSearchHistory,
+    showRegionManager,toggleHomeSection,renameRegion,removeRegion,addRegion,
+    selectConsumeItem,doConsume,doExport,saveQuickItem,handleQuickMediaUpload,
+    showExportPreview,cancelAddItem,showNameSuggestions,fillNameSuggestion,
+    startScan,stopScan,useScanResult,saveLowStockThreshold,showStockAlertPopup
+  };
+})();
+</script>
 </body>
 </html>
