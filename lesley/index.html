@@ -672,9 +672,15 @@ const App = (() => {
   async function getHomeSections() {
     try {
       const all = await dbOp('homeSections','readonly',s=>s.getAll());
-      if(all.length === 0) return [{id:'default',sections:['modules','expiryAlert']}];
-      return all;
-    } catch(e) { return [{id:'default',sections:['modules','expiryAlert']}]; }
+      if(all.length === 0) return [{id:'default',sections:['todayActivity','stockAlert','modules','expiryAlert']}];
+      // 自动迁移：老用户配置补上今日动态+库存预警
+      const cfg = all[0];
+      const needed = ['todayActivity','stockAlert'];
+      let migrated = false;
+      for (const n of needed) { if (!cfg.sections.includes(n)) { cfg.sections.unshift(n); migrated = true; } }
+      if (migrated) { await saveHomeSections(cfg); }
+      return [cfg];
+    } catch(e) { return [{id:'default',sections:['todayActivity','stockAlert','modules','expiryAlert']}]; }
   }
   async function saveHomeSections(data) {
     return dbOp('homeSections','readwrite',s=>s.put({id:'default',sections:data.sections}));
