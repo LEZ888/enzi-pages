@@ -1,28 +1,12 @@
-/* LESLEY公司仓储 — Service Worker（离线缓存应用外壳） */
-const CACHE = 'lesley-v2';
-const ASSETS = [
-  './', './index.html', './app.js', './manifest.webmanifest',
-  './default-item.png', './icon-192.png', './icon-512.png',
-  './vendor/react.js', './vendor/react-dom.js', './vendor/htm.umd.js'
-];
-self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
+const CACHE = 'lesley-warehouse-v3';
+const ASSETS = ['./', './index.html', './manifest.json', './logo.jpg', './sw.js'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).catch(()=>{})).then(() => self.skipWaiting()));
 });
-self.addEventListener('activate', function (e) {
-  e.waitUntil(caches.keys().then(function (ks) {
-    return Promise.all(ks.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
-  }).then(function () { return self.clients.claim(); }));
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener('fetch', function (e) {
+self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request).then(function (cached) {
-    if (cached) return cached;
-    return fetch(e.request).then(function (resp) {
-      if (resp && resp.status === 200 && resp.type === 'basic') {
-        var cp = resp.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, cp); });
-      }
-      return resp;
-    }).catch(function () { return caches.match('./index.html'); });
-  }));
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./index.html'))));
 });
