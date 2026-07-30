@@ -1849,20 +1849,33 @@ const App = (() => {
     try{state.records=await getAllRecords();}catch(e){console.error(e);}
     state.searchHistory=loadSearchHistory();
     const app=document.getElementById('app');
-    switch(state.currentPage){
-      case'home':app.innerHTML=await renderHome();break;
-      case'module':app.innerHTML=await renderModule();break;
-      case'add-item':app.innerHTML=renderAddItemForm();break;
-      case'quick-add':app.innerHTML=renderQuickAddForm();break;
-      case'detail':app.innerHTML=await renderDetail();break;
-      case'search':app.innerHTML=renderSearch();break;
-      case'stats':app.innerHTML=renderStats();drawChart();break;
-      case'records':app.innerHTML=renderRecords();break;
-      case'settings':app.innerHTML=renderSettings();break;
-      case'consume':app.innerHTML=await renderConsumePage();break;
-      default:app.innerHTML=await renderHome();
+    try{
+      switch(state.currentPage){
+        case'home':app.innerHTML=await renderHome();break;
+        case'module':app.innerHTML=await renderModule();break;
+        case'add-item':app.innerHTML=renderAddItemForm();break;
+        case'quick-add':app.innerHTML=renderQuickAddForm();break;
+        case'detail':app.innerHTML=await renderDetail();break;
+        case'search':app.innerHTML=renderSearch();break;
+        case'stats':app.innerHTML=renderStats();drawChart();break;
+        case'records':app.innerHTML=renderRecords();break;
+        case'settings':app.innerHTML=renderSettings();break;
+        case'consume':app.innerHTML=await renderConsumePage();break;
+        default:app.innerHTML=await renderHome();
+      }
+    }catch(err){
+      console.error('render error:',err);
+      app.innerHTML=`<div class="page active" style="padding:24px;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:16px;color:var(--gray-700);margin-bottom:6px">页面显示异常</div>
+        <div style="font-size:13px;color:var(--gray-400);margin-bottom:18px">${escapeHtml(String(err&&err.message||err))}</div>
+        <button class="action-btn success" onclick="location.reload()">🔄 刷新重试</button>
+        <button class="action-btn default" style="margin-top:10px" onclick="App.resetView()">返回首页</button>
+      </div>`;
     }
   }
+
+  function resetView(){ state.currentPage='home'; state.currentItem=null; render(); }
 
   // ================================================================
   // CHART DRAWING
@@ -2128,8 +2141,32 @@ const App = (() => {
     // 加载库存预警阈值（持久化）
     try{ const t=parseInt(localStorage.getItem('lw_threshold')); if(!isNaN(t)&&t>0) state.lowStockThreshold=t; }catch(e){}
     state._stockPopupShown=false;
-    if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+    if('serviceWorker'in navigator){
+      navigator.serviceWorker.register('sw.js').then(reg=>{
+        // 发现新版本：提示用户刷新（联网已 network-first，刷新即最新）
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          if(!nw)return;
+          nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              showUpdateBar();
+            }
+          });
+        });
+        if(reg.waiting&&navigator.serviceWorker.controller) showUpdateBar();
+      }).catch(()=>{});
+    }
     render();
+
+    function showUpdateBar(){
+      let bar=document.getElementById('swUpdateBar');
+      if(bar)return;
+      bar=document.createElement('div');
+      bar.id='swUpdateBar';
+      bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--red);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;font-size:14px;box-shadow:0 -2px 10px rgba(0,0,0,.2)';
+      bar.innerHTML='<span>🔄 已发布新版本</span><button onclick="location.reload()" style="background:#fff;color:var(--red);border:none;padding:6px 14px;border-radius:8px;font-weight:700;cursor:pointer">立即刷新</button>';
+      document.body.appendChild(bar);
+    }
     const observer=new MutationObserver(()=>{
       if(document.getElementById('itemCategory')||document.getElementById('quickCat'))loadCategoriesIntoSelect();
     });
@@ -2312,7 +2349,7 @@ const App = (() => {
     selectConsumeItem,doConsume,doExport,saveQuickItem,handleQuickMediaUpload,
     showExportPreview,cancelAddItem,showNameSuggestions,fillNameSuggestion,
     startScan,stopScan,useScanResult,scanFromFile,onScanFilePicked,
-    saveLowStockThreshold,showStockAlertPopup
+    saveLowStockThreshold,showStockAlertPopup,resetView
   };
 })();
 </script>
