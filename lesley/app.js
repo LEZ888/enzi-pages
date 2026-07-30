@@ -7,8 +7,24 @@
   var ReactDOM = window.ReactDOM;
   var htm = window.htm;
   var html = htm.bind(React.createElement);
-  var useState = React.useState, useEffect = React.useEffect, useRef = React.useRef,
+  var useState = React.useState, useEffect = React.useEffect,
       useCallback = React.useCallback, useMemo = React.useMemo, useContext = React.useContext;
+
+  /* ============ 错误边界（避免任何渲染异常导致整页空白）============ */
+  class ErrorBoundary extends React.Component {
+    constructor(props) { super(props); this.state = { err: null }; }
+    static getDerivedStateFromError(err) { return { err: err }; }
+    componentDidCatch(err, info) { try { console.error('APP_ERROR', err, info && info.componentStack); } catch (e) {} }
+    render() {
+      if (this.state.err) {
+        return html`<div style=${{ padding: '20px', color: '#c00', fontFamily: 'monospace' }}>
+          <h3>页面出错了（已捕获，未崩溃）</h3>
+          <pre style=${{ whiteSpace: 'pre-wrap', fontSize: '12px' }}>${String(this.state.err && (this.state.err.stack || this.state.err.message) || this.state.err)}</pre>
+        </div>`;
+      }
+      return this.props.children;
+    }
+  }
 
   /* ============ 数据层（原生 IndexedDB） ============ */
   var DB_NAME = 'lesley-company-storage';
@@ -576,11 +592,11 @@
 
         <div class="consume-banner" onClick=${function () { navigate('/consume'); }}>
           <div class="cb-ico">📦</div>
-          <div style="flex:1;">
+          <div style=${{ flex: 1 }}>
             <div class="cb-title">每日消耗登记</div>
             <div class="cb-sub">快速搜索或按区域选择物品并扣减库存</div>
           </div>
-          <div style="font-size:20px;">›</div>
+          <div style=${{ fontSize: '20px' }}>›</div>
         </div>
 
         <div class="footer-note">${cloudEnabled() ? '✅ 已开启云端同步（GitHub 私有仓库），换手机后安装应用并输入同一 Token 即可恢复。' : '数据默认保存在本机浏览器。到「设置」开启 GitHub 云端同步后，换手机不丢数据。'}</div>
@@ -1513,5 +1529,5 @@
   }
 
   /* ============ 启动 ============ */
-  ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
+  ReactDOM.createRoot(document.getElementById('root')).render(html`<${ErrorBoundary}><${App}/></${ErrorBoundary}>`);
 })();
