@@ -423,9 +423,21 @@ img{max-width:100%;display:block}
 .scan-manual{display:none;gap:8px;padding:10px 16px;background:rgba(0,0,0,.82);z-index:1}
 .scan-manual-input{flex:1;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.96);font-size:14px;color:#222}
 .scan-manual-input::placeholder{color:#999}
+
+/* 扫描取景框 */
+.scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72%;max-width:300px;height:170px;border:2px solid rgba(255,255,255,.95);border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.4);pointer-events:none;z-index:6}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:26px;height:26px;border:3px solid #2dd4bf}
+.scan-frame::before{top:-3px;left:-3px;border-right:none;border-bottom:none;border-top-left-radius:10px}
+.scan-frame::after{bottom:-3px;right:-3px;border-left:none;border-top:none;border-bottom-right-radius:10px}
+.scan-line{position:absolute;left:8px;right:8px;top:10%;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#2dd4bf,transparent);animation:scanMove 1.8s ease-in-out infinite}
+@keyframes scanMove{0%{top:10%}50%{top:88%}100%{top:10%}}
+#scanReader video{width:100%!important;height:100%!important;object-fit:cover!important;display:block}
+#scanReader canvas{display:none}
+.scan-hint{z-index:7!important}
+.scan-footer,.scan-result-bar,.scan-manual{z-index:8;position:relative}
 </style>
-<!-- 扫码识别库（条码/QR），部署到 HTTPS 后可用；离线预览(file://)不可用会优雅降级 -->
-<script src="./html5-qrcode.min.js"></script>
+<!-- 扫码识别库改为懒加载（见 ensureZxing / ensureQr），避免 700KB 同步脚本拖慢首屏 -->
+<link rel="prefetch" href="./zxing.min.js" as="script">
 </head>
 <body>
 <div id="app"></div>
@@ -449,6 +461,7 @@ img{max-width:100%;display:block}
   </div>
   <div class="scan-video-container">
     <div id="scanReader" style="width:100%;height:100%"></div>
+    <div class="scan-frame"><div class="scan-line"></div></div>
       <div class="scan-hint" id="scanHint">将条码/二维码对准取景框…</div>
     </div>
     <div class="scan-manual" id="scanManual">
@@ -2193,6 +2206,16 @@ const App = (() => {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 
+  // 首屏渲染完成后，空闲时段静默预热扫码引擎：点扫码时秒开，且不拖慢启动
+  function _warmupScanEngine(){
+    try{
+      if(typeof window.BarcodeDetector!=='undefined') return; // 原生可用，无需预热
+      ensureZxing().catch(function(){});
+    }catch(e){}
+  }
+  if('requestIdleCallback' in window){ requestIdleCallback(_warmupScanEngine,{timeout:4000}); }
+  else { setTimeout(_warmupScanEngine,2500); }
+
   // ================================================================
   // STOCK ALERT POPUP (首页进入时弹窗提醒)
   // ================================================================
@@ -2220,22 +2243,34 @@ const App = (() => {
   // ================================================================
   // SCAN (扫码录入 / 扫码消耗)
   // ================================================================
-  let _html5Qr=null;
-  function ensureLib(){
-    if(typeof Html5Qrcode!=='undefined') return Promise.resolve();
+  let _zxReader=null;       // ZXing BrowserMultiFormatReader 实例
+  let _zxControls=null;     // 实时解码 controls（用于停止）
+  let _bdDetector=null;     // BarcodeDetector 实例（原生，最强）
+  let _bdVideo=null;        // BarcodeDetector 路径的 video
+  let _bdStream=null;       // 摄像头 MediaStream
+  let _bdRAF=null;          // rAF id
+  let _bdRunning=false;     // BarcodeDetector 是否运行
+  let _qrScanner=null;      // html5-qrcode 兜底（二维码相册）
+
+  function ensureZxing(){
+    if(typeof ZXing!=='undefined') return Promise.resolve();
     return new Promise(function(res,rej){
       var s=document.createElement('script');
-      s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-      s.crossOrigin='anonymous';
-      s.onload=function(){ (typeof Html5Qrcode!=='undefined')?res():rej(new Error('CDN识别库加载失败')); };
-      s.onerror=function(){ rej(new Error('识别库加载失败（本地与CDN均不可用，请检查网络）')); };
+      s.src='./zxing.min.js';
+      s.onload=function(){ (typeof ZXing!=='undefined')?res():rej(new Error('ZXing库加载失败')); };
+      s.onerror=function(){ rej(new Error('ZXing库加载失败')); };
       document.head.appendChild(s);
     });
   }
-  function _initQr(){
-    if(typeof Html5Qrcode==='undefined') throw new Error('识别库未加载');
-    if(!_html5Qr) _html5Qr=new Html5Qrcode('scanReader',{verbose:false});
-    return _html5Qr;
+  function ensureQr(){
+    if(typeof Html5Qrcode!=='undefined') return Promise.resolve();
+    return new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='./html5-qrcode.min.js';
+      s.onload=function(){ (typeof Html5Qrcode!=='undefined')?res():rej(new Error('识别库加载失败')); };
+      s.onerror=function(){ rej(new Error('识别库加载失败')); };
+      document.head.appendChild(s);
+    });
   }
   function findItemByCode(code){
     if(!code) return [];
@@ -2244,6 +2279,27 @@ const App = (() => {
       (i.barcode && i.barcode===c) ||
       (i.name && (i.name===c || i.name.includes(c)))
     );
+  }
+
+  function stopAllEngines(){
+    if(_zxControls){ try{ _zxControls.stop(); }catch(e){} _zxControls=null; }
+    _zxReader=null;
+    if(_bdRAF){ cancelAnimationFrame(_bdRAF); _bdRAF=null; }
+    _bdRunning=false;
+    if(_bdStream){ try{ _bdStream.getTracks().forEach(function(t){t.stop();}); }catch(e){} _bdStream=null; }
+    if(_bdVideo && _bdVideo.parentNode){ try{ _bdVideo.parentNode.removeChild(_bdVideo); }catch(e){} _bdVideo=null; }
+    _bdDetector=null;
+    if(_qrScanner){ try{ _qrScanner.stop().catch(function(){}); }catch(e){} _qrScanner=null; }
+    var sr=document.getElementById('scanReader'); if(sr){ try{ sr.innerHTML=''; }catch(e){} }
+  }
+
+  function onScanSuccess(code){
+    if(!code) return;
+    stopAllEngines();
+    var hint=document.getElementById('scanHint'); if(hint) hint.textContent='✅ 识别成功：'+code;
+    var rt=document.getElementById('scanResultText'); if(rt) rt.textContent=code;
+    var bar=document.getElementById('scanResultBar'); if(bar) bar.classList.add('show');
+    state._lastScan=code;
   }
 
   function startScan(mode){
@@ -2255,102 +2311,143 @@ const App = (() => {
     var man=document.getElementById('scanManual'); if(man) man.style.display='flex';
     var fin=document.getElementById('scanFileInput'); if(fin) fin.value='';
 
-    // 启动超时兜底：若 8 秒后仍卡在“正在启动摄像头…”，提示改用相册/手动，避免无限转圈
+    // 启动超时兜底：8 秒仍卡在“启动中”则提示改用相册/手动，避免无限转圈
     var startTimer=setTimeout(function(){
       if(hint && hint.textContent==='正在启动摄像头…'){
         if(hint) hint.textContent='摄像头启动较慢，请稍候，或改用「📁 相册识别」/手动输入条码';
       }
     },8000);
 
-    ensureLib().then(function(){
-      var hasCam=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-      if(!hasCam){ clearTimeout(startTimer); if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码'; return; }
-      // 复用前先停掉可能残留的实例，保证干净启动
-      if(_html5Qr){ try{ _html5Qr.stop().catch(function(){}); }catch(e){} _html5Qr=null; }
-      var qr;
-      try{ qr=_initQr(); }catch(e){ clearTimeout(startTimer); if(hint) hint.textContent='识别库未就绪，请刷新页面'; return; }
-      var onOk=function(decodedText){
-        try{ qr.stop().catch(function(){}); }catch(e){}
-        if(hint) hint.textContent='✅ 识别成功：'+decodedText;
-        if(rt) rt.textContent=decodedText;
-        if(bar) bar.classList.add('show');
-        state._lastScan=decodedText;
-      };
-      // 去掉 aspectRatio 固定裁剪，改用自适应取景框，启动更快、不卡顿
-      var cfg={
-        fps:12,
-        qrbox:function(vw,vh){ var s=Math.max(180,Math.min(vw,vh,300)); return {width:s,height:s}; },
-        experimentalFeatures:{ useBarCodeDetectorIfSupported:true }
-      };
-      if(typeof Html5QrcodeSupportedFormats!=='undefined'){
-        cfg.formatsToSupport=[
-          Html5QrcodeSupportedFormats.QR_CODE,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-          Html5QrcodeSupportedFormats.CODE_39,
-          Html5QrcodeSupportedFormats.CODE_93,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.ITF,
-          Html5QrcodeSupportedFormats.AZTEC,
-          Html5QrcodeSupportedFormats.DATA_MATRIX,
-          Html5QrcodeSupportedFormats.PDF_417
-        ];
-      }
-      function begin(cam){
-        return qr.start(cam, cfg, onOk, function(){}).then(function(){
-          clearTimeout(startTimer);
-          if(hint) hint.textContent='将条码/二维码对准取景框';
-        });
-      }
-      begin({facingMode:'environment'}).catch(function(){
-        begin({}).catch(function(err){
-          clearTimeout(startTimer);
-          var msg=(err&&err.message)?err.message:(''+err);
-          if(hint) hint.textContent='摄像头启动失败：'+msg+'。可改用「📁 从相册识别」或手动输入';
-        });
-      });
+    var hasCam=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    if(!hasCam){ clearTimeout(startTimer); if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码'; return; }
+
+    // 优先原生 BarcodeDetector（最强，含 1D+二维码）；否则 ZXing 纯JS引擎（已验证可解商品条码）
+    var useBD=(typeof window.BarcodeDetector!=='undefined');
+    // 原生 BarcodeDetector 可用时无需下载 ZXing；否则只下 ZXing（不预载 375KB 的 html5-qrcode）
+    var libs=useBD?[]:[ensureZxing()];
+    Promise.all(libs).then(function(){
+      if(useBD){ startBarcodeDetector(startTimer,hint); }
+      else { startZXingRealtime(startTimer,hint); }
     }).catch(function(err){
       clearTimeout(startTimer);
-      if(hint) hint.textContent=(err&&err.message)?err.message:'识别库加载失败';
+      if(hint) hint.textContent=(err&&err.message)?err.message:'识别库加载失败，请刷新页面';
     });
   }
 
-  // 相册/文件识别兜底（无摄像头或摄像头被拒时仍可扫码）
-  function scanFromFile(){
-    const inp=document.getElementById('scanFileInput');
-    if(inp) inp.click();
+  function startBarcodeDetector(startTimer,hint){
+    var formats=['qr_code','ean_13','ean_8','code_128','code_39','code_93','upc_a','upc_e','itf','aztec','data_matrix','pdf_417','codabar'];
+    var bd;
+    try{ bd=new BarcodeDetector({formats:formats}); }catch(e){ startZXingRealtime(startTimer,hint); return; }
+    _bdDetector=bd; _bdRunning=true;
+    var video=document.createElement('video');
+    video.setAttribute('playsinline','true'); video.muted=true;
+    video.style.width='100%'; video.style.height='100%'; video.style.objectFit='cover';
+    var target=document.getElementById('scanReader'); target.innerHTML=''; target.appendChild(video);
+    _bdVideo=video;
+    function attach(constraints){
+      return navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+        _bdStream=stream; video.srcObject=stream; return video.play();
+      });
+    }
+    attach({video:{facingMode:'environment'}}).catch(function(){ return attach({video:true}); })
+      .then(function(){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='将条码/二维码对准取景框';
+        loopDetect();
+      })
+      .catch(function(err){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='摄像头启动失败：'+(err&&err.message?err.message:err)+'。可改用「📁 相册识别」或手动输入';
+      });
+    function loopDetect(){
+      if(!_bdRunning) return;
+      _bdRAF=requestAnimationFrame(loopDetect);
+      if(video.readyState<2) return;
+      bd.detect(video).then(function(res){
+        if(res&&res.length){ onScanSuccess(res[0].rawValue); }
+      }).catch(function(){});
+    }
   }
+
+  function startZXingRealtime(startTimer,hint){
+    var target=document.getElementById('scanReader'); target.innerHTML='';
+    var video=document.createElement('video');
+    video.setAttribute('playsinline','true'); video.muted=true;
+    video.style.width='100%'; video.style.height='100%'; video.style.objectFit='cover';
+    target.appendChild(video);
+    try{ if(!_zxReader) _zxReader=new ZXing.BrowserMultiFormatReader(); }
+    catch(e){ if(hint) hint.textContent='识别引擎初始化失败，请刷新页面'; return; }
+    function begin(constraints){
+      return _zxReader.decodeFromConstraints(constraints, video, function(result, err, controls){
+        _zxControls=controls;
+        if(result){ onScanSuccess(result.getText()); }
+      });
+    }
+    begin({video:{facingMode:'environment'}}).then(function(){
+      clearTimeout(startTimer);
+      if(hint) hint.textContent='将商品条码对准取景框（EAN / CODE128 等）';
+    }).catch(function(){
+      begin({video:true}).then(function(){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='将商品条码对准取景框（EAN / CODE128 等）';
+      }).catch(function(err){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='摄像头启动失败：'+(err&&err.message?err.message:err)+'。可改用「📁 相册识别」或手动输入';
+      });
+    });
+  }
+
+  // 相册/文件识别：多引擎依次尝试，命中即用
+  function scanFromFile(){ var inp=document.getElementById('scanFileInput'); if(inp) inp.click(); }
   function onScanFilePicked(e){
-    const file=e.target.files && e.target.files[0];
+    var file=e.target.files && e.target.files[0];
     e.target.value='';
     if(!file) return;
-    if(_html5Qr){ try{ _html5Qr.stop().catch(()=>{}); }catch(err){} }
-    const hint=document.getElementById('scanHint');
-    ensureLib().then(()=>{
-      let qr;
-      try{ qr=_initQr(); }catch(err){ toast('识别库未就绪，请刷新页面'); return; }
-      if(hint) hint.textContent='正在识别图片…';
-      qr.scanFile(file, false).then(decodedText=>{
-        if(hint) hint.textContent='✅ 识别成功：'+decodedText;
-        document.getElementById('scanResultText').textContent=decodedText;
-        document.getElementById('scanResultBar').classList.add('show');
-        state._lastScan=decodedText;
-      }).catch(err=>{
-        if(hint) hint.textContent='图片未识别到条码，请换清晰照片，或手动输入条码';
+    var hint=document.getElementById('scanHint');
+    if(hint) hint.textContent='正在识别图片…';
+    var engines=[];
+    if(typeof window.BarcodeDetector!=='undefined'){
+      engines.push(function(){
+        var bd=new BarcodeDetector({formats:['qr_code','ean_13','ean_8','code_128','code_39','code_93','upc_a','upc_e','itf','aztec','data_matrix','pdf_417','codabar']});
+        return bd.detect(file).then(function(res){ if(res&&res.length) return res[0].rawValue; throw new Error('no'); });
       });
-    }).catch(err=>{
-      if(hint) hint.textContent='识别库加载失败，请联网后重试或手动输入条码';
+    }
+    engines.push(function(){
+      return ensureZxing().then(function(){ return new Promise(function(res,rej){
+        var r=new ZXing.BrowserMultiFormatReader();
+        r.decodeFromImageUrl(URL.createObjectURL(file)).then(function(x){ res(x.getText()); }).catch(function(err){ rej(err); });
+      }); });
     });
+    engines.push(function(){
+      return ensureQr().then(function(){ return new Promise(function(res,rej){
+        if(typeof Html5Qrcode==='undefined'){ rej(new Error('no')); return; }
+        var qr=new Html5Qrcode('scanReader',{verbose:false});
+        qr.scanFile(file,false).then(function(t){ res(t); }).catch(function(err){ rej(err); });
+      }); });
+    });
+    runEngines(engines, hint);
+  }
+  function runEngines(engines, hint){
+    var i=0;
+    function next(){
+      if(i>=engines.length){ if(hint) hint.textContent='图片未识别到条码，请换清晰照片，或手动输入条码'; return; }
+      var eng=engines[i++];
+      eng().then(function(code){
+        if(hint) hint.textContent='✅ 识别成功：'+code;
+        document.getElementById('scanResultText').textContent=code;
+        document.getElementById('scanResultBar').classList.add('show');
+        state._lastScan=code;
+      }).catch(function(){ next(); });
+    }
+    next();
   }
 
   function useManualScan(){
-    const inp=document.getElementById('scanManualInput');
-    const code=inp? inp.value.trim():'';
+    var inp=document.getElementById('scanManualInput');
+    var code=inp? inp.value.trim():'';
     if(!code){ toast('请输入条码'); return; }
     state._lastScan=code;
-    const man=document.getElementById('scanManual'); if(man) man.style.display='none';
+    var man=document.getElementById('scanManual'); if(man) man.style.display='none';
     useScanResult();
   }
 
@@ -2361,18 +2458,25 @@ const App = (() => {
     stopScan();
     if(mode==='quick-add' || mode==='add-item'){
       if(mode==='quick-add'){
-        document.getElementById('quickName').value=code;
-        document.getElementById('quickBarcode').value=code;
-        // 若已有同条码/同名产品，预填区域与分类
+        const elName=document.getElementById('quickName');
+        const elCode=document.getElementById('quickBarcode');
+        if(!elName || !elCode){ toast('请先打开「快速录入」页面再扫码'); return; }
         const match=findItemByCode(code)[0];
+        // 匹配到已有产品就回填产品名；否则名称留空让用户填，条码只进条码框
+        elName.value = match ? match.name : '';
+        elCode.value = code;
         if(match){
-          if(match.moduleId) document.getElementById('quickModule').value=match.moduleId;
-          toast('已匹配已有产品，可修改数量后保存');
+          const elMod=document.getElementById('quickModule');
+          if(elMod && match.moduleId) elMod.value=match.moduleId;
+          toast('已匹配「'+match.name+'」，可修改数量后保存');
+        } else {
+          toast('条码已填入，请补全产品名称');
         }
       } else {
-        const el=document.getElementById('itemBarcode'); if(el) el.value=code;
-        const nm=document.getElementById('itemName'); if(nm && !nm.value) nm.value=code;
-        toast('条码已填入');
+        const el=document.getElementById('itemBarcode');
+        if(!el){ toast('请先打开产品编辑页面再扫码'); return; }
+        el.value=code;
+        toast('条码已填入，请补全产品名称');
       }
     } else if(mode==='consume'){
       const matches=findItemByCode(code);
@@ -2385,7 +2489,6 @@ const App = (() => {
         state.consumeSelectedItemId=matches[0].id;
         render();
       } else {
-        // 多个匹配，弹窗选择
         const opts=matches.map(m=>{
           const mod=MODULES.find(x=>x.id===m.moduleId);
           return `<div class="consume-match-item" onclick="App.state.consumeSelectedItemId='${m.id}';App.state.consumeSearchQuery='${escapeHtml(m.name)}';App.hideModal();App.render()">
@@ -2400,14 +2503,11 @@ const App = (() => {
   }
 
   function stopScan(){
-    if(_html5Qr){ try{ _html5Qr.stop().catch(()=>{}); }catch(e){} _html5Qr=null; }
+    stopAllEngines();
     const ov=document.getElementById('scanOverlay'); if(ov) ov.classList.remove('show');
     const man=document.getElementById('scanManual'); if(man){ man.style.display='none'; const inp=document.getElementById('scanManualInput'); if(inp) inp.value=''; }
   }
 
-  // ================================================================
-  // SETTINGS: 库存预警阈值保存
-  // ================================================================
   function saveLowStockThreshold(val){
     const t=parseInt(val);
     if(isNaN(t)||t<0){ toast('请输入有效的阈值'); return; }
