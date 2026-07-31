@@ -420,6 +420,9 @@ img{max-width:100%;display:block}
 .stock-tab{flex-shrink:0;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-600);transition:all .2s}
 .stock-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
 .stock-tab.warn-active{background:var(--yellow);color:#8a6d1a;border-color:var(--yellow)}
+.scan-manual{display:none;gap:8px;padding:10px 16px;background:rgba(0,0,0,.82);z-index:1}
+.scan-manual-input{flex:1;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.96);font-size:14px;color:#222}
+.scan-manual-input::placeholder{color:#999}
 </style>
 <!-- 扫码识别库（条码/QR），部署到 HTTPS 后可用；离线预览(file://)不可用会优雅降级 -->
 <script src="./html5-qrcode.min.js"></script>
@@ -441,12 +444,16 @@ img{max-width:100%;display:block}
 <!-- 扫码层 -->
 <div class="scan-overlay" id="scanOverlay">
   <div class="scan-header">
-    <div class="scan-header-title">📷 扫码</div>
+    <div class="scan-header-title">📷 扫码录入</div>
     <button class="scan-close-btn" onclick="App.stopScan()">✕</button>
   </div>
   <div class="scan-video-container">
     <div id="scanReader" style="width:100%;height:100%"></div>
       <div class="scan-hint" id="scanHint">将条码/二维码对准取景框…</div>
+    </div>
+    <div class="scan-manual" id="scanManual">
+      <input class="scan-manual-input" id="scanManualInput" type="text" placeholder="相机/相册识别不了？手动输入条码后点「使用」" onkeydown="if(event.key==='Enter')App.useManualScan()">
+      <button type="button" class="scan-btn scan-btn-primary" onclick="App.useManualScan()">使用</button>
     </div>
     <div class="scan-footer">
       <button type="button" class="scan-btn scan-btn-cancel" onclick="App.scanFromFile()">📁 从相册识别</button>
@@ -2214,6 +2221,17 @@ const App = (() => {
   // SCAN (扫码录入 / 扫码消耗)
   // ================================================================
   let _html5Qr=null;
+  function ensureLib(){
+    if(typeof Html5Qrcode!=='undefined') return Promise.resolve();
+    return new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+      s.crossOrigin='anonymous';
+      s.onload=function(){ (typeof Html5Qrcode!=='undefined')?res():rej(new Error('CDN识别库加载失败')); };
+      s.onerror=function(){ rej(new Error('识别库加载失败（本地与CDN均不可用，请检查网络）')); };
+      document.head.appendChild(s);
+    });
+  }
   function _initQr(){
     if(typeof Html5Qrcode==='undefined') throw new Error('识别库未加载');
     if(!_html5Qr) _html5Qr=new Html5Qrcode('scanReader',{verbose:false});
@@ -2230,35 +2248,58 @@ const App = (() => {
 
   function startScan(mode){
     state.scanMode=mode;
-    document.getElementById('scanResultBar').classList.remove('show');
-    document.getElementById('scanResultText').textContent='';
-    document.getElementById('scanHint').textContent='将条码/二维码对准取景框…';
-    document.getElementById('scanOverlay').classList.add('show');
+    var bar=document.getElementById('scanResultBar'); if(bar) bar.classList.remove('show');
+    var rt=document.getElementById('scanResultText'); if(rt) rt.textContent='';
+    var hint=document.getElementById('scanHint'); if(hint) hint.textContent='正在启动摄像头…';
+    var ov=document.getElementById('scanOverlay'); if(ov) ov.classList.add('show');
+    var man=document.getElementById('scanManual'); if(man) man.style.display='flex';
+    var fin=document.getElementById('scanFileInput'); if(fin) fin.value='';
 
-    // 无摄像头能力 → 引导用相册
-    const hasCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-    if(!hasCam){
-      document.getElementById('scanHint').textContent='当前环境无法调用摄像头，请点底部「📁 从相册识别」选择图片';
-      return;
-    }
-    let qr;
-    try{ qr=_initQr(); }
-    catch(e){ toast('识别库未就绪，请刷新页面或改用相册识别'); return; }
-
-    const onOk=(decodedText)=>{
-      try{ qr.stop().catch(()=>{}); }catch(e){}
-      document.getElementById('scanHint').textContent='✅ 识别成功：'+decodedText;
-      document.getElementById('scanResultText').textContent=decodedText;
-      document.getElementById('scanResultBar').classList.add('show');
-      state._lastScan=decodedText;
-    };
-    const cfg={fps:10, qrbox:{width:240,height:240}};
-    // 优先后置摄像头；失败自动降级到默认摄像头
-    qr.start({facingMode:'environment'}, cfg, onOk, ()=>{}).catch(()=>{
-      qr.start({}, cfg, onOk, ()=>{}).catch(err=>{
-        const msg=(err&&err.message)?err.message:(''+err);
-        document.getElementById('scanHint').textContent='摄像头启动失败：'+msg+'。可点「📁 从相册识别」';
+    ensureLib().then(function(){
+      var hasCam=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      if(!hasCam){
+        if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码';
+        return;
+      }
+      var qr;
+      try{ qr=_initQr(); }catch(e){ if(hint) hint.textContent='识别库未就绪，请刷新页面'; return; }
+      var onOk=function(decodedText){
+        try{ qr.stop().catch(function(){}); }catch(e){}
+        if(hint) hint.textContent='✅ 识别成功：'+decodedText;
+        if(rt) rt.textContent=decodedText;
+        if(bar) bar.classList.add('show');
+        state._lastScan=decodedText;
+      };
+      var cfg={
+        fps:15,
+        qrbox:{width:260,height:260},
+        aspectRatio:1.0,
+        experimentalFeatures:{ useBarCodeDetectorIfSupported:true }
+      };
+      if(typeof Html5QrcodeSupportedFormats!=='undefined'){
+        cfg.formatsToSupport=[
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODE_93,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.ITF,
+          Html5QrcodeSupportedFormats.AZTEC,
+          Html5QrcodeSupportedFormats.DATA_MATRIX,
+          Html5QrcodeSupportedFormats.PDF_417
+        ];
+      }
+      qr.start({facingMode:'environment'}, cfg, onOk, function(){}).catch(function(){
+        qr.start({}, cfg, onOk, function(){}).catch(function(err){
+          var msg=(err&&err.message)?err.message:(''+err);
+          if(hint) hint.textContent='摄像头启动失败：'+msg+'。可改用「📁 从相册识别」或手动输入';
+        });
       });
+    }).catch(function(err){
+      if(hint) hint.textContent=(err&&err.message)?err.message:'识别库加载失败';
     });
   }
 
@@ -2272,17 +2313,31 @@ const App = (() => {
     e.target.value='';
     if(!file) return;
     if(_html5Qr){ try{ _html5Qr.stop().catch(()=>{}); }catch(err){} }
-    let qr;
-    try{ qr=_initQr(); }catch(err){ toast('识别库未就绪，请刷新页面'); return; }
-    document.getElementById('scanHint').textContent='正在识别图片…';
-    qr.scanFile(file, false).then(decodedText=>{
-      document.getElementById('scanHint').textContent='✅ 识别成功：'+decodedText;
-      document.getElementById('scanResultText').textContent=decodedText;
-      document.getElementById('scanResultBar').classList.add('show');
-      state._lastScan=decodedText;
+    const hint=document.getElementById('scanHint');
+    ensureLib().then(()=>{
+      let qr;
+      try{ qr=_initQr(); }catch(err){ toast('识别库未就绪，请刷新页面'); return; }
+      if(hint) hint.textContent='正在识别图片…';
+      qr.scanFile(file, false).then(decodedText=>{
+        if(hint) hint.textContent='✅ 识别成功：'+decodedText;
+        document.getElementById('scanResultText').textContent=decodedText;
+        document.getElementById('scanResultBar').classList.add('show');
+        state._lastScan=decodedText;
+      }).catch(err=>{
+        if(hint) hint.textContent='图片未识别到条码，请换清晰照片，或手动输入条码';
+      });
     }).catch(err=>{
-      document.getElementById('scanHint').textContent='图片中未识别到条码/二维码，请换一张清晰的图';
+      if(hint) hint.textContent='识别库加载失败，请联网后重试或手动输入条码';
     });
+  }
+
+  function useManualScan(){
+    const inp=document.getElementById('scanManualInput');
+    const code=inp? inp.value.trim():'';
+    if(!code){ toast('请输入条码'); return; }
+    state._lastScan=code;
+    const man=document.getElementById('scanManual'); if(man) man.style.display='none';
+    useScanResult();
   }
 
   function useScanResult(){
@@ -2333,6 +2388,7 @@ const App = (() => {
   function stopScan(){
     if(_html5Qr){ try{ _html5Qr.stop().catch(()=>{}); }catch(e){} _html5Qr=null; }
     const ov=document.getElementById('scanOverlay'); if(ov) ov.classList.remove('show');
+    const man=document.getElementById('scanManual'); if(man){ man.style.display='none'; const inp=document.getElementById('scanManualInput'); if(inp) inp.value=''; }
   }
 
   // ================================================================
@@ -2358,7 +2414,7 @@ const App = (() => {
     showRegionManager,toggleHomeSection,renameRegion,removeRegion,addRegion,
     selectConsumeItem,doConsume,doExport,saveQuickItem,handleQuickMediaUpload,
     showExportPreview,cancelAddItem,showNameSuggestions,fillNameSuggestion,
-    startScan,stopScan,useScanResult,scanFromFile,onScanFilePicked,
+    startScan,stopScan,useScanResult,scanFromFile,onScanFilePicked,useManualScan,
     saveLowStockThreshold,showStockAlertPopup,resetView
   };
 })();
