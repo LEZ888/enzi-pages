@@ -1,5 +1,5 @@
-const CACHE = 'lesley-warehouse-v4';
-const STATIC_ASSETS = ['./', './index.html', './manifest.json', './logo.jpg', './html5-qrcode.min.js', './sw.js'];
+const CACHE = 'lesley-warehouse-v5';
+const STATIC_ASSETS = ['./', './index.html', './manifest.json', './logo.jpg', './zxing.min.js', './html5-qrcode.min.js', './sw.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
