@@ -2255,14 +2255,20 @@ const App = (() => {
     var man=document.getElementById('scanManual'); if(man) man.style.display='flex';
     var fin=document.getElementById('scanFileInput'); if(fin) fin.value='';
 
+    // 启动超时兜底：若 8 秒后仍卡在“正在启动摄像头…”，提示改用相册/手动，避免无限转圈
+    var startTimer=setTimeout(function(){
+      if(hint && hint.textContent==='正在启动摄像头…'){
+        if(hint) hint.textContent='摄像头启动较慢，请稍候，或改用「📁 相册识别」/手动输入条码';
+      }
+    },8000);
+
     ensureLib().then(function(){
       var hasCam=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-      if(!hasCam){
-        if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码';
-        return;
-      }
+      if(!hasCam){ clearTimeout(startTimer); if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码'; return; }
+      // 复用前先停掉可能残留的实例，保证干净启动
+      if(_html5Qr){ try{ _html5Qr.stop().catch(function(){}); }catch(e){} _html5Qr=null; }
       var qr;
-      try{ qr=_initQr(); }catch(e){ if(hint) hint.textContent='识别库未就绪，请刷新页面'; return; }
+      try{ qr=_initQr(); }catch(e){ clearTimeout(startTimer); if(hint) hint.textContent='识别库未就绪，请刷新页面'; return; }
       var onOk=function(decodedText){
         try{ qr.stop().catch(function(){}); }catch(e){}
         if(hint) hint.textContent='✅ 识别成功：'+decodedText;
@@ -2270,10 +2276,10 @@ const App = (() => {
         if(bar) bar.classList.add('show');
         state._lastScan=decodedText;
       };
+      // 去掉 aspectRatio 固定裁剪，改用自适应取景框，启动更快、不卡顿
       var cfg={
-        fps:15,
-        qrbox:{width:260,height:260},
-        aspectRatio:1.0,
+        fps:12,
+        qrbox:function(vw,vh){ var s=Math.max(180,Math.min(vw,vh,300)); return {width:s,height:s}; },
         experimentalFeatures:{ useBarCodeDetectorIfSupported:true }
       };
       if(typeof Html5QrcodeSupportedFormats!=='undefined'){
@@ -2292,13 +2298,21 @@ const App = (() => {
           Html5QrcodeSupportedFormats.PDF_417
         ];
       }
-      qr.start({facingMode:'environment'}, cfg, onOk, function(){}).catch(function(){
-        qr.start({}, cfg, onOk, function(){}).catch(function(err){
+      function begin(cam){
+        return qr.start(cam, cfg, onOk, function(){}).then(function(){
+          clearTimeout(startTimer);
+          if(hint) hint.textContent='将条码/二维码对准取景框';
+        });
+      }
+      begin({facingMode:'environment'}).catch(function(){
+        begin({}).catch(function(err){
+          clearTimeout(startTimer);
           var msg=(err&&err.message)?err.message:(''+err);
           if(hint) hint.textContent='摄像头启动失败：'+msg+'。可改用「📁 从相册识别」或手动输入';
         });
       });
     }).catch(function(err){
+      clearTimeout(startTimer);
       if(hint) hint.textContent=(err&&err.message)?err.message:'识别库加载失败';
     });
   }
