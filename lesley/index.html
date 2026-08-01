@@ -735,9 +735,12 @@ const App = (() => {
 
   // ---- Data Export (multi-format + preview) ----
   async function prepareExportData() {
-    const items=await getAllItems(), records=await getAllRecords(),
-          catsRaw=await dbOp('categories','readonly',s=>s.getAll());
-    return {version:2,exportTime:new Date().toISOString(),appName:'LESLEY公司仓储',items,records,categories:catsRaw};
+    const [items,records,catsRaw,modsRaw]=await Promise.all([
+      getAllItems(), getAllRecords(),
+      dbOp('categories','readonly',s=>s.getAll()),
+      loadModules()
+    ]);
+    return {version:3,exportTime:new Date().toISOString(),appName:'LESLEY公司仓储',items,records,categories:catsRaw,modules:modsRaw};
   }
 
   async function showExportPreview() {
@@ -749,9 +752,11 @@ const App = (() => {
         <div class="export-format-btn ${state.exportFormat==='json'?'active':''}" onclick="App.state.exportFormat='json';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📄 JSON</div>
         <div class="export-format-btn ${state.exportFormat==='csv'?'active':''}" onclick="App.state.exportFormat='csv';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📊 CSV</div>
         <div class="export-format-btn ${state.exportFormat==='images'?'active':''}" onclick="App.state.exportFormat='images';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">🖼️ 图片</div>
+        <div class="export-format-btn ${state.exportFormat==='xml'?'active':''}" onclick="App.state.exportFormat='xml';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📄 XML</div>
+        <div class="export-format-btn ${state.exportFormat==='xlsx'?'active':''}" onclick="App.state.exportFormat='xlsx';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📊 Excel</div>
       </div>
-      <div class="form-label">数据预览（前500字符）</div>
-      <div class="export-preview">${escapeHtml(JSON.stringify(data,null,2).substring(0,500))}...</div>
+      <div class="form-label">导出说明</div>
+      <div class="export-preview">${ state.exportFormat==='json' ? 'JSON：完整备份，含物品/记录/分类/模块及图片' : state.exportFormat==='csv' ? 'CSV：物品清单，Excel/WPS 可直接打开（不含图片）' : state.exportFormat==='images' ? '图片：逐张下载所有物品图片' : state.exportFormat==='xml' ? 'XML：结构化备份，含全部字段与图片，可被本应用重新导入' : 'Excel：含「物品 / 记录 / 分类 / 模块」四个工作表，Excel/WPS/Numbers 可打开' }</div>
       <div style="font-size:12px;color:var(--gray-400);margin:8px 0">
         📦 物品：${data.items.length}个 | 📋 记录：${data.records.length}条 | 🏷️ 分类：${data.categories.length}个
       </div>
@@ -789,6 +794,18 @@ const App = (() => {
         toast('CSV文件已导出！');
         break;
       }
+      case 'xml': {
+        const blob=new Blob([buildXml(data)],{type:'application/xml;charset=utf-8'});
+        downloadBlob(blob,`LESLEY公司仓储备份_${formatDate(new Date(),'YYYYMMDD_HHmmss')}.xml`);
+        toast('XML备份已导出！');
+        break;
+      }
+      case 'xlsx': {
+        const blob=buildXlsx(data);
+        downloadBlob(blob,`LESLEY公司仓储_${formatDate(new Date(),'YYYYMMDD')}.xlsx`);
+        toast('Excel文件已导出！');
+        break;
+      }
       case 'images': {
         // Download each image individually
         const itemsWithImages=data.items.filter(i=>i.images&&i.images.length);
@@ -821,25 +838,357 @@ const App = (() => {
   }
 
   // Import
-  async function importData(file){
-    return new Promise((res,rej)=>{
-      const reader=new FileReader();
-      reader.onload=async(e)=>{
-        try{
-          const data=JSON.parse(e.target.result);
-          if(!data.items||!data.records)throw new Error('无效的备份文件');
-          await clearAllData();
-          const tx=db.transaction(['items','records','categories'],'readwrite');
-          data.items.forEach(i=>tx.objectStore('items').put(i));
-          data.records.forEach(r=>tx.objectStore('records').put(r));
-          if(data.categories)data.categories.forEach(c=>tx.objectStore('categories').put(c));
-          tx.oncomplete=()=>{toast(`恢复成功！${data.items.length}个物品，${data.records.length}条记录`);res();};
-          tx.onerror=()=>rej(tx.error);
-        }catch(err){rej(err);}
-      };
-      reader.readAsText(file);
+
+  // ===== 多格式导出/导入辅助 =====
+  function colLetter(n){let s='';n++;while(n>0){s=String.fromCharCode(65+((n-1)%26))+s;n=Math.floor((n-1)/26);}return s;}
+  function colToNum(s){let n=0;for(let i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n-1;}
+  function xmlEscape(s){if(s===null||s===undefined)return '';return String(s).replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));}
+  function resolveModuleId(name){if(!name)return 'finished';const m=MODULES.find(x=>x.name===name);if(m)return m.id;if(MODULES.find(x=>x.id===name))return name;return 'finished';}
+
+  function buildXml(data){
+    let x='<?xml version="1.0" encoding="UTF-8"?>\n<LESLEYWarehouseExport version="3" exportTime="'+xmlEscape(data.exportTime)+'">\n';
+    x+='  <items>\n';
+    (data.items||[]).forEach(i=>{
+      x+='    <item>\n';
+      x+='      <id>'+xmlEscape(i.id)+'</id>\n';
+      x+='      <name>'+xmlEscape(i.name)+'</name>\n';
+      x+='      <quantity>'+xmlEscape(i.quantity)+'</quantity>\n';
+      x+='      <moduleId>'+xmlEscape(i.moduleId)+'</moduleId>\n';
+      x+='      <moduleName>'+xmlEscape((MODULES.find(m=>m.id===i.moduleId)||{}).name||'')+'</moduleName>\n';
+      x+='      <categoryId>'+xmlEscape(i.categoryId)+'</categoryId>\n';
+      x+='      <location>'+xmlEscape(i.location)+'</location>\n';
+      x+='      <barcode>'+xmlEscape(i.barcode)+'</barcode>\n';
+      x+='      <arrivalDate>'+xmlEscape(i.arrivalDate)+'</arrivalDate>\n';
+      x+='      <expiryDate>'+xmlEscape(i.expiryDate)+'</expiryDate>\n';
+      x+='      <reminderDays>'+xmlEscape(i.reminderDays)+'</reminderDays>\n';
+      x+='      <usageNote>'+xmlEscape(i.usageNote)+'</usageNote>\n';
+      x+='      <supplierNote>'+xmlEscape(i.supplierNote)+'</supplierNote>\n';
+      x+='      <images>\n';
+      (i.images||[]).forEach(im=>{x+='        <image>'+xmlEscape(im)+'</image>\n';});
+      x+='      </images>\n';
+      x+='    </item>\n';
     });
+    x+='  </items>\n';
+    x+='  <records>\n';
+    (data.records||[]).forEach(r=>{
+      x+='    <record>\n';
+      x+='      <id>'+xmlEscape(r.id)+'</id>\n';
+      x+='      <itemId>'+xmlEscape(r.itemId)+'</itemId>\n';
+      x+='      <moduleId>'+xmlEscape(r.moduleId)+'</moduleId>\n';
+      x+='      <type>'+xmlEscape(r.type)+'</type>\n';
+      x+='      <quantity>'+xmlEscape(r.quantity)+'</quantity>\n';
+      x+='      <remainingQty>'+xmlEscape(r.remainingQty)+'</remainingQty>\n';
+      x+='      <note>'+xmlEscape(r.note)+'</note>\n';
+      x+='      <timestamp>'+xmlEscape(r.timestamp)+'</timestamp>\n';
+      x+='    </record>\n';
+    });
+    x+='  </records>\n';
+    x+='  <categories>\n';
+    (data.categories||[]).forEach(c=>{
+      x+='    <category><id>'+xmlEscape(c.id)+'</id><moduleId>'+xmlEscape(c.moduleId)+'</moduleId><name>'+xmlEscape(c.name)+'</name></category>\n';
+    });
+    x+='  </categories>\n';
+    x+='  <modules>\n';
+    (data.modules||[]).forEach(m=>{
+      x+='    <module><id>'+xmlEscape(m.id)+'</id><name>'+xmlEscape(m.name)+'</name><icon>'+xmlEscape(m.icon)+'</icon></module>\n';
+    });
+    x+='  </modules>\n';
+    x+='</LESLEYWarehouseExport>\n';
+    return x;
   }
+
+  const XLSX_COLS={
+    items:[['id','ID'],['name','物品名称'],['quantity','数量'],['moduleId','模块ID'],['moduleName','所属模块'],['categoryId','分类ID'],['location','存放位置'],['barcode','条码'],['arrivalDate','到货日期'],['expiryDate','到期时间'],['reminderDays','预警天数'],['usageNote','用途备注'],['supplierNote','供应商'],['imagesCount','图片数']],
+    records:[['timestamp','时间'],['itemId','物品ID'],['moduleId','模块ID'],['type','类型'],['quantity','数量'],['remainingQty','剩余'],['note','备注']],
+    categories:[['id','ID'],['moduleId','模块ID'],['name','名称']],
+    modules:[['id','ID'],['name','名称'],['icon','图标']]
+  };
+  function sheetXml(rows){
+    let c='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+    rows.forEach((row,rIdx)=>{
+      c+='<row r="'+(rIdx+1)+'">';
+      row.forEach((cell,ci)=>{
+        if(cell===null||cell===undefined)cell='';
+        const ref=colLetter(ci)+(rIdx+1);
+        if(typeof cell==='number'||(cell!==''&&!isNaN(cell)&&rIdx>0)){
+          c+='<c r="'+ref+'"><v>'+cell+'</v></c>';
+        }else{
+          c+='<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(cell)+'</t></is></c>';
+        }
+      });
+      c+='</row>';
+    });
+    c+='</sheetData></worksheet>';
+    return c;
+  }
+  function crc32(buf){
+    let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}
+    let crc=0xFFFFFFFF;for(let i=0;i<buf.length;i++)crc=t[(crc^buf[i])&0xFF]^(crc>>>8);return (crc^0xFFFFFFFF)>>>0;
+  }
+  function buildXlsxZip(files){
+    const enc=new TextEncoder();const parts=[];const central=[];let offset=0;
+    files.forEach(f=>{
+      const data=enc.encode(f.content);const crc=crc32(data);const nb=enc.encode(f.name);
+      const lh=new Uint8Array(30+nb.length);const dv=new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true);dv.setUint16(4,20,true);dv.setUint16(6,0,true);dv.setUint16(8,0,true);
+      dv.setUint16(10,0,true);dv.setUint16(12,0,true);dv.setUint32(14,crc,true);
+      dv.setUint32(18,data.length,true);dv.setUint32(22,data.length,true);dv.setUint16(26,nb.length,true);dv.setUint16(28,0,true);
+      lh.set(nb,30);parts.push(lh,data);
+      const cd=new Uint8Array(46+nb.length);const cv=new DataView(cd.buffer);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0,true);
+      cv.setUint16(10,0,true);cv.setUint16(12,0,true);cv.setUint32(14,crc,true);
+      cv.setUint32(18,data.length,true);cv.setUint32(22,data.length,true);cv.setUint16(26,nb.length,true);cv.setUint16(28,0,true);
+      cv.setUint32(42,offset,true);cd.set(nb,46);central.push(cd);
+      offset+=lh.length+data.length;
+    });
+    const cs=central.reduce((s,c)=>s+c.length,0);
+    const eo=new Uint8Array(22);const ev=new DataView(eo.buffer);
+    ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+    ev.setUint32(12,cs,true);ev.setUint32(16,offset,true);
+    parts.push.apply(parts,central);parts.push(eo);
+    return new Blob(parts,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  function buildXlsx(data){
+    const sheets=[
+      {name:'物品',rows:[XLSX_COLS.items.map(c=>c[1])].concat((data.items||[]).map(i=>XLSX_COLS.items.map(c=>{
+        if(c[0]==='moduleName')return (MODULES.find(m=>m.id===i.moduleId)||{}).name||'';
+        if(c[0]==='imagesCount')return (i.images?i.images.length:0);
+        return i[c[0]];
+      })))},
+      {name:'记录',rows:[XLSX_COLS.records.map(c=>c[1])].concat((data.records||[]).map(r=>XLSX_COLS.records.map(c=>r[c[0]])))},
+      {name:'分类',rows:[XLSX_COLS.categories.map(c=>c[1])].concat((data.categories||[]).map(c=>XLSX_COLS.categories.map(c2=>c[c2[0]])))},
+      {name:'模块',rows:[XLSX_COLS.modules.map(c=>c[1])].concat((data.modules||[]).map(m=>XLSX_COLS.modules.map(c=>m[c[0]])))}
+    ];
+    const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((s,idx)=>'<Override PartName="/xl/worksheets/sheet'+(idx+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>';
+    const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+    const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map((s,idx)=>'<sheet name="'+xmlEscape(s.name)+'" sheetId="'+(idx+1)+'" r:id="rId'+(idx+1)+'"/>').join('')+'</sheets></workbook>';
+    const wbrels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,idx)=>'<Relationship Id="rId'+(idx+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(idx+1)+'.xml"/>').join('')+'</Relationships>';
+    const files=[{name:'[Content_Types].xml',content:ct},{name:'_rels/.rels',content:rels},{name:'xl/workbook.xml',content:wb},{name:'xl/_rels/workbook.xml.rels',content:wbrels}];
+    sheets.forEach((s,idx)=>{files.push({name:'xl/worksheets/sheet'+(idx+1)+'.xml',content:sheetXml(s.rows)});});
+    return buildXlsxZip(files);
+  }
+
+  function parseCsvText(text){
+    text=text.replace(/^\uFEFF/,'');
+    const rows=[];let row=[],field='',inQ=false;
+    for(let i=0;i<text.length;i++){
+      const ch=text[i];
+      if(inQ){
+        if(ch==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; }
+        else field+=ch;
+      }else{
+        if(ch==='"')inQ=true;
+        else if(ch===','){row.push(field);field='';}
+        else if(ch==='\n'){row.push(field);rows.push(row);row=[];field='';}
+        else if(ch==='\r'){}
+        else field+=ch;
+      }
+    }
+    if(field.length||row.length){row.push(field);rows.push(row);}
+    return rows;
+  }
+  function parseXmlText(text){
+    const doc=new DOMParser().parseFromString(text,'application/xml');
+    if(doc.querySelector('parsererror'))throw new Error('XML 解析失败');
+    const T=(el,tag)=>{const n=el.querySelector(tag);return n?n.textContent:'';};
+    const N=s=>{const n=parseInt(s);return isNaN(n)?0:n;};
+    const items=Array.from(doc.querySelectorAll('items > item')).map(it=>({
+      id:T(it,'id'),name:T(it,'name'),quantity:N(T(it,'quantity')),moduleId:T(it,'moduleId'),
+      categoryId:T(it,'categoryId'),location:T(it,'location'),barcode:T(it,'barcode'),
+      arrivalDate:T(it,'arrivalDate'),expiryDate:T(it,'expiryDate'),reminderDays:N(T(it,'reminderDays')),
+      usageNote:T(it,'usageNote'),supplierNote:T(it,'supplierNote'),
+      images:Array.from(it.querySelectorAll('images > image')).map(n=>n.textContent)
+    }));
+    const records=Array.from(doc.querySelectorAll('records > record')).map(r=>({
+      id:T(r,'id'),itemId:T(r,'itemId'),moduleId:T(r,'moduleId'),type:T(r,'type'),
+      quantity:N(T(r,'quantity')),remainingQty:N(T(r,'remainingQty')),note:T(r,'note'),timestamp:T(r,'timestamp')
+    }));
+    const categories=Array.from(doc.querySelectorAll('categories > category')).map(c=>({id:T(c,'id'),moduleId:T(c,'moduleId'),name:T(c,'name')}));
+    const modules=Array.from(doc.querySelectorAll('modules > module')).map(m=>({id:T(m,'id'),name:T(m,'name'),icon:T(m,'icon')}));
+    return {items,records,categories,modules};
+  }
+  function sheetXmlToRows(xml){
+    const rows=[];
+    const rowMatches=xml.match(/<row[^>]*>[\s\S]*?<\/row>/g)||[];
+    rowMatches.forEach(rm=>{
+      const tmp=[];let maxCol=0;
+      (rm.match(/<c[^>]*>[\s\S]*?<\/c>/g)||[]).forEach(cell=>{
+        const ref=(cell.match(/r="([A-Z]+)\d+"/)||[])[1];
+        const colIdx=colToNum(ref);
+        let val='';
+        if(/t="inlineStr"/.test(cell)){const t=cell.match(/<t[^>]*>([\s\S]*?)<\/t>/);if(t)val=t[1];}
+        else{const v=cell.match(/<v>([\s\S]*?)<\/v>/);if(v)val=v[1];}
+        tmp.push({colIdx,val});
+        if(colIdx>maxCol)maxCol=colIdx;
+      });
+      const arr=new Array(maxCol+1).fill('');
+      tmp.forEach(c=>arr[c.colIdx]=c.val);
+      rows.push(arr);
+    });
+    return rows;
+  }
+  async function inflateRaw(bytes){
+    const ds=new DecompressionStream('deflate-raw');
+    const w=ds.writable.getWriter();w.write(bytes);w.close();
+    const r=ds.readable.getReader();const chunks=[];let done=false;
+    while(!done){const x=await r.read();if(x.done){done=true;break;}chunks.push(x.value);}
+    let total=chunks.reduce((s,c)=>s+c.length,0);const merged=new Uint8Array(total);let o=0;
+    chunks.forEach(c=>{merged.set(c,o);o+=c.length;});
+    return new TextDecoder().decode(merged);
+  }
+  async function parseZipBuf(buf){
+    const dv=new DataView(buf);let eocd=-1;
+    for(let i=buf.byteLength-22;i>=0;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+    if(eocd<0)throw new Error('不是有效的压缩包');
+    const cdOffset=dv.getUint32(eocd+16,true);const cdCount=dv.getUint16(eocd+10,true);
+    const files={};let p=cdOffset;
+    for(let i=0;i<cdCount;i++){
+      if(dv.getUint32(p,true)!==0x02014b50)break;
+      const method=dv.getUint16(p+10,true);const compSize=dv.getUint32(p+20,true);
+      const nameLen=dv.getUint16(p+28,true);const extraLen=dv.getUint16(p+30,true);
+      let name='';for(let j=0;j<nameLen;j++)name+=String.fromCharCode(buf[p+46+j]);
+      const localOff=dv.getUint32(p+42,true);
+      files[name]={method,compSize,localOff};p+=46+nameLen+extraLen;
+    }
+    const out={};
+    for(const name in files){
+      const f=files[name];const lh=new DataView(buf,f.localOff);
+      const lNameLen=lh.getUint16(26,true);const lExtraLen=lh.getUint16(28,true);
+      const dataStart=f.localOff+30+lNameLen+lExtraLen;
+      const bytes=new Uint8Array(buf,dataStart,f.compSize);
+      if(f.method===0){out[name]=new TextDecoder().decode(bytes);}
+      else if(f.method===8){try{out[name]=await inflateRaw(bytes);}catch(e){out[name]='';}}
+    }
+    return out;
+  }
+  async function parseXlsxBuf(buf){
+    const files=await parseZipBuf(buf);
+    const wb=files['xl/workbook.xml']||'';
+    const wbrels=files['xl/_rels/workbook.xml.rels']||'';
+    const sheetDefs=[];
+    (wb.match(/<sheet[^>]*>/g)||[]).forEach(s=>{
+      const name=(s.match(/name="([^"]*)"/)||[])[1];
+      const rid=(s.match(/r:id="([^"]*)"/)||[])[1];
+      if(name&&rid)sheetDefs.push({name,rid});
+    });
+    const relMap={};
+    (wbrels.match(/<Relationship[^>]*>/g)||[]).forEach(r=>{
+      const id=(r.match(/Id="([^"]*)"/)||[])[1];
+      const tgt=(r.match(/Target="([^"]*)"/)||[])[1];
+      if(id&&tgt)relMap[id]=tgt;
+    });
+    function rowsOf(name){
+      const def=sheetDefs.find(d=>d.name===name);if(!def)return [];
+      let tgt=relMap[def.rid];if(!tgt)return [];
+      if(tgt.startsWith('/'))tgt=tgt.slice(1);else if(!tgt.startsWith('xl/'))tgt='xl/'+tgt;
+      return sheetXmlToRows(files[tgt]||'');
+    }
+    function toObjs(rows){
+      if(rows.length<2)return [];
+      const header=rows[0];const out=[];
+      for(let i=1;i<rows.length;i++){const o={};header.forEach((h,ci)=>o[h]=rows[i][ci]);out.push(o);}
+      return out;
+    }
+    const items=toObjs(rowsOf('物品')).map(o=>({
+      id:o['ID']||makeId(),name:o['物品名称']||'',quantity:parseInt(o['数量']||o['quantity'])||0,
+      moduleId:o['模块ID']||resolveModuleId(o['所属模块']),categoryId:o['分类ID']||'',location:o['存放位置']||'',barcode:o['条码']||'',
+      arrivalDate:o['到货日期']||'',expiryDate:o['到期时间']||'',reminderDays:parseInt(o['预警天数']||o['reminderDays'])||7,
+      usageNote:o['用途备注']||'',supplierNote:o['供应商']||'',images:[]
+    }));
+    const records=toObjs(rowsOf('记录')).map(o=>({
+      id:o['ID']||makeId(),itemId:o['物品ID']||'',moduleId:o['模块ID']||'',type:o['类型']||'in',
+      quantity:parseInt(o['数量']||o['quantity'])||0,remainingQty:parseInt(o['剩余']||o['remainingQty'])||0,note:o['备注']||'',timestamp:o['时间']||new Date().toISOString()
+    }));
+    const categories=toObjs(rowsOf('分类')).map(o=>({id:o['ID']||makeId(),moduleId:o['模块ID']||'',name:o['名称']||''}));
+    const modules=toObjs(rowsOf('模块')).map(o=>({id:o['ID']||makeId(),name:o['名称']||'',icon:o['图标']||'📦'}));
+    return {items,records,categories,modules};
+  }
+  function csvToData(text){
+    const rows=parseCsvText(text);
+    if(rows.length<2)return {items:[],records:[],categories:[],modules:[]};
+    const header=rows[0];
+    const items=rows.slice(1).filter(r=>r[0]).map(r=>{const o={};header.forEach((h,ci)=>o[h]=r[ci]||'');return o;}).filter(o=>o['物品名称']);
+    return {items:items.map(o=>({
+      id:o['ID']||makeId(),name:o['物品名称']||'',quantity:parseInt(o['数量']||o['quantity'])||0,
+      moduleId:o['模块ID']||resolveModuleId(o['所属模块']),categoryId:o['分类ID']||'',location:o['存放位置']||'',barcode:o['条码']||'',
+      arrivalDate:o['到货日期']||'',expiryDate:o['到期时间']||'',reminderDays:parseInt(o['预警天数']||o['reminderDays'])||7,
+      usageNote:o['用途备注']||'',supplierNote:o['供应商']||'',images:[]
+    })),records:[],categories:[],modules:[]};
+  }
+
+  async function handleImportFile(file){
+    if(!file)return;
+    const name=(file.name||'').toLowerCase();
+    let parsed=null,kind='';
+    try{
+      if(name.endsWith('.json')){parsed=JSON.parse(await file.text());kind='json';}
+      else if(name.endsWith('.csv')){parsed=csvToData(await file.text());kind='csv';}
+      else if(name.endsWith('.xml')){parsed=parseXmlText(await file.text());kind='xml';}
+      else if(name.endsWith('.xlsx')){parsed=await parseXlsxBuf(await file.arrayBuffer());kind='xlsx';}
+      else{
+        const head=(await file.slice(0,4).text());
+        if(head==='PK\u0003\u0004'){parsed=await parseXlsxBuf(await file.arrayBuffer());kind='xlsx';}
+        else{const t=await file.text();if(t.trim().startsWith('<')){parsed=parseXmlText(t);kind='xml';}else if(t.trim().startsWith('{')){parsed=JSON.parse(t);kind='json';}else{parsed=csvToData(t);kind='csv';}}
+      }
+    }catch(e){toast('解析失败：'+e.message);return;}
+    if(!parsed||!parsed.items||!parsed.items.length){toast('文件中未找到可导入的物品数据');return;}
+    state._pendingImport=parsed;
+    showImportConfirm(parsed,kind);
+  }
+  function showImportConfirm(parsed,kind){
+    const n=parsed.items.length, r=(parsed.records||[]).length, c=(parsed.categories||[]).length, m=(parsed.modules||[]).length;
+    showModal(`
+      <div class="modal-title">确认恢复数据</div>
+      <div style="font-size:13px;color:var(--gray-600);margin:10px 0;line-height:1.7">
+        来源格式：<b>${kind.toUpperCase()}</b><br>
+        将导入：📦 物品 <b>${n}</b> 个 ｜ 📋 记录 <b>${r}</b> 条 ｜ 🏷️ 分类 <b>${c}</b> 个 ｜ 📁 模块 <b>${m}</b> 个<br>
+        <span style="color:var(--danger)">⚠️ 此操作会覆盖本机现有全部数据，且不可恢复。</span>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.confirmImport()">确定恢复</button>
+      </div>
+    `);
+  }
+  async function confirmImport(){
+    const parsed=state._pendingImport;hideModal();
+    if(!parsed)return;
+    const tx=db.transaction(['items','records','categories','modules','homeSections'],'readwrite');
+    tx.objectStore('items').clear();tx.objectStore('records').clear();
+    tx.objectStore('categories').clear();tx.objectStore('modules').clear();tx.objectStore('homeSections').clear();
+    parsed.items.forEach(i=>tx.objectStore('items').put(i));
+    (parsed.records||[]).forEach(r=>tx.objectStore('records').put(r));
+    (parsed.categories||[]).forEach(c=>tx.objectStore('categories').put(c));
+    (parsed.modules||[]).forEach(m=>tx.objectStore('modules').put(m));
+    await new Promise((res,rej)=>{tx.oncomplete=()=>{toast(`恢复成功！${parsed.items.length}个物品`);res();};tx.onerror=()=>rej(tx.error);});
+    state._pendingImport=null;
+    try{MODULES=await loadModules();}catch(e){}
+    try{if(App.render)App.render();else if(App.navigate)App.navigate(state.page||'home');}catch(e){}
+  }
+  async function showImportModal(){
+    const url=location.href;
+    showModal(`
+      <div class="modal-title">恢复 / 导入数据</div>
+      <div style="font-size:13px;color:var(--gray-600);margin:6px 0 12px">支持格式：JSON · CSV · XML · Excel(.xlsx)</div>
+      <div style="background:var(--gray-50);border:1px dashed var(--gray-300);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px;line-height:1.7">
+        <b>📲 从微信导入：</b><br>
+        1. 点击下方「复制本应用链接」，发到微信「文件传输助手」或任意聊天；<br>
+        2. 在微信里点开该链接（用微信内置浏览器打开本应用）；<br>
+        3. 进入 设置 → 恢复数据 → 选择文件，即可从<b>微信聊天文件 / 微信收藏</b>里挑选备份文件。<br>
+        <span style="color:var(--gray-400)">（iOS 微信内置浏览器仅支持选图片；文件请用安卓微信，或先把备份发到「文件传输助手」再在手机浏览器打开本链接）</span>
+      </div>
+      <button class="modal-btn modal-btn-confirm" style="margin-bottom:10px" onclick="App.copyLinkForWechat()">📋 复制本应用链接（发到微信）</button>
+      <button class="modal-btn" style="background:var(--blue);color:#fff;margin-bottom:6px" onclick="document.getElementById('importFile').click();App.hideModal()">📁 从本机选择文件</button>
+      <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+    `);
+  }
+  function copyLinkForWechat(){
+    const url=location.href;
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>toast('链接已复制，去微信粘贴发送给自己')).catch(()=>{prompt('复制此链接发到微信：',url);});}
+    else{prompt('复制此链接发到微信：',url);}
+  }
+
+
 
   async function clearAllData(){
     const tx=db.transaction(['items','records','categories','homeSections'],'readwrite');
@@ -1820,15 +2169,15 @@ const App = (() => {
         <div class="setting-group">
           <div class="setting-item" onclick="App.showExportPreview()">
             <div class="setting-left"><div class="setting-icon" style="background:var(--blue)">💾</div>
-              <div><div class="setting-name">备份数据</div><div class="setting-desc">多格式导出（JSON/CSV/图片）+ 预览</div></div></div>
+              <div><div class="setting-name">备份数据</div><div class="setting-desc">多格式导出（JSON/CSV/Excel/XML/图片）+ 预览</div></div></div>
             <div class="setting-arrow">›</div>
           </div>
-          <div class="setting-item" onclick="document.getElementById('importFile').click()">
+          <div class="setting-item" onclick="App.showImportModal()">
             <div class="setting-left"><div class="setting-icon" style="background:var(--green)">📥</div>
-              <div><div class="setting-name">恢复数据</div><div class="setting-desc">从备份文件导入</div></div></div>
+              <div><div class="setting-name">恢复数据</div><div class="setting-desc">本机 / 微信导入（JSON·CSV·XML·Excel）</div></div></div>
             <div class="setting-arrow">›</div>
           </div>
-          <input type="file" id="importFile" accept=".json" style="display:none" onchange="App.importData(this.files[0]).then(()=>{}).catch(e=>toast('导入失败:'+e.message))">
+          <input type="file" id="importFile" accept=".json,.csv,.xml,.xlsx,application/json,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="if(this.files[0])App.handleImportFile(this.files[0]);this.value=''">
         </div>
         <div class="setting-group">
           <div class="setting-item" onclick="App.clearAllDataConfirm()">
@@ -2520,7 +2869,7 @@ const App = (() => {
   // Public API
   return {
     state,navigate,render,toast,confirm,
-    exportData:showExportPreview,importData,saveItem,handleMediaUpload,
+    exportData:showExportPreview,showImportModal,handleImportFile,confirmImport,copyLinkForWechat,saveItem,handleMediaUpload,
     showStockAction,doStockAction,handleDeleteItem,
     showCatManager,showAddCategory,doAddCategory,renameCategory,deleteCategoryConfirm,
     clearAllDataConfirm,hideModal,showModal,_resolveConfirm,
