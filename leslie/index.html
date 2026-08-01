@@ -379,7 +379,7 @@
 <div class="mask hidden" id="mask"></div>
 <div class="toast" id="toast"></div>
 <div class="corner" id="corner"></div>
-<footer class="foot">© 莱斯莉 · 长按Logo 3秒进入管理</footer>
+<footer class="foot">© 莱斯莉<span id="adminHint" style="display:none"> · 长按Logo 3秒进入管理</span></footer>
 
 <script>
 "use strict";
@@ -1314,7 +1314,7 @@ document.getElementById("pwdInput").addEventListener("keydown",e=>{if(e.key==="E
 document.getElementById("chgPwdBtn").onclick=()=>{document.getElementById("chgPwdInput").value="";document.getElementById("chgPwdInput2").value="";document.getElementById("chgPwdModal").classList.remove("hidden");document.getElementById("chgPwdInput").focus();};
 document.getElementById("chgPwdCancel").onclick=()=>document.getElementById("chgPwdModal").classList.add("hidden");
 document.getElementById("chgPwdOk").onclick=async()=>{const v=document.getElementById("chgPwdInput").value.trim();const v2=document.getElementById("chgPwdInput2").value.trim();if(!v){toast("密码不能为空");return;}if(v!==v2){toast("两次输入不一致");return;}STATE.settings.adminPassword=v;await Store.saveAll();document.getElementById("chgPwdModal").classList.add("hidden");toast("管理密码已更新");};
-function updateModeTag(){const t=document.getElementById("modeTag");const cloud=STATE.settings.supabase.enabled;t.textContent=cloud?"云端模式":"本地模式";t.classList.toggle("cloud",cloud);t.style.display=STATE.isAdmin?"":"none";}
+function updateModeTag(){const t=document.getElementById("modeTag");const cloud=STATE.settings.supabase.enabled;t.textContent=cloud?"云端模式":"本地模式";t.classList.toggle("cloud",cloud);t.style.display=STATE.isAdmin?"":"none";const ah=document.getElementById("adminHint");if(ah)ah.style.display=STATE.isAdmin?"":"none";}
 document.getElementById("searchInput").addEventListener("input",e=>{STATE.search=e.target.value.trim();renderHome();});
 
 /* ============ 初始化 ============ */
