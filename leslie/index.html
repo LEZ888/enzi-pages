@@ -260,7 +260,7 @@
   .pin-tag{display:inline-block;background:#ffecec;color:#e4393c;font-size:11px;padding:1px 6px;border-radius:4px;margin-left:6px}
 </style>
 
-<script>(function(){function setupManifest(){var ic=document.querySelector('link[rel="icon"]');var src=ic?ic.href:null;if(!src)return;var m={name:"LESLEY · 化妆品功效展示系统",short_name:"LESLEY",start_url:".",display:"standalone",background_color:"#ffffff",theme_color:"#b03052",icons:[{src:src,sizes:"512x512",type:"image/png",purpose:"any"}]};try{var b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});var u=URL.createObjectURL(b);var l=document.createElement("link");l.rel="manifest";l.href=u;document.head.appendChild(l);}catch(e){}}if(document.readyState!=="loading")setupManifest();else document.addEventListener("DOMContentLoaded",setupManifest);})();</script>
+<script>(function(){function setupManifest(){var ic=document.querySelector('link[rel="icon"]');var src=ic?ic.href:null;if(!src)return;var m={name:"LESLEY",short_name:"LESLEY",start_url:".",display:"standalone",background_color:"#ffffff",theme_color:"#b03052",icons:[{src:src,sizes:"512x512",type:"image/png",purpose:"any"}]};try{var b=new Blob([JSON.stringify(m)],{type:"application/manifest+json"});var u=URL.createObjectURL(b);var l=document.createElement("link");l.rel="manifest";l.href=u;document.head.appendChild(l);}catch(e){}}if(document.readyState!=="loading")setupManifest();else document.addEventListener("DOMContentLoaded",setupManifest);})();</script>
 </head>
 <body>
 
@@ -348,7 +348,7 @@
 <div class="modal hidden" id="formModal"><div class="box">
   <h3 id="formTitle">新增产品</h3>
   <div class="field"><label>产品标题 *（也建议填，但不强制）</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
-  <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：莱斯莉"></div>
+  <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
   <div class="field"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
   <div class="field"><label>系列</label><select id="f_series"><option value="">不选择</option></select></div>
   <div class="field"><label>功效标签（逗号分隔，可点筛选）</label><input id="f_tags" placeholder="美白, 补水, 提亮"></div>
@@ -382,7 +382,7 @@
 <div class="mask hidden" id="mask"></div>
 <div class="toast" id="toast"></div>
 <div class="corner" id="corner"></div>
-<footer class="foot">© 莱斯莉<span id="adminHint"></span></footer>
+<footer class="foot">© LESLEY<span id="adminHint"></span></footer>
 
 <script>
 "use strict";
@@ -409,7 +409,7 @@ const DEFAULT_SETTINGS={
   redeemItems:[],
   moments:{
     cover:"",
-    author:{avatar:"",nickname:"LESLEY · 莱斯莉"},
+    author:{avatar:"",nickname:"LESLEY"},
     auditMode:"manual",
     posts:[]
   },
@@ -635,7 +635,6 @@ function renderProfile(){
   const id=STATE.identity||{};const c=STATE.settings.shop.contact;
   document.getElementById("profileBody").innerHTML=`<h2 style="margin-top:0">个人中心</h2>
     <div class="stat">
-      <div class="s"><b>${esc(id.id||"-")}</b><span>本机ID</span></div>
       <div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div>
       <div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div>
       <div class="s"><b>${id.points||0}</b><span>积分</span></div>
@@ -646,7 +645,7 @@ function renderProfile(){
       <button class="btn sm" id="pfHis">浏览记录</button>
     </div>
     ${(id.phone)?`<div class="help">已绑定手机号：${esc(id.phone)}（换设备可用于恢复身份）</div>`:""}
-    <hr class="sep"><div class="help">客服微信：${c.wechat||"未设置"}　电话：${c.phone||"未设置"}（在后台「店铺装修→联系客服」配置）</div>`;
+    <div class="help">客服微信：${c.wechat||"未设置"}　电话：${c.phone||"未设置"}（在后台「店铺装修→联系客服」配置）</div>`;
   document.getElementById("pfBind").onclick=async()=>{const ph=prompt("输入手机号：",id.phone||"");if(!ph)return;STATE.identity.phone=ph;await persistIdentity();renderProfile();toast("已保存");};
   document.getElementById("pfFav").onclick=()=>{const ids=(id.collections||[]);if(!ids.length){toast("还没有收藏");return;}STATE.view="home";switchView("home");STATE.filterTag=null;renderHome();toast("已显示收藏产品");};
   document.getElementById("pfHis").onclick=()=>{toast("浏览记录："+(id.history||[]).length+" 条");};
@@ -3811,7 +3810,7 @@ function renderProfile(){
   const invHtml=invs.length?invs.map(v=>`<div class="pl-row"><span class="pl-d">邀请客户 ${esc((v.id||"").slice(0,8))}</span><span class="pl-t">${fmtFull(v.ts)}</span></div>`).join(""):`<div class="empty">还没有邀请到好友</div>`;
   const redHtml=red.length?red.map(r=>`<div class="pl-row"><span class="pl-d">${esc(r.name||"礼品")}（${esc(r.status||"待发货")}）</span><span class="pl-t">${fmtFull(r.ts)}</span></div>`).join(""):`<div class="empty">还没有兑换记录</div>`;
   document.getElementById("profileBody").innerHTML=`<h2 style="margin-top:0">个人中心</h2>
-    <div class="stat"><div class="s"><b>${esc(id.id||"-")}</b><span>本机ID</span></div><div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div><div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div><div class="s"><b>${id.points||0}</b><span>积分</span></div></div>
+    <div class="stat"><div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div><div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div><div class="s"><b>${id.points||0}</b><span>积分</span></div></div>
     <h3 style="margin:14px 0 6px">我的积分明细</h3>${logHtml}
     <h3 style="margin:14px 0 6px">我的邀请（${invs.length} 人）</h3>${invHtml}
     <div class="invite-box">
@@ -4056,6 +4055,8 @@ processUrlRef();
 </script>
 
 
+
+
 <script>
 /* === PH5_INJECTED === */
 /* ============ Phase 5：辅助功能与最终交付 ============ */
@@ -4091,7 +4092,26 @@ processUrlRef();
   +".cmp-table{border:1px solid var(--c-line);border-radius:var(--radius);overflow:hidden;margin-top:8px}"
   +".cmp-col,.cmp-val,.cmp-label{padding:8px 10px;border-bottom:1px solid var(--c-line);font-size:13px}"
   +".cmp-head{font-weight:700}.cmp-label{background:#f6f6f6;font-weight:600}"
-  +".cmp-row{display:flex}.cmp-row>*{flex:1;min-width:0}";
+  +".cmp-row{display:flex}.cmp-row>*{flex:1;min-width:0}"
+  /* 个人中心卡片式分区 */
+  +".pf-card{border-radius:10px;padding:14px 16px;margin-top:14px;border:1px solid var(--c-line)}"
+  +".pf-card.pf-invite{background:linear-gradient(135deg,#f0f6ff,#e8f2ff);border-color:#c9deff}"
+  +".pf-card.pf-points{background:linear-gradient(135deg,#f0fbe8,#e8f9e0);border-color:#bfe09f}"
+  +".pf-card.pf-redeem{background:linear-gradient(135deg,#fff8f0,#fff0e0);border-color:#ffd9a0}"
+  +".pf-card.pf-link{background:linear-gradient(135deg,#f8f0ff,#f0e8ff);border-color:#d4c9ff}"
+  +".pf-card h3{margin:0 0 10px 0;font-size:15px;display:flex;align-items:center;gap:8px}"
+  +".pf-card h3::before{content:'';display:inline-block;width:4px;height:16px;border-radius:2px;flex-shrink:0}"
+  +".pf-card.pf-invite h3::before{background:#3b82f6}"
+  +".pf-card.pf-points h3::before{background:#22c55e}"
+  +".pf-card.pf-redeem h3::before{background:#f59e0b}"
+  +".pf-card.pf-link h3::before{background:#a855f7}"
+  +".pf-card .pf-info{font-size:13px;color:var(--c-sub);line-height:1.7;margin-bottom:8px}"
+  +".pf-card .pf-code{display:inline-block;background:#fff;border:1px solid #ddd;border-radius:6px;padding:3px 10px;font-family:monospace;font-size:15px;font-weight:700;color:#3b82f6;letter-spacing:1px}"
+  +".pf-card .pf-qr{text-align:center;margin-top:10px}"
+  +".pf-card .pf-qr img,.pf-card .pf-qr canvas{max-width:180px;border-radius:8px}"
+  +".pf-card .pl-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13px}"
+  +".pf-card .pl-row:last-child{border-bottom:none}"
+  +".pf-card .empty{padding:16px 0;text-align:center;color:var(--c-sub);font-size:13px}";
   var st=document.createElement("style");st.id="p5style";st.textContent=css;document.head.appendChild(st);
 })();
 
@@ -4124,24 +4144,66 @@ renderProfile=function(){
   _origProfile();
   var fav=document.getElementById("pfFav");if(fav)fav.onclick=function(){openCollectModal();};
   var his=document.getElementById("pfHis");if(his)his.onclick=function(){openHistoryModal();};
-  // 一、个人中心完善：我的邀请 / 积分明细 / 兑换记录 / 我的专属链接
+  // 一、个人中心完善：卡片式分区布局
   var body=document.getElementById("profileBody");if(!body)return;
   var id=STATE.identity;
   var inv=id.invites||[];var log=id.pointsLog||[];var red=id.redeemed||[];
   var inviteCode=id.inviteCode||"";
   var link=(location.origin+location.pathname)+"?inv="+encodeURIComponent(inviteCode);
-  var html='<hr class="sep"><h3>我的邀请</h3>'
-    +'<div class="muted">邀请码：'+esc(inviteCode)+'　已成功邀请 '+inv.length+' 人</div>'
-    +(inv.length?'<div class="tags">'+inv.map(function(x){return '<span class="et">'+esc((""+x).slice(0,8))+'</span>';}).join("")+'</div>':'<div class="muted">还没有邀请记录，把下方专属链接分享出去赚积分吧</div>')
-    +'<div class="btn-row" style="margin-top:8px"><button class="btn sm" id="pfCopyLink">复制我的专属链接</button></div>'
-    +'<hr class="sep"><h3>积分明细</h3>'
-    +(log.length?log.slice().reverse().slice(0,30).map(function(l){return '<div class="pl-row"><span class="pl-d">'+esc(l.detail||l.type||"积分变动")+'</span><span class="muted">'+(l.amount>0?"+":"")+l.amount+' · '+fmtTime(l.ts)+'</span></div>';}).join(""):'<div class="empty">暂无积分记录</div>')
-    +'<hr class="sep"><h3>兑换记录</h3>'
-    +(red.length?red.slice().reverse().map(function(r){return '<div class="pl-row"><span class="pl-d">'+esc(r.name||"礼品")+'</span><span class="muted">'+(r.cost||0)+' 积分 · '+fmtTime(r.ts||Date.now())+'</span></div>';}).join(""):'<div class="empty">还没有兑换记录</div>');
+  // 邀请卡片（蓝色调）
+  var html='<div class="pf-card pf-invite"><h3>我的邀请</h3>'
+    +'<div class="pf-info">邀请码：<span class="pf-code">'+esc(inviteCode)+'</span>　已成功邀请 <b>'+inv.length+'</b> 人</div>'
+    +(inv.length?'<div class="tags">'+inv.map(function(x){return '<span class="et">'+esc((""+x).slice(0,8))+'</span>';}).join("")+'</div>':'<div class="pf-info">还没有邀请记录，把下方专属链接分享出去赚积分吧</div>')
+    +'<div class="btn-row" style="margin-top:10px"><button class="btn sm" id="pfCopyLink">复制专属链接</button><button class="btn sm" id="pfShareShop">分享店铺邀好友</button></div>'
+    +'</div>';
+  // 积分明细卡片（绿色调）
+  html+='<div class="pf-card pf-points"><h3>积分明细</h3>'
+    +(log.length?log.slice().reverse().slice(0,30).map(function(l){return '<div class="pl-row"><span class="pl-d">'+esc(l.detail||l.type||"积分变动")+'</span><span style="color:'+(l.amount>0?'#22c55e':'#e4393c')+';font-weight:600">'+(l.amount>0?"+":"")+l.amount+'</span><span class="muted">'+fmtTime(l.ts)+'</span></div>';}).join(""):'<div class="empty">暂无积分记录</div>')
+    +'</div>';
+  // 兑换记录卡片（橙色调）
+  html+='<div class="pf-card pf-redeem"><h3>兑换记录</h3>'
+    +(red.length?red.slice().reverse().map(function(r){return '<div class="pl-row"><span class="pl-d">'+esc(r.name||"礼品")+'</span><span class="muted">'+(r.cost||0)+' 积分 · '+fmtTime(r.ts||Date.now())+'</span></div>';}).join(""):'<div class="empty">还没有兑换记录</div>')
+    +'</div>';
+  // 专属链接/二维码卡片（紫色调）
+  html+='<div class="pf-card pf-link"><h3>我的专属邀请码</h3>'
+    +'<div class="pf-info" style="text-align:center"><span class="pf-code" style="font-size:18px">'+esc(inviteCode)+'</span></div>'
+    +'<div class="pf-info" style="word-break:break-all;font-size:12px">'+esc(link)+'</div>'
+    +'<div class="btn-row" style="justify-content:center;margin-top:8px">'
+    +'<button class="btn sm primary" id="pfCopyLink2">复制邀请码</button>'
+    +'<button class="btn sm" id="pfCopyLink3">复制邀请链接</button>'
+    +'</div>'
+    +'<div class="pf-qr" id="pfQrArea"></div>'
+    +'<div class="pf-info" style="text-align:center;font-size:12px">扫码也可进入（带你的邀请）</div>'
+    +'</div>';
   body.insertAdjacentHTML("beforeend",html);
+  // 绑定事件
   var cp=document.getElementById("pfCopyLink");
-  if(cp)cp.onclick=function(){var done=function(){toast("已复制专属链接");};try{navigator.clipboard.writeText(link).then(done,function(){prompt("复制下面的链接：",link);});}catch(e){prompt("复制下面的链接：",link);}};
+  if(cp)cp.onclick=function(){copyLink(link);};
+  var cp2=document.getElementById("pfCopyLink2");
+  if(cp2)cp2.onclick=function(){copyText(inviteCode,"已复制邀请码");};
+  var cp3=document.getElementById("pfCopyLink3");
+  if(cp3)cp3.onclick=function(){copyLink(link);};
+  var sh=document.getElementById("pfShareShop");
+  if(sh)sh.onclick=function(){openSharePicker();};
+  // 生成二维码
+  renderInviteQr(inviteCode,link);
 };
+function copyLink(link){
+  var done=function(){toast("已复制专属链接");};
+  try{navigator.clipboard.writeText(link).then(done,function(){prompt("复制下面的链接：",link);});}catch(e){prompt("复制下面的链接：",link);}
+}
+function copyText(text,msg){
+  try{navigator.clipboard.writeText(text).then(function(){toast(msg||"已复制");},function(){prompt("复制：",text);});}catch(e){prompt("复制：",text);}
+}
+function renderInviteQr(code,link){
+  var area=document.getElementById("pfQrArea");if(!area)return;
+  if(typeof QRCode!=='undefined'){
+    area.innerHTML='';
+    var qrc=new QRCode(area,{width:160,height:160,text:link,colorDark:"#222",colorLight:"#fff",correctLevel:QRCode.CorrectLevel.M});
+  }else{
+    area.innerHTML='<div style="font-size:12px;color:var(--c-sub)">二维码加载中…</div>';
+  }
+}
 function openCollectModal(){
   var ids=STATE.identity.collections||[];
   if(!ids.length){toast("还没有收藏");return;}
