@@ -1,4 +1,4 @@
-const CACHE = 'lesley-warehouse-v6';
+const CACHE = 'lesley-warehouse-v7';
 const STATIC_ASSETS = ['./', './index.html', './manifest.json', './logo.jpg', './zxing.min.js', './html5-qrcode.min.js', './sw.js'];
 
 self.addEventListener('install', e => {
