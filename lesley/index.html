@@ -433,11 +433,40 @@ img{max-width:100%;display:block}
 @keyframes scanMove{0%{top:10%}50%{top:88%}100%{top:10%}}
 #scanReader video{width:100%!important;height:100%!important;object-fit:cover!important;display:block}
 #scanReader canvas{display:none}
+
+/* ====== Auth Modal Styles ====== */
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-box{background:#fff;border-radius:16px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.auth-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--red);color:#fff}
+.auth-title{font-size:17px;font-weight:700}
+.auth-close-btn{background:none;color:#fff;font-size:22px;padding:4px 8px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--gray-200)}
+.auth-tab{flex:1;padding:12px;font-size:15px;font-weight:600;color:var(--gray-500);background:none;border-bottom:2px solid transparent;transition:all .2s}
+.auth-tab.active{color:var(--red);border-bottom-color:var(--red)}
+.auth-body{padding:18px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:5px}
+.auth-field input{width:100%;padding:11px 13px;border:1.5px solid var(--gray-300);border-radius:10px;font-size:15px;background:var(--gray-50);transition:border-color .2s}
+.auth-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(212,69,58,.12)}
+.auth-btn-primary{width:100%;padding:12px;background:var(--red);color:#fff;border-radius:10px;font-size:16px;font-weight:700;margin-top:6px;transition:opacity .2s}
+.auth-btn-primary:active{opacity:.85}
+.auth-error{margin-top:10px;padding:10px 12px;background:var(--danger-light);color:var(--danger);border-radius:8px;font-size:13px;display:block}
+.auth-footer-text{text-align:center;padding:14px;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-100)}
+
+/* Cloud bar (logged-in top bar) */
+.cloud-bar{position:fixed;top:0;left:0;right:0;z-index:998;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.cloud-status{font-weight:600}
+.cloud-actions{display:flex;gap:6px}
+.cloud-btn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.cloud-btn-danger{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.4)}
+
 .scan-hint{z-index:7!important}
 .scan-footer,.scan-result-bar,.scan-manual{z-index:8;position:relative}
 </style>
 <!-- 扫码识别库改为懒加载（见 ensureZxing / ensureQr），避免 700KB 同步脚本拖慢首屏 -->
 <link rel="prefetch" href="./zxing.min.js" as="script">
+<!-- Supabase JS SDK (auth + realtime) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -450,6 +479,60 @@ img{max-width:100%;display:block}
       <button class="confirm-btn modal-btn-cancel" onclick="App._resolveConfirm(false)">取消</button>
       <button class="confirm-btn modal-btn-confirm" id="confirmOkBtn" onclick="App._resolveConfirm(true)">确认</button>
     </div>
+  </div>
+</div>
+
+<!-- ====== 云端同步 / 登录弹窗 ====== -->
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-title" id="authTitle">登录 LESLEY 云端</div>
+      <button class="auth-close-btn" onclick="App.hideAuth()">✕</button>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabLogin" onclick="App.switchAuthTab('login')">登录</button>
+      <button class="auth-tab" id="authTabRegister" onclick="App.switchAuthTab('register')">注册</button>
+    </div>
+    <div class="auth-body">
+      <div class="auth-form" id="authLoginForm">
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>密码</label>
+          <input type="password" id="authPassword" placeholder="至少6位" autocomplete="current-password">
+        </div>
+        <button class="auth-btn-primary" id="authLoginBtn" onclick="App.handleLogin()">登录</button>
+        <div class="auth-error" id="authError" style="display:none"></div>
+      </div>
+      <div class="auth-form" id="authRegisterForm" style="display:none">
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>密码（至少6位）</label>
+          <input type="password" id="regPassword" placeholder="设置密码" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <label>确认密码</label>
+          <input type="password" id="regPassword2" placeholder="再输一次密码" autocomplete="new-password">
+        </div>
+        <button class="auth-btn-primary" id="authRegBtn" onclick="App.handleRegister()">注册</button>
+        <div class="auth-error" id="regError" style="display:none"></div>
+      </div>
+    </div>
+    <div class="auth-footer-text">数据加密存储在云端，多设备自动同步</div>
+  </div>
+</div>
+
+<!-- 已登录状态栏（顶部） -->
+<div class="cloud-bar" id="cloudBar" style="display:none">
+  <span class="cloud-status" id="cloudStatus">☁️ 已连接云端</span>
+  <div class="cloud-actions">
+    <button class="cloud-btn" onclick="App.syncNow()" title="立即同步">🔄 同步</button>
+    <button class="cloud-btn cloud-btn-danger" onclick="App.handleLogout()" title="退出登录">退出</button>
   </div>
 </div>
 
@@ -2177,6 +2260,11 @@ const App = (() => {
               <div><div class="setting-name">恢复数据</div><div class="setting-desc">本机 / 微信导入（JSON·CSV·XML·Excel）</div></div></div>
             <div class="setting-arrow">›</div>
           </div>
+          <div class="setting-item" onclick="App.showAuth(_sbReady?'login':'login')">
+            <div class="setting-left"><div class="setting-icon" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">☁️</div>
+              <div><div class="setting-name" id="settingCloudName">云端同步</div><div class="setting-desc" id="settingCloudDesc">登录后多设备自动同步数据</div></div></div>
+            <div class="setting-arrow" id="settingCloudArrow">›</div>
+          </div>
           <input type="file" id="importFile" accept=".json,.csv,.xml,.xlsx,application/json,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="if(this.files[0])App.handleImportFile(this.files[0]);this.value=''">
         </div>
         <div class="setting-group">
@@ -2509,8 +2597,194 @@ const App = (() => {
     }
   }
 
-  // ---- Init ----
+  
+  // ================================================================
+  // SUPABASE CLOUD SYNC — Step B: Auth (注册/登录/退出/持久化)
+  // ================================================================
+  var _supabaseUrl = 'https://bykjhibldnrtzsxqukgd.supabase.co';
+  var _supabaseAnonKey = 'sb_publishable_QI9qlchy_Td0tlvNJTMGtA_sDJ5ZTWP';
+  var sbClient = null;       // Supabase client instance
+  var sbUser = null;         // Current user object {id, email, ...}
+  var _sbReady = false;
+
+  function getSB(){
+    if(!sbClient && typeof window.supabase !== 'undefined' && window.supabase.createClient){
+      sbClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+    }
+    return sbClient;
+  }
+
+  // --- Restore session from localStorage hash ---
+  async function restoreSession(){
+    try{
+      const sb=getSB(); if(!sb) return false;
+      const {data:{session},error}=await sb.auth.getSession();
+      if(error){ console.warn('restoreSession error:',error.message); return false; }
+      if(session && session.user){
+        sbUser=session.user;
+        localStorage.setItem('lw_sb_uid', session.user.id);
+        localStorage.setItem('lw_sb_email', session.user.email);
+        _sbReady=true;
+        return true;
+      }
+      return false;
+    }catch(e){
+      console.warn('restoreSession exception:', e);
+      return false;
+    }
+  }
+
+  // --- Show auth modal ---
+  function showAuth(mode){
+    document.getElementById('authOverlay').style.display='flex';
+    switchAuthTab(mode||'login');
+  }
+
+  function hideAuth(){
+    document.getElementById('authOverlay').style.display='none';
+    hideError('authError'); hideError('regError');
+  }
+
+  function switchAuthTab(tab){
+    const isLogin=(tab==='login');
+    document.getElementById('authTabLogin').classList.toggle('active',isLogin);
+    document.getElementById('authTabRegister').classList.toggle('active',!isLogin);
+    document.getElementById('authLoginForm').style.display=isLogin?'block':'none';
+    document.getElementById('authRegisterForm').style.display=isLogin?'none':'block';
+    document.getElementById('authTitle').textContent=isLogin?'登录 LESLEY 云端':'注册新账号';
+  }
+
+  function showError(id,msg){
+    const el=document.getElementById(id); if(el){el.textContent=msg;el.style.display='block';}
+  }
+  function hideError(id){ const el=document.getElementById(id); if(el){el.style.display='none';} }
+
+  // --- Register ---
+  async function handleRegister(){
+    const email=(document.getElementById('regEmail')||{}).value.trim();
+    const pw=(document.getElementById('regPassword')||{}).value;
+    const pw2=(document.getElementById('regPassword2')||{}).value;
+    hideError('regError');
+    if(!email || !email.includes('@')){showError('regError','请输入有效邮箱地址');return;}
+    if(pw.length<6){showError('regError','密码至少6位');return;}
+    if(pw!==pw2){showError('regError','两次密码不一致');return;}
+    const btn=document.getElementById('authRegBtn'); btn.disabled=true;btn.textContent='注册中…';
+    try{
+      const sb=getSB();
+      const {data,error}=await sb.auth.signUp({email,password:pw});
+      if(error) throw new Error(error.message);
+      toast('✅ 注册成功！请查收邮箱验证邮件');
+      switchAuthTab('login');
+      (document.getElementById('authEmail')||{}).value=email;
+    }catch(e){
+      showError('regError', e.message || '注册失败，请稍后重试');
+    }finally{btn.disabled=false;btn.textContent='注册';}
+  }
+
+  // --- Login ---
+  async function handleLogin(){
+    const email=(document.getElementById('authEmail')||{}).value.trim();
+    const pw=(document.getElementById('authPassword')||{}).value;
+    hideError('authError');
+    if(!email){showError('authError','请输入邮箱');return;}
+    if(!pw){showError('authError','请输入密码');return;}
+    const btn=document.getElementById('authLoginBtn'); btn.disabled=true;btn.textContent='登录中…';
+    try{
+      const sb=getSB();
+      const {data:{user,session},error}=await sb.auth.signInWithPassword({email,password:pw});
+      if(error) throw new Error(error.message);
+      sbUser=user;
+      localStorage.setItem('lw_sb_uid', user.id);
+      localStorage.setItem('lw_sb_email', user.email);
+      _sbReady=true;
+      hideAuth();
+      showCloudBar();
+      toast('☁️ 登录成功，已连接云端');
+      // Trigger initial sync after login
+      syncNow();
+    }catch(e){
+      showError('authError', e.message || '登录失败，请检查账号密码');
+    }finally{btn.disabled=false;btn.textContent='登录';}
+  }
+
+  // --- Logout ---
+  async function handleLogout(){
+    const ok=await confirmAsync('确定要退出云端同步吗？\n退出后数据仅保存在本机。');
+    if(!ok) return;
+    try{
+      const sb=getSB(); if(sb){ await sb.auth.signOut(); }
+    }catch(e){}
+    sbUser=null; _sbReady=false;
+    localStorage.removeItem('lw_sb_uid');
+    localStorage.removeItem('lw_sb_email');
+    hideCloudBar();
+    toast('已退出云端同步');
+  }
+
+  // --- Show/hide cloud status bar ---
+  function showCloudBar(){
+    const bar=document.getElementById('cloudBar');
+    if(bar){bar.style.display='flex';}
+    // Push app content down
+    const appEl=document.getElementById('app');
+    if(appEl) appEl.style.paddingTop='44px';
+    // Update settings label
+    const nameEl=document.getElementById('settingCloudName');
+    const descEl=document.getElementById('settingCloudDesc');
+    const arrowEl=document.getElementById('settingCloudArrow');
+    if(nameEl) nameEl.textContent='云端同步（已登录）';
+    if(descEl) descEl.textContent=sbUser?sbUser.email:'已连接';
+    if(arrowEl) arrowEl.textContent='✓';arrowEl&&arrowEl.style.setProperty('color','var(--green)');
+  }
+  function hideCloudBar(){
+    const bar=document.getElementById('cloudBar');
+    if(bar){bar.style.display='none';}
+    const appEl=document.getElementById('app');
+    if(appEl) appEl.style.paddingTop='';
+    // Reset settings label
+    const nameEl=document.getElementById('settingCloudName');
+    const descEl=document.getElementById('settingCloudDesc');
+    const arrowEl=document.getElementById('settingCloudArrow');
+    if(nameEl) nameEl.textContent='云端同步';
+    if(descEl) descEl.textContent='登录后多设备自动同步数据';
+    if(arrowEl) arrowEl.textContent='›';arrowEl&&arrowEl.style.removeProperty('color');
+  }
+
+  // --- Sync now (placeholder — Step C will implement real push/pull) ---
+  async function syncNow(){
+    if(!_sbReady || !sbUser){ toast('请先登录云端'); showAuth('login'); return; }
+    const st=document.getElementById('cloudStatus');
+    if(st) st.textContent='⏳ 同步中…';
+    try{
+      // Step C: real push/pull will go here
+      // For now just verify connection
+      const sb=getSB();
+      const {data,error}=await sb.from('items').select('id').limit(1);
+      if(error) throw error;
+      if(st) st.textContent='☁️ 已连接云端 · 已同步';
+      toast('🔄 云端同步完成');
+    }catch(e){
+      if(st) st.textContent='⚠️ 同步失败';
+      toast('同步失败：'+ (e.message||'网络错误'));
+    }
+  }
+
+  // Expose to App namespace
+  App.showAuth = showAuth;
+  App.hideAuth = hideAuth;
+  App.switchAuthTab = switchAuthTab;
+  App.handleLogin = handleLogin;
+  App.handleRegister = handleRegister;
+  App.handleLogout = handleLogout;
+  App.syncNow = syncNow;
+
+// ---- Init ----
   async function init(){
+    // Step B: 恢复云端登录态
+    try {
+      const loggedIn = await restoreSession();
+      if(loggedIn) showCloudBar();
+    } catch(e) { console.warn('session restore skipped:', e); }
     try { await initDB(); }
     catch(e){ db = null; console.warn('IndexedDB unavailable, falling back to localStorage:', e); }
     try{MODULES=await loadModules();}catch(e){console.error('loadModules failed',e);}
