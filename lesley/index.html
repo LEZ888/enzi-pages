@@ -465,8 +465,8 @@ img{max-width:100%;display:block}
 </style>
 <!-- 扫码识别库改为懒加载（见 ensureZxing / ensureQr），避免 700KB 同步脚本拖慢首屏 -->
 <link rel="prefetch" href="./zxing.min.js" as="script">
-<!-- Supabase JS SDK (auth + realtime) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase JS SDK（本地内置，避免 CDN 被墙导致页面卡死无法打开） -->
+<script defer src="./supabase.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -739,21 +739,27 @@ const App = (() => {
 
   async function addItem(item) {
     item.id = makeId(); item.createdAt = new Date().toISOString(); item.updatedAt = item.createdAt;
-    return dbOp('items','readwrite',s=>s.add(item));
+    const r = await dbOp('items','readwrite',s=>s.add(item));
+    schedulePush();
+    return r;
   }
-  async function updateItem(item) { item.updatedAt = new Date().toISOString(); return dbOp('items','readwrite',s=>s.put(item)); }
+  async function updateItem(item) { item.updatedAt = new Date().toISOString(); const r=await dbOp('items','readwrite',s=>s.put(item)); schedulePush(); return r; }
 
   async function deleteItem(id) {
     const recs = await getAllRecords();
     for (const r of recs.filter(r => r.itemId === id)) {
       await dbOp('records','readwrite', s => s.delete(r.id));
     }
-    return dbOp('items','readwrite', s => s.delete(id));
+    const r = await dbOp('items','readwrite', s => s.delete(id));
+    schedulePush();
+    return r;
   }
 
   async function addRecord(record) {
     record.id = makeId(); record.timestamp = new Date().toISOString();
-    return dbOp('records','readwrite',s=>s.add(record));
+    const r = await dbOp('records','readwrite',s=>s.add(record));
+    schedulePush();
+    return r;
   }
 
   async function getRecordsByItemId(itemId) {
@@ -777,10 +783,10 @@ const App = (() => {
     return all.filter(c=>c.moduleId===moduleId);
   }
   async function addCategory(moduleId,name) {
-    const c={id:makeId(),moduleId,name}; return dbOp('categories','readwrite',s=>s.add(c));
+    const c={id:makeId(),moduleId,name}; const r=await dbOp('categories','readwrite',s=>s.add(c)); schedulePush(); return r;
   }
-  async function updateCategory(cat) { return dbOp('categories','readwrite',s=>s.put(cat)); }
-  async function deleteCategory(id) { return dbOp('categories','readwrite',s=>s.delete(id)); }
+  async function updateCategory(cat) { const r=await dbOp('categories','readwrite',s=>s.put(cat)); schedulePush(); return r; }
+  async function deleteCategory(id) { const r=await dbOp('categories','readwrite',s=>s.delete(id)); schedulePush(); return r; }
 
   // Home Sections (customizable)
   async function getHomeSections() {
@@ -1244,6 +1250,7 @@ const App = (() => {
     (parsed.categories||[]).forEach(c=>tx.objectStore('categories').put(c));
     (parsed.modules||[]).forEach(m=>tx.objectStore('modules').put(m));
     await new Promise((res,rej)=>{tx.oncomplete=()=>{toast(`恢复成功！${parsed.items.length}个物品`);res();};tx.onerror=()=>rej(tx.error);});
+    if(_sbReady){ pushAll().catch(function(e){ console.warn('import push failed', e); }); }
     state._pendingImport=null;
     try{MODULES=await loadModules();}catch(e){}
     try{if(App.render)App.render();else if(App.navigate)App.navigate(state.page||'home');}catch(e){}
@@ -2753,19 +2760,107 @@ const App = (() => {
   // --- Sync now (placeholder — Step C will implement real push/pull) ---
   async function syncNow(){
     if(!_sbReady || !sbUser){ toast('请先登录云端'); showAuth('login'); return; }
+    try{
+      await fullSync();
+      toast('🔄 云端同步完成');
+    }catch(e){
+      toast('同步失败：'+ (e.message||'网络错误'));
+    }
+  }
+
+  // ============================================================
+  // Step C: 云端数据自动同步（换手机恢复 / 实时备份）
+  // ============================================================
+  let _pushTimer = null;
+  function schedulePush(){
+    if(!_sbReady || !sbUser) return;
+    if(_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(function(){ pushAll().catch(function(e){ console.warn('pushAll failed', e); }); }, 800);
+  }
+
+  function mapItemToDB(o){
+    return { id:o.id, user_id:sbUser.id, module_id:o.moduleId, category_id:o.categoryId||null,
+      name:o.name, quantity:o.quantity, location:o.location||'', usage_note:o.usageNote||'',
+      supplier_note:o.supplierNote||'', barcode:o.barcode||null,
+      arrival_date:o.arrivalDate||null, expiry_date:o.expiryDate||null,
+      reminder_days:o.reminderDays||7, images:o.images||[], videos:[],
+      updated_at:o.updatedAt||new Date().toISOString() };
+  }
+  function mapCatToDB(o){ return { id:o.id, user_id:sbUser.id, module_id:o.moduleId, name:o.name }; }
+  function mapRecToDB(o){
+    return { id:o.id, user_id:sbUser.id, item_id:o.itemId||null, module_id:o.moduleId,
+      type:o.type, quantity:o.quantity, note:o.note||'', remaining_qty:o.remainingQty||0 };
+  }
+  function mapItemFromDB(r){ return { id:r.id, moduleId:r.module_id, categoryId:r.category_id||'', name:r.name,
+      quantity:r.quantity, location:r.location||'', usageNote:r.usage_note||'', supplierNote:r.supplier_note||'',
+      barcode:r.barcode||'', arrivalDate:r.arrival_date||null, expiryDate:r.expiry_date||null,
+      reminderDays:r.reminder_days||7, images:r.images||[], updatedAt:r.updated_at, createdAt:r.created_at }; }
+  function mapCatFromDB(r){ return { id:r.id, moduleId:r.module_id, name:r.name }; }
+  function mapRecFromDB(r){ return { id:r.id, itemId:r.item_id||null, moduleId:r.module_id, type:r.type,
+      quantity:r.quantity, note:r.note||'', remainingQty:r.remaining_qty||0, timestamp:r.created_at }; }
+
+  async function pushTable(table, getAllFn, mapFn){
+    const sb=getSB(); if(!sb||!sbUser) return;
+    const local = (await getAllFn()) || [];
+    const localIds = local.map(function(o){return o.id;});
+    if(local.length){
+      const rows = local.map(mapFn).filter(Boolean);
+      const {error} = await sb.from(table).upsert(rows, {onConflict:'id'});
+      if(error) throw error;
+    }
+    // 同步删除：云端存在但本地已删的，从云端删除
+    const {data:cloud, error:ce} = await sb.from(table).select('id').eq('user_id', sbUser.id);
+    if(ce) throw ce;
+    const toDelete = (cloud||[]).map(function(c){return c.id;}).filter(function(id){return localIds.indexOf(id)<0;});
+    if(toDelete.length){
+      const {error:de} = await sb.from(table).delete().in('id', toDelete);
+      if(de) throw de;
+    }
+  }
+  async function pushAll(){
+    await pushTable('categories', function(){return dbOp('categories','readonly',function(s){return s.getAll();});}, mapCatToDB);
+    await pushTable('items', function(){return getAllItems();}, mapItemToDB);
+    await pushTable('records', function(){return getAllRecords();}, mapRecToDB);
+  }
+
+  async function pullTableMerge(table, storeName, mapFn, cloudTimeField, localTimeField){
+    const sb=getSB(); if(!sb||!sbUser) return;
+    const {data,error} = await sb.from(table).select('*').eq('user_id', sbUser.id);
+    if(error) throw error;
+    if(!data || !data.length) return;
+    const localAll = await dbOp(storeName,'readonly',function(s){return s.getAll();});
+    const localMap = {}; localAll.forEach(function(o){ localMap[o.id]=o; });
+    for(const row of data){
+      const obj = mapFn(row);
+      const local = localMap[obj.id];
+      if(!local){ await dbOp(storeName,'readwrite',function(s){return s.put(obj);}); continue; }
+      if(!cloudTimeField) continue; // 分类无时间戳：保留本地，稍后推送上云
+      const tCloud = new Date(row[cloudTimeField]||0).getTime();
+      const tLocal = new Date(local[localTimeField]||0).getTime();
+      if(tCloud > tLocal) await dbOp(storeName,'readwrite',function(s){return s.put(obj);});
+    }
+  }
+  async function pullAll(){
+    await pullTableMerge('categories','categories', mapCatFromDB, null, null);
+    await pullTableMerge('items','items', mapItemFromDB, 'updated_at', 'updatedAt');
+    await pullTableMerge('records','records', mapRecFromDB, 'created_at', 'timestamp');
+  }
+
+  // 完整同步：先拉云端（换手机恢复），再推本地（保证本地改动上云）
+  async function fullSync(){
+    if(!_sbReady || !sbUser) return;
     const st=document.getElementById('cloudStatus');
     if(st) st.textContent='⏳ 同步中…';
     try{
-      // Step C: real push/pull will go here
-      // For now just verify connection
-      const sb=getSB();
-      const {data,error}=await sb.from('items').select('id').limit(1);
-      if(error) throw error;
+      await pullAll();
+      await pushAll();
+      try{ state.items = await getAllItems(); }catch(e){}
+      try{ state.records = await getAllRecords(); }catch(e){}
+      if(typeof render==='function') render();
       if(st) st.textContent='☁️ 已连接云端 · 已同步';
-      toast('🔄 云端同步完成');
     }catch(e){
       if(st) st.textContent='⚠️ 同步失败';
-      toast('同步失败：'+ (e.message||'网络错误'));
+      console.warn('fullSync error', e);
     }
   }
 
@@ -2794,6 +2889,7 @@ const App = (() => {
     // 加载库存预警阈值（持久化）
     try{ const t=parseInt(localStorage.getItem('lw_threshold')); if(!isNaN(t)&&t>0) state.lowStockThreshold=t; }catch(e){}
     state._stockPopupShown=false;
+    if(_sbReady && sbUser){ fullSync().catch(function(e){ console.warn('initial sync skipped', e); }); }
     if('serviceWorker'in navigator){
       navigator.serviceWorker.register('sw.js').then(reg=>{
         // 发现新版本：提示用户刷新（联网已 network-first，刷新即最新）
