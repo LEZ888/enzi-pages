@@ -467,6 +467,22 @@ img{max-width:100%;display:block}
 <link rel="prefetch" href="./zxing.min.js" as="script">
 <!-- Supabase JS SDK（本地内置，避免 CDN 被墙导致页面卡死无法打开） -->
 <script defer src="./supabase.min.js"></script>
+<!-- 全局错误兜底：任何脚本报错都显示红条而不是白屏，方便用户截图反馈 -->
+<script>
+window.addEventListener('error', function(e){
+  try{
+    var msg = (e && e.message) ? e.message : '未知脚本错误';
+    var bar = document.getElementById('errBar');
+    if(!bar){
+      bar = document.createElement('div');
+      bar.id = 'errBar';
+      bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#dc2626;color:#fff;padding:10px 14px;font-size:13px;line-height:1.5;white-space:pre-wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+      (document.body || document.documentElement).appendChild(bar);
+    }
+    bar.textContent = '⚠️ 页面脚本出错（请截图发给助理）：' + msg;
+  }catch(_){}
+});
+</script>
 </head>
 <body>
 <div id="app"></div>
@@ -2864,14 +2880,7 @@ const App = (() => {
     }
   }
 
-  // Expose to App namespace
-  App.showAuth = showAuth;
-  App.hideAuth = hideAuth;
-  App.switchAuthTab = switchAuthTab;
-  App.handleLogin = handleLogin;
-  App.handleRegister = handleRegister;
-  App.handleLogout = handleLogout;
-  App.syncNow = syncNow;
+  // Expose to App namespace via the IIFE return (NOT App.xxx= here — App is in TDZ)
 
 // ---- Init ----
   async function init(){
@@ -3248,7 +3257,8 @@ const App = (() => {
     selectConsumeItem,doConsume,doExport,saveQuickItem,handleQuickMediaUpload,
     showExportPreview,cancelAddItem,showNameSuggestions,fillNameSuggestion,
     startScan,stopScan,useScanResult,scanFromFile,onScanFilePicked,useManualScan,
-    saveLowStockThreshold,showStockAlertPopup,resetView
+    saveLowStockThreshold,showStockAlertPopup,resetView,
+    showAuth,hideAuth,switchAuthTab,handleLogin,handleRegister,handleLogout,syncNow
   };
 })();
 </script>
