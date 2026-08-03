@@ -347,6 +347,7 @@
 
 <div class="modal hidden" id="formModal"><div class="box">
   <h3 id="formTitle">新增产品</h3>
+  <div class="btn-row" style="margin-bottom:10px"><button class="btn sm" id="pasteFillBtn" type="button">📋 一键粘贴识别</button><button class="btn sm" id="importBtn" type="button">🔗 从链接抓取</button><span id="pasteHint" style="font-size:12px;color:var(--c-sub);align-self:center"></span></div>
   <div class="field"><label>产品标题 *（也建议填，但不强制）</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
   <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
   <div class="field"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
@@ -921,11 +922,15 @@ function renderPanel(){const b=document.getElementById("pbody");if(CUR_TAB==="pr
 let SEL=[];
 function renderProdTab(b){
   b.innerHTML=`<div class="btn-row" style="margin-bottom:10px"><button class="btn primary sm" id="addProd">+ 新增产品</button>
+    <button class="btn sm" id="pasteNew">📋 粘贴新建</button>
+    <button class="btn sm" id="importNew">🔗 链接抓取新建</button>
     <button class="btn sm" id="batchBtn">批量操作(<span id="selN">0</span>)</button></div>
     <div id="plist"></div>`;
   const list=STATE.products.slice().sort((a,b)=>(a.order||0)-(b.order||0));
   if(!list.length)b.insertAdjacentHTML("beforeend",`<div class="empty">还没有产品，点上方按钮添加。</div>`);
   b.querySelector("#addProd").onclick=()=>openForm(null);
+  b.querySelector("#pasteNew").onclick=()=>{openForm(null);setTimeout(()=>doPasteFill(),0);};
+  b.querySelector("#importNew").onclick=()=>{openForm(null);setTimeout(()=>openImportModal(),0);};
   b.querySelector("#batchBtn").onclick=openBatch;
   const box=b.querySelector("#plist");
   list.forEach(p=>{
@@ -1043,6 +1048,235 @@ document.getElementById("formSave").onclick=async()=>{
 };
 // 退出前自动存草稿（表单打开时）
 setInterval(()=>{if(!document.getElementById("formModal").classList.contains("hidden"))saveDraft();},4000);
+
+/* --- 一键粘贴识别产品信息 --- */
+function parseDateTime(s){try{let t=String(s).replace(/[年月]/g,'-').replace(/[日]/g,' ').replace(/[./]/g,'-');const m=t.match(/(\d{4})-(\d{1,2})-(\d{1,2})(?:[\sT]+(\d{1,2}):(\d{2}))?/);if(m){const y=m[1],mo=String(m[2]).padStart(2,'0'),d=String(m[3]).padStart(2,'0');const hh=m[4]?String(m[4]).padStart(2,'0'):'00';const mm=m[5]||'00';return y+'-'+mo+'-'+d+'T'+hh+':'+mm;}}catch(e){}return null;}
+function parseProductText(text){
+  const lines=String(text||'').split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  if(!lines.length)return {};
+  const esc=function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');};
+  const get=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
+  const r={};
+  let name=get(['产品名称','商品名称','商品名','品名','名称','标题','名字','产品名']);
+  if(!name)name=lines[0];
+  if(name)r.name=name;
+  const brand=get(['品牌','牌子','商标']);if(brand)r.brand=brand;
+  const cat=get(['分类','类别','品类']);if(cat)r.cat=cat;
+  const series=get(['系列','产品线']);if(series)r.series=series;
+  const tagsRaw=get(['核心功效','主要功效','功效标签','功效','卖点','标签','特点','特色']);
+  if(tagsRaw){const t=tagsRaw.split(/[,，、;；\s]+/).map(function(s){return s.trim();}).filter(Boolean);if(t.length)r.tags=t;}
+  const actRaw=get(['活动标签','活动类型','活动','促销']);if(actRaw)r.activity=actRaw;
+  const stockRaw=get(['库存数量','库存','存货','现货']);if(stockRaw){const m=stockRaw.match(/\d+/);if(m)r.stock=m[0];}
+  const endRaw=get(['活动结束时间','结束时间','活动截止','有效期至','截止','到期']);if(endRaw){const dt=parseDateTime(endRaw);if(dt)r.endTime=dt;}
+  const buyText=get(['按钮文字','购买文字','按钮']);if(buyText)r.buyText=buyText;
+  const buyLinkRaw=get(['购买链接','下单链接','商品链接','链接','购买','下单']);
+  if(buyLinkRaw){const m=buyLinkRaw.match(/https?:\/\/\S+/i);if(m)r.buyLink=m[0];else if(/^https?:\/\//i.test(buyLinkRaw.trim()))r.buyLink=buyLinkRaw.trim();}
+  if(!r.buyLink){const all=lines.join('\n').match(/https?:\/\/\S+/i);if(all)r.buyLink=all[0];}
+  const shareTitle=get(['分享标题','分享']);if(shareTitle)r.shareTitle=shareTitle;
+  const shareDesc=get(['分享描述','分享说明']);if(shareDesc)r.shareDesc=shareDesc;
+  const LAB=/^(产品名称|商品名称|商品名|品名|名称|标题|品牌|牌子|商标|分类|类别|品类|系列|产品线|功效|卖点|标签|特点|特色|活动|促销|库存|存货|结束时间|有效期至|截止|到期|按钮文字|购买文字|购买链接|链接|下单|分享|描述|详情|介绍|说明|文案|正文)[:：]/;
+  const dkeys=['产品描述','产品介绍','描述','详情','介绍','说明','文案','正文'];
+  let desc=null;
+  for(let i=0;i<lines.length;i++){for(const k of dkeys){const m=lines[i].match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.*)$'));if(m){const inline=m[1].trim();const out=[];if(inline)out.push(inline);for(let j=i+1;j<lines.length;j++){if(LAB.test(lines[j]))break;out.push(lines[j]);}if(out.length){const joined=out.join('\n').trim();if(!desc||joined.length>desc.length)desc=joined;}}}}
+  if(!desc){const left=lines.filter(function(ln){return ln!==name&&!/^https?:\/\//i.test(ln)&&!LAB.test(ln);});if(left.length)desc=left.join('\n').trim();}
+  if(desc)r.desc=desc;
+  return r;
+}
+function applyParsed(r){
+  const filled=[];
+  if(r.name){fill('f_name',r.name);filled.push('标题');}
+  if(r.brand){fill('f_brand',r.brand);filled.push('品牌');}
+  if(r.cat){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(c){return c.name&&(c.name===r.cat||c.name.indexOf(r.cat)>=0||r.cat.indexOf(c.name)>=0);});if(c){fc.value=c.id;filled.push('分类');}}
+  if(r.series){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(s){return s.name&&(s.name===r.series||s.name.indexOf(r.series)>=0||r.series.indexOf(s.name)>=0);});if(s){fs.value=s.id;filled.push('系列');}}
+  if(r.tags){fill('f_tags',r.tags.join(','));filled.push('功效标签');}
+  if(r.activity){const sel=document.getElementById('f_act');const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===r.activity||r.activity.indexOf(k)>=0;});if(hit){sel.value=hit;filled.push('活动标签');}else{sel.value='__custom__';fill('f_act_custom',r.activity);document.getElementById('f_act_custom').classList.remove('hidden');filled.push('活动标签');}}
+  if(r.stock!==undefined&&r.stock!==null){fill('f_stock',r.stock);filled.push('库存');}
+  if(r.endTime){fill('f_end',r.endTime);filled.push('结束时间');}
+  if(r.buyText){fill('f_buytxt',r.buyText);filled.push('按钮文字');}
+  if(r.buyLink){fill('f_buylink',r.buyLink);filled.push('购买链接');}
+  if(r.shareTitle){fill('f_sharetitle',r.shareTitle);filled.push('分享标题');}
+  if(r.shareDesc){fill('f_sharedesc',r.shareDesc);filled.push('分享描述');}
+  if(r.desc){FORM.desc=r.desc;const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(r.desc).slice(0,40)+(r.desc.length>40?'…':'');filled.push('描述');}
+  return filled;
+}
+async function doPasteFill(){
+  const modal=document.getElementById('formModal');
+  if(modal.classList.contains('hidden')){openForm(null);}
+  else if(val('f_name').trim()){if(!confirm('将用粘贴内容覆盖当前表单已填内容，继续？'))return;}
+  let text=null;
+  try{if(navigator.clipboard&&navigator.clipboard.readText)text=await navigator.clipboard.readText();}catch(e){text=null;}
+  if(!text||!text.trim()){openPasteModal();return;}
+  const filled=applyParsed(parseProductText(text));
+  const hint=document.getElementById('pasteHint');
+  if(filled.length){toast('已自动填入：'+filled.join('、'));if(hint)hint.textContent='已识别 '+filled.length+' 项';}
+  else{toast('未识别到可填充字段，请检查粘贴内容');if(hint)hint.textContent='未识别到字段';}
+}
+function openPasteModal(){
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:170px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:13px;resize:vertical" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
+  document.body.appendChild(m);
+  const ta=m.querySelector('#pmText');setTimeout(function(){ta.focus();},50);
+  m.querySelector('#pmCancel').onclick=function(){m.remove();};
+  m.querySelector('#pmOk').onclick=function(){const txt=ta.value;m.remove();const filled=applyParsed(parseProductText(txt));toast(filled.length?('已自动填入：'+filled.join('、')):'未识别到字段');};
+}
+document.getElementById('pasteFillBtn').onclick=doPasteFill;
+document.getElementById('importBtn').onclick=openImportFromForm;
+
+/* --- 从链接抓取产品 + 可勾选导入预览 --- */
+function unescapeHtml(s){if(!s)return s;const d=document.createElement('div');d.innerHTML=String(s).replace(/<\/?[^>]*>/g,'');return (d.textContent||String(s)).replace(/\s+/g,' ').trim();}
+function isProductUrl(s){return /https?:\/\/[^\s"'<>]*?(taobao\.com|tmall\.com|1688\.com|alibaba\.com)/i.test(s);}
+function isPureUrl(s){return /^\s*https?:\/\/\S+\s*$/.test(s);}
+const IMPORT_TARGETS=[
+ {v:'f_name',t:'标题'},
+ {v:'f_brand',t:'品牌'},
+ {v:'f_cat',t:'分类'},
+ {v:'f_series',t:'系列'},
+ {v:'f_tags',t:'功效标签'},
+ {v:'f_act',t:'活动标签'},
+ {v:'f_stock',t:'库存'},
+ {v:'f_end',t:'结束时间'},
+ {v:'f_buytxt',t:'购买按钮文字'},
+ {v:'f_buylink',t:'购买链接'},
+ {v:'f_sharetitle',t:'分享标题'},
+ {v:'f_sharedesc',t:'分享描述'},
+ {v:'f_sharethumb',t:'分享缩略图(URL)'},
+ {v:'desc',t:'产品描述'},
+ {v:'',t:'不导入'}
+];
+function defaultTarget(label){
+  if(/分享标题/.test(label))return 'f_sharetitle';
+  if(/分享描述|分享说明/.test(label))return 'f_sharedesc';
+  if(/标题|名称|品名/.test(label))return 'f_name';
+  if(/品牌/.test(label))return 'f_brand';
+  if(/分类/.test(label))return 'f_cat';
+  if(/系列/.test(label))return 'f_series';
+  if(/功效/.test(label))return 'f_tags';
+  if(/活动/.test(label))return 'f_act';
+  if(/标签|卖点|特点/.test(label))return 'f_tags';
+  if(/库存/.test(label))return 'f_stock';
+  if(/结束|截止|到期/.test(label))return 'f_end';
+  if(/购买文字|按钮文字/.test(label))return 'f_buytxt';
+  if(/链接|购买|下单/.test(label))return 'f_buylink';
+  if(/缩略|主图|图片|封面/.test(label))return 'f_sharethumb';
+  if(/描述|详情|介绍|说明|文案|正文/.test(label))return 'desc';
+  return '';
+}
+function objectToFields(r){
+  const map=[['name','标题'],['brand','品牌'],['cat','分类'],['series','系列'],['tags','功效标签'],['activity','活动标签'],['stock','库存'],['endTime','结束时间'],['buyText','购买按钮文字'],['buyLink','购买链接'],['shareTitle','分享标题'],['shareDesc','分享描述'],['desc','产品描述']];
+  const out=[];
+  map.forEach(function(kv){let v=r[kv[0]];if(v===undefined||v===null||v==='')return;if(Array.isArray(v))v=v.join(', ');out.push({label:kv[1],value:String(v),target:defaultTarget(kv[1])});});
+  return out;
+}
+function getMeta(html,prop){
+  let m=html.match(new RegExp('<meta[^>]*?(property|name)\\s*=\\s*["\']'+prop+'["\'][^>]*?content\\s*=\\s*["\']([^"\']*)["\']','i'));
+  if(m)return m[2];
+  m=html.match(new RegExp('<meta[^>]*?content\\s*=\\s*["\']([^"\']*)["\'][^>]*?(property|name)\\s*=\\s*["\']'+prop+'["\']','i'));
+  if(m)return m[1];
+  return null;
+}
+function parseProductHtml(html,url){
+  const fields=[];
+  let title=getMeta(html,'og:title');
+  if(!title){const m=html.match(/<title>([^<]*)<\/title>/i);if(m){title=m[1].replace(/\s*[-–|｜]\s*(淘宝|天猫|阿里巴巴|1688|Taobao|Tmall|Alibaba).*$/i,'').trim();}}
+  if(title)fields.push({label:'标题',value:unescapeHtml(title),target:'f_name'});
+  const pm=html.match(/"price"\s*:\s*"?(\d+\.?\d*)"?(?:\s*[,}])/i)||html.match(/￥\s*(\d+\.?\d*)/)||html.match(/class="tb-rmb-num"[^>]*>([\d.]+)/i)||html.match(/offerPrice["']?\s*:\s*"?(\d+\.?\d*)/i);
+  if(pm)fields.push({label:'价格',value:pm[1],target:''});
+  let img=getMeta(html,'og:image');if(img)fields.push({label:'主图',value:img,target:'f_sharethumb'});
+  let desc=getMeta(html,'og:description')||getMeta(html,'description');if(desc)fields.push({label:'产品描述',value:unescapeHtml(desc),target:'desc'});
+  let brand=getMeta(html,'og:brand');if(brand)fields.push({label:'品牌',value:unescapeHtml(brand),target:'f_brand'});
+  return fields;
+}
+async function fetchProductPage(url){
+  const PROXIES=[u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://thingproxy.freeboard.io/fetch/'+u];
+  for(let i=0;i<PROXIES.length;i++){
+    try{
+      const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+      const to=ctrl?setTimeout(function(){ctrl.abort();},12000):null;
+      const r=await fetch(PROXIES[i](url),{mode:'cors',signal:ctrl?ctrl.signal:undefined});
+      if(to)clearTimeout(to);
+      if(r&&r.ok){const t=await r.text();if(t&&t.length>500)return t;}
+    }catch(e){}
+  }
+  return null;
+}
+function importByTarget(target,value){
+  value=(value||'').trim();if(!value||!target)return;
+  if(target==='desc'){FORM.desc=value;const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(value).slice(0,40)+(value.length>40?'…':'');return;}
+  if(target==='f_cat'){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(x){return x.name&&(x.name===value||x.name.indexOf(value)>=0||value.indexOf(x.name)>=0);});fc.value=c?c.id:'';return;}
+  if(target==='f_series'){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(x){return x.name&&(x.name===value||x.name.indexOf(value)>=0||value.indexOf(x.name)>=0);});fs.value=s?s.id:'';return;}
+  if(target==='f_act'){const sel=document.getElementById('f_act');const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===value||value.indexOf(k)>=0;});const cu=document.getElementById('f_act_custom');if(hit){sel.value=hit;cu.classList.add('hidden');}else{sel.value='__custom__';cu.value=value;cu.classList.remove('hidden');}return;}
+  if(target==='f_end'){const dt=parseDateTime(value);fill(target,dt||value);return;}
+  if(target==='f_stock'){const m=value.match(/\d+/);if(m)fill(target,m[0]);return;}
+  const el=document.getElementById(target);if(el)el.value=value;
+}
+let _importModal=null;
+function openImportModal(){
+  if(_importModal)_importModal.remove();
+  const m=document.createElement('div');m.className='modal';m.id='importModal';
+  m.innerHTML='<div class="box" style="max-width:640px"><h3>🔗 从链接抓取 / 粘贴产品</h3>'+
+    '<div class="help" id="imfStatus">把淘宝/1688 商品链接粘贴到下方（留空则直接粘贴商品文案），点「识别」。链接抓取走公共代理，若被反爬拦截会自动改为手动粘贴文案模式。</div>'+
+    '<textarea id="imfInput" style="width:100%;height:90px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:13px;resize:vertical" placeholder="粘贴淘宝/1688 链接，或直接粘贴商品文案：\n产品名称：xxx\n品牌：xxx\n..."></textarea>'+
+    '<div class="btn-row" style="margin-top:8px"><button class="btn" id="imfCancel">取消</button><button class="btn primary" id="imfRecognize">识别</button></div>'+
+    '<div id="imfRows" style="margin-top:12px;max-height:46vh;overflow:auto"></div>'+
+    '<div class="btn-row" style="margin-top:10px;justify-content:space-between"><button class="btn sm" id="imfAdd">+ 添加字段</button><div><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">确认导入选中</button></div></div></div>';
+  document.body.appendChild(m);_importModal=m;
+  const ta=m.querySelector('#imfInput');setTimeout(function(){ta.focus();},50);
+  m.querySelector('#imfCancel').onclick=function(){m.remove();_importModal=null;};
+  m.querySelector('#imfClose').onclick=function(){m.remove();_importModal=null;};
+  m.querySelector('#imfRecognize').onclick=function(){runRecognition(m);};
+  m.querySelector('#imfAdd').onclick=function(){m.querySelector('#imfRows').appendChild(makeRow({label:'自定义字段',value:'',target:''}));};
+  m.querySelector('#imfImport').onclick=function(){gatherAndImport(m);};
+  return m;
+}
+async function runRecognition(m){
+  const ta=m.querySelector('#imfInput');const text=ta.value.trim();
+  const status=m.querySelector('#imfStatus');
+  if(!text){status.textContent='请先粘贴链接或商品文案再点识别。';return;}
+  if(isPureUrl(text)&&isProductUrl(text)){
+    status.textContent='正在通过代理抓取页面，请稍候…';
+    const html=await fetchProductPage(text);
+    if(!html){status.innerHTML='⚠️ 链接抓取失败（淘宝/1688 反爬或代理暂不可用）。<b>请直接把商品页复制的文案粘贴到上方文本框</b>，再点「识别」。';return;}
+    const fields=parseProductHtml(html,text);
+    if(!fields.length){status.textContent='⚠️ 抓到了页面但没解析出产品信息，请改用手动粘贴文案。';return;}
+    renderImportRows(m,fields);
+    status.textContent='已从链接识别 '+fields.length+' 项，请勾选并选择要导入的字段：';
+    return;
+  }
+  const r=parseProductText(text);const fields=objectToFields(r);
+  if(!fields.length){status.textContent='未识别到可导入字段，可点「+ 添加字段」手动补。';return;}
+  renderImportRows(m,fields);
+  status.textContent='已识别 '+fields.length+' 项，请勾选并选择要导入的字段：';
+}
+function renderImportRows(m,fields){
+  const box=m.querySelector('#imfRows');box.innerHTML='';
+  if(!fields.length){box.innerHTML='<div class="help">没有可导入的字段。</div>';return;}
+  fields.forEach(function(f){box.appendChild(makeRow(f));});
+}
+function makeRow(f){
+  const row=document.createElement('div');row.className='imf-row';
+  row.style.cssText='display:flex;gap:8px;align-items:flex-start;border:1px solid var(--c-line,#eee);border-radius:8px;padding:8px;margin-bottom:8px;background:var(--c-card,#fff)';
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.style.cssText='width:auto;margin-top:6px;flex:none';
+  const mid=document.createElement('div');mid.style.cssText='flex:1;min-width:0';
+  const lab=document.createElement('input');lab.value=f.label||'字段';lab.style.cssText='width:100%;font-size:12px;color:var(--c-sub,#888);border:1px solid var(--c-line,#ddd);border-radius:6px;padding:3px 6px;margin-bottom:4px';
+  const val=document.createElement('textarea');val.value=f.value||'';val.rows=2;val.style.cssText='width:100%;font-size:13px;border:1px solid var(--c-line,#ddd);border-radius:6px;padding:6px;resize:vertical';
+  mid.appendChild(lab);mid.appendChild(val);
+  const right=document.createElement('div');right.style.cssText='display:flex;flex-direction:column;gap:4px;align-items:center;flex:none';
+  const sel=document.createElement('select');IMPORT_TARGETS.forEach(function(t){const o=document.createElement('option');o.value=t.v;o.textContent=t.t;if(t.v===(f.target||''))o.selected=true;sel.appendChild(o);});sel.style.cssText='font-size:12px;max-width:150px';
+  const del=document.createElement('button');del.textContent='✕';del.type='button';del.className='btn sm';del.style.cssText='padding:2px 9px';del.onclick=function(){row.remove();};
+  right.appendChild(sel);right.appendChild(del);
+  row.appendChild(cb);row.appendChild(mid);row.appendChild(right);
+  row._data={cb:cb,val:val,sel:sel};
+  return row;
+}
+function gatherAndImport(m){
+  const box=m.querySelector('#imfRows');const rows=Array.from(box.querySelectorAll('.imf-row'));
+  let n=0;
+  rows.forEach(function(row){const d=row._data;if(!d.cb.checked)return;const target=d.sel.value;if(!target)return;importByTarget(target,d.val.value);n++;});
+  m.remove();_importModal=null;
+  toast('已导入 '+n+' 个字段到表单');
+  const hint=document.getElementById('pasteHint');if(hint)hint.textContent='已导入 '+n+' 项';
+}
+function openImportFromForm(){const fm=document.getElementById('formModal');if(fm.classList.contains('hidden'))openForm(null);openImportModal();}
 
 /* --- 富文本编辑器 --- */
 function openRichEditor(initial,onSave){
