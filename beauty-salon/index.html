@@ -177,6 +177,207 @@
   .kg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
   .kg-card { border: 1px solid #eee; border-radius: 10px; overflow: hidden; background: #fff; }
   .kg-card .row-act { margin-top: 8px; }
+  /* ============================================================
+   * 手机适配底座（mobile-first utility，2026-08-04 新增）
+   * 设计目标：iPhone 14 Pro (390px) / 小米 (360px) / iPad mini 仍可读
+   * ============================================================ */
+  /* 1. 顶栏重排：标题居中、操作置右、宽度更紧 */
+  .topbar { padding: 0 8px; }
+  .topbar .left { gap: 6px; min-width: 0; flex: 0 0 auto; }
+  .topbar .left .brand { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 56vw; }
+  .topbar .right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .topbar .right .role-tag { font-size: 12px; background: rgba(255,255,255,.18); padding: 4px 8px; border-radius: 999px; }
+  .topbar .right .btn.ghost.sm { color: #fff; background: rgba(255,255,255,.18); font-size: 13px; padding: 6px 10px; }
+  /* 2. 全局触屏友好：iOS 16px 防放大、点击高亮关 */
+  input, select, textarea { font-size: 16px; }
+  button, .btn, .navitem, .xbtn, .pill { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  /* 3. 模态在手机端：几乎全屏、底部固定操作 */
+  .modal { max-height: 92vh; }
+  /* 4. 默认表格在手机端转卡片化（无需后端模板改造） */
+  .m-tblcard { display: block; }
+  .m-tblcard thead { display: none; }
+  .m-tblcard tbody { display: block; }
+  .m-tblcard tr { display: block; background: #fff; border: 1px solid #eef0f4; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .m-tblcard td { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; border: none; word-break: break-word; }
+  .m-tblcard td::before { content: attr(data-th); font-size: 12px; color: #6b7280; flex: 0 0 auto; max-width: 45%; }
+  .m-tblcard td.no-th::before { content: none; }
+  .m-tblcard td.action-cell { justify-content: flex-end; padding-top: 8px; border-top: 1px dashed #eef0f4; margin-top: 6px; }
+  /* 5. 通用手机工具类（默认无副作用，640px 以下才生效） */
+  .m-hide { display: none; }
+  /* ============================================================
+   * 手机断点（≤640px）
+   * ============================================================ */
+  @media (max-width: 640px) {
+    /* —— 顶栏 —— */
+    .topbar { height: 52px; }
+    .topbar .left .brand { font-size: 14px; max-width: 50vw; }
+    .hamburger { width: 40px; height: 40px; font-size: 22px; }
+    /* —— 侧栏：全屏抽屉 —— */
+    .sidebar { position: fixed; top: 52px; bottom: 0; left: 0; right: 0; width: auto; max-width: 100%; transform: translateX(-100%); transition: transform .25s; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar .navitem { padding: 14px 18px; font-size: 15px; }
+    .backdrop { top: 52px; }
+    /* —— 内容 —— */
+    .content { padding: 12px; }
+    .card { padding: 14px; border-radius: 10px; margin-bottom: 12px; }
+    .card h3 { font-size: 15px; }
+    .page-head h2 { font-size: 17px; }
+    /* —— 字段：label 在上、input 全宽 —— */
+    .field { margin-bottom: 12px; }
+    .field label { font-size: 12px; margin-bottom: 6px; }
+    /* —— row: 输入/按钮自动换行 + 全宽 —— */
+    .row { gap: 8px; }
+    .row > * { min-width: 0; }
+    .row > .btn, .row > button { flex: 1 1 auto; }
+    /* —— 所有按钮更宽更好按 —— */
+    .btn { padding: 10px 14px; font-size: 14px; }
+    .btn.sm { padding: 7px 12px; font-size: 13px; }
+    /* —— 工作台：单列 —— */
+    .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { padding: 12px; }
+    .stat .value { font-size: 20px; }
+    /* —— 设置：单列 —— */
+    .grid2 { grid-template-columns: 1fr; }
+    /* —— 模态：全屏化 —— */
+    .modal-mask { padding: 0; align-items: flex-end; }
+    .modal { max-width: 100%; max-height: 95vh; border-radius: 14px 14px 0 0; padding: 18px 16px 24px; }
+    .modal h3 { font-size: 16px; }
+    .modal .modal-act { position: sticky; bottom: -24px; margin: 16px -16px -24px; padding: 12px 16px 18px; background: #fff; border-top: 1px solid #eef0f4; }
+    .modal .modal-act .btn { flex: 1; }
+    /* —— 表格全部转卡片 —— */
+    table { display: block; }
+    table thead { display: none; }
+    table tbody { display: block; }
+    table tr { display: block; background: #fff; border: 1px solid #eef0f4; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+    table td { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border: none; word-break: break-word; }
+    table td.no-th::before { content: none; }
+    table td.action-cell { justify-content: flex-end; padding-top: 8px; border-top: 1px dashed #eef0f4; margin-top: 6px; }
+    /* 表格第一列（主信息）加粗 */
+    table td:first-child { font-weight: 600; color: #111827; }
+    /* 表格里的按钮全宽 */
+    table td .btn { flex: 1 1 auto; }
+    table td .row-act { display: flex; gap: 6px; flex-wrap: wrap; }
+    table td .row-act .btn { flex: 1 1 0; }
+    /* —— 缩略图网格 3列→2列 —— */
+    .ac-grid, .kg-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ac-thumb, .case-thumb { height: 100px; }
+    /* —— 工资/薪资参数 4列→2列 —— */
+    .sal-grid, .sc-grid { grid-template-columns: 1fr 1fr; }
+    /* —— 顶部隐藏第三级（用户名）标签 —— */
+    .m-hide { display: block; } /* 实际由 .m-hide 类控制；占位 */
+  }
+  /* 真正隐藏：手机端 */
+  @media (max-width: 640px) {
+    .m-hide { display: none !important; }
+  }
+  /* ============================================================
+   * 业绩开单（手机端专用规则）
+   * ============================================================ */
+  .ord-item, .ord-split { display: grid; grid-template-columns: 1fr; gap: 8px; padding: 10px; border: 1px solid #eef0f4; border-radius: 10px; margin-bottom: 10px; background: #fafbfc; }
+  .ord-item .row, .ord-split .row { gap: 6px; }
+  .ord-item .qtyamt, .ord-split .emppct { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ord-item .used-card-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ord-item .ord-del, .ord-split .split-del { margin-top: 4px; }
+  @media (min-width: 641px) {
+    .ord-item { grid-template-columns: 90px 1fr 1fr 80px 60px; align-items: center; }
+    .ord-split { grid-template-columns: 1fr 80px 100px 60px; align-items: center; }
+  }
+  /* ============================================================
+   * 股东报表 / 产品表 / 案例表：在 tr 第一格注入 data-th（js 自动注入），
+   * data-th=列名 即可让卡片化生效
+   * ============================================================ */
+  .page-head .m-exports { display: flex; gap: 6px; flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .page-head .m-exports .btn { flex: 1 1 0; }
+  }
+  /* —— 库存/产品表格的标签在手机上可读 —— */
+  .m-tagwrap { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+  /* —— 工资 头部：员工下拉+月份+操作 三段堆叠 —— */
+  .sal-head { flex-direction: column; align-items: stretch; }
+  .sal-head > * { width: 100%; }
+  .sal-adj { flex-direction: column; align-items: stretch; }
+  .sal-adj > * { width: 100%; }
+  /* —— 开单页：客户名/员工/日期 横向 → 纵向 —— */
+  .order-meta { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
+  .order-meta-2 { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 12px; }
+  @media (min-width: 641px) {
+    .order-meta { grid-template-columns: 1fr 1fr; }
+    .order-meta-2 { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  /* —— 用品/员工/项目/卡/活动 表格的 tr 在手机端：主信息+操作分两段 —— */
+  .m-cardlist { display: block; }
+  .m-cardlist .m-card-item { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .m-cardlist .m-card-item .m-card-title { font-weight: 700; color: #111827; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 10px; }
+  .m-cardlist .m-card-item .m-card-body { font-size: 13px; color: #4b5563; line-height: 1.6; word-break: break-word; }
+  .m-cardlist .m-card-item .m-card-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .m-cardlist .m-card-item .m-card-actions .btn { flex: 1; }
+  @media (min-width: 641px) { .m-cardlist { display: none; } }
+  /* —— 数据表头 th 在手机上用 sr-only 不显示，仅靠 data-th —— */
+  /* —— 登录页：手机上更紧凑 —— */
+  @media (max-width: 640px) {
+    .login-wrap { padding: 20px; }
+    .login-card { padding: 22px 20px; border-radius: 12px; }
+    .login-card h2 { font-size: 18px; }
+  }
+  /* —— toast 在 iOS 底部安全区 —— */
+  @supports (padding: max(0px)) {
+    .toast { bottom: max(24px, env(safe-area-inset-bottom)); }
+  }
+  /* —— 防止横向溢出 —— */
+  .content, .card, .modal { max-width: 100%; overflow-x: hidden; }
+  /* —— 输入/select 在 modal 中更宽 —— */
+  .modal input, .modal select, .modal textarea { font-size: 16px; }
+  /* —— 开单页新增工具类（2026-08-04） —— */
+  .m-addbtn { width: 100%; margin-top: 4px; padding: 10px 12px; }
+  .m-savebtn { width: 100%; padding: 12px 16px; font-size: 15px; font-weight: 600; }
+  .form-actions { margin-top: 12px; }
+  .m-label { font-size: 12px; color: #6b7280; flex: 0 0 auto; }
+  .ord-item .used-card-row { align-items: flex-start; }
+  .ord-item .used-card-row .m-label { padding-top: 8px; }
+  .ord-item .qtyamt .field input { font-weight: 600; }
+  /* —— 表格在手机端的列表化：缩小列间空隙，让按钮更集中 —— */
+  @media (max-width: 640px) {
+    table tr td[data-th="操作"] .row-act { justify-content: flex-end; }
+  }
+  /* —— 工作台/工资头部字段排列 —— */
+  @media (max-width: 640px) {
+    .page-head { gap: 8px; }
+    .page-head h2, .page-head h3 { font-size: 16px; }
+    .sal-head .btn { width: 100%; }
+    .sal-head select, .sal-head input { width: 100%; }
+  }
+  /* —— 工资计算结果：表格也转卡片 —— */
+  @media (max-width: 640px) {
+    .sal-detail table { font-size: 13px; }
+  }
+  /* —— 工资调整行：员工下拉+金额+加减号 紧凑 —— */
+  .sal-adj-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .sal-adj-row select { flex: 1 1 140px; }
+  .sal-adj-row input { width: 100px; }
+  @media (max-width: 640px) {
+    .sal-adj-row { flex-direction: column; align-items: stretch; }
+    .sal-adj-row input { width: 100%; }
+  }
+  /* —— 案例/活动卡缩略图：手机上单击即可 —— */
+  @media (max-width: 640px) {
+    .case-thumb { height: 110px; }
+  }
+  /* —— 隐藏/折叠：手机端把不那么重要的标签隐藏 —— */
+  .m-only-pc { display: none; }
+  @media (min-width: 641px) {
+    .m-only-mobile { display: none !important; }
+    .m-only-pc { display: initial; }
+  }
+  /* —— 通用表格缩略图：手机端 56×56、PC 端 44×44 —— */
+  .m-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; display: block; }
+  .m-thumb-empty { background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 11px; }
+  .m-drag { cursor: grab; color: #9ca3af; text-align: center; user-select: none; }
+  @media (max-width: 640px) {
+    .m-thumb { width: 56px; height: 56px; }
+    .m-drag { display: none; }
+  }
+  /* —— 列表/卡片化：操作列内的按钮 —— */
+  .row-act { display: flex; gap: 6px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -400,6 +601,42 @@ function render() {
   applyBrand();
   if (!App.role) { renderLogin(); return; }
   renderShell();
+  mAutoTableLabels();
+  mMarkFirstColumn();
+}
+
+/* 给所有 table 自动注入 data-th（从 thead 推断列名），并标记主列 */
+function mAutoTableLabels() {
+  try {
+    const tables = document.querySelectorAll('table');
+    for (const t of tables) {
+      const ths = t.querySelectorAll('thead th');
+      if (ths.length === 0) continue;
+      if (t.dataset.labeled === '1') continue;
+      t.dataset.labeled = '1';
+      const heads = [];
+      ths.forEach((th, i) => { heads[i] = (th.textContent || '').trim(); });
+      t.querySelectorAll('tbody tr').forEach(tr => {
+        const tds = tr.querySelectorAll('td');
+        tds.forEach((td, i) => {
+          if (!td.hasAttribute('data-th')) {
+            const h = heads[i] || '';
+            td.setAttribute('data-th', h);
+            if (h === '') td.classList.add('no-th');
+          }
+        });
+      });
+    }
+  } catch (e) { /* 保护 render 流程 */ }
+}
+
+function mMarkFirstColumn() {
+  try {
+    document.querySelectorAll('table tbody tr').forEach(tr => {
+      const first = tr.querySelector('td');
+      if (first && !first.classList.contains('first-col')) first.classList.add('first-col');
+    });
+  } catch (e) {}
 }
 
 function applyBrand() {
@@ -505,25 +742,27 @@ function logout() { App.role = null; App.employeeId = null; clearSession(); rend
 function renderModule(key) {
   const c = document.getElementById('content');
   switch (key) {
-    case 'dashboard': return renderDashboard(c);
-    case 'products': return renderProducts(c);
-    case 'stock': return renderStock(c);
-    case 'supplies': return renderSupplies(c);
-    case 'orders': return renderOrders(c);
-    case 'labor': return renderLaborConfig(c);
-    case 'salary': return renderSalary(c);
-    case 'salaryCfg': return renderSalaryConfig(c);
-    case 'employees': return renderEmployees(c);
-    case 'activityCards': return renderActivityCards(c);
-    case 'knowledge': return renderKnowledge(c);
-    case 'cases': return renderCases(c);
-    case 'projects': return renderProjects(c);
-    case 'cards': return renderCards(c);
-    case 'activities': return renderActivities(c);
-    case 'shareholder': return renderShareholder(c);
-    case 'settings': return renderSettings(c);
-    default: return renderPlaceholder(c, key);
+    case 'dashboard': renderDashboard(c); break;
+    case 'products': renderProducts(c); break;
+    case 'stock': renderStock(c); break;
+    case 'supplies': renderSupplies(c); break;
+    case 'orders': renderOrders(c); break;
+    case 'labor': renderLaborConfig(c); break;
+    case 'salary': renderSalary(c); break;
+    case 'salaryCfg': renderSalaryConfig(c); break;
+    case 'employees': renderEmployees(c); break;
+    case 'activityCards': renderActivityCards(c); break;
+    case 'knowledge': renderKnowledge(c); break;
+    case 'cases': renderCases(c); break;
+    case 'projects': renderProjects(c); break;
+    case 'cards': renderCards(c); break;
+    case 'activities': renderActivities(c); break;
+    case 'shareholder': renderShareholder(c); break;
+    case 'settings': renderSettings(c); break;
+    default: renderPlaceholder(c, key); break;
   }
+  mAutoTableLabels();
+  mMarkFirstColumn();
 }
 
 function renderPlaceholder(c, key) {
@@ -615,20 +854,21 @@ function renderProducts(c) {
   const catOptions = `<option value="">全部分类</option>` + cats.map(cat => `<option value="${cat.id}" ${App.productCat === cat.id ? 'selected' : ''}>${esc(cat.name)}</option>`).join('');
   c.innerHTML = `
     <div class="card">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px">
-        <input id="pSearch" placeholder="搜索名称" value="${esc(App.productSearch)}" style="max-width:170px">
-        <select id="pCat" style="max-width:150px">${catOptions}</select>
-        ${isOwner ? `<button class="btn sm ${App.productFastExpire ? '' : 'ghost'}" onclick="App.productFastExpire=!App.productFastExpire;renderProducts(document.getElementById('content'))">快到期</button>` : ''}
-        <span style="flex:1"></span>
-        <button class="btn sm ghost" onclick="downloadProductsTemplate()">下载模板</button>
-        <button class="btn sm ghost" onclick="document.getElementById('pImport').click()">导入</button>
-        <input id="pImport" type="file" accept=".xlsx,.csv" style="display:none" onchange="importProducts(this.files[0])">
-        <span style="display:inline-flex;gap:6px">
+      <div class="page-head">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1 1 240px;min-width:0">
+          <input id="pSearch" placeholder="搜索名称" value="${esc(App.productSearch)}" style="max-width:170px">
+          <select id="pCat" style="max-width:150px">${catOptions}</select>
+          ${isOwner ? `<button class="btn sm ${App.productFastExpire ? '' : 'ghost'}" onclick="App.productFastExpire=!App.productFastExpire;renderProducts(document.getElementById('content'))">快到期</button>` : ''}
+        </div>
+        <div class="m-exports">
+          <button class="btn sm ghost" onclick="downloadProductsTemplate()">下载模板</button>
+          <button class="btn sm ghost" onclick="document.getElementById('pImport').click()">导入</button>
+          <input id="pImport" type="file" accept=".xlsx,.csv" style="display:none" onchange="importProducts(this.files[0])">
           <button class="btn sm ghost" onclick="exportCurrent('products','csv')">CSV</button>
           <button class="btn sm ghost" onclick="exportCurrent('products','xlsx')">Excel</button>
           <button class="btn sm ghost" onclick="exportCurrent('products','json')">JSON</button>
-        </span>
-        <button class="btn sm" onclick="openProductForm(null)">+ 新建产品</button>
+          <button class="btn sm" onclick="openProductForm(null)">+ 新建产品</button>
+        </div>
       </div>
       <div id="pTableWrap"></div>
     </div>`;
@@ -650,34 +890,36 @@ function renderProductTable() {
   const canDrag = !App.productSearch && !App.productCat && !App.productFastExpire;
 
   wrap.innerHTML = (canDrag ? '' : '<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">清除筛选后可拖拽排序</div>') + `
-    <table>
+    <table class="m-tbl">
       <thead><tr>
-        <th></th><th>缩略图</th><th>名称</th><th>分类</th><th>零售价</th><th>会员价</th><th>库存</th>
-        ${isOwner ? '<th>保质期</th>' : ''}
-        <th>排序</th><th>状态</th><th>操作</th>
+        <th data-th="拖动">拖动</th><th data-th="缩略图">缩略图</th><th data-th="名称">名称</th><th data-th="分类">分类</th><th data-th="零售价">零售价</th><th data-th="会员价">会员价</th><th data-th="库存">库存</th>
+        ${isOwner ? '<th data-th="保质期">保质期</th>' : ''}
+        <th data-th="排序">排序</th><th data-th="状态">状态</th><th data-th="操作">操作</th>
       </tr></thead>
       <tbody>
         ${list.map(p => {
           const st = shelfStatus(p);
           const catNames = (p.category_ids || []).map(id => (cats.find(c => c.id === id) || {}).name).filter(Boolean).join('、');
           const thumb = (p.images && p.images[0])
-            ? `<img src="${p.images[0]}" style="width:44px;height:44px;object-fit:cover;border-radius:8px">`
-            : '<div style="width:44px;height:44px;border-radius:8px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:11px">无图</div>';
+            ? `<img src="${p.images[0]}" class="m-thumb">`
+            : '<div class="m-thumb m-thumb-empty">无图</div>';
           return `<tr draggable="${canDrag}" data-id="${p.id}" ondragstart="pdragStart(event,'${p.id}')" ondragover="event.preventDefault()" ondrop="pdragDrop(event,'${p.id}')">
-            <td style="cursor:grab;color:#9ca3af">⋮⋮</td>
-            <td>${thumb}</td>
-            <td>${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="tag">${esc(p.hot_badge)}</span>` : ''}</td>
-            <td>${esc(catNames)}</td>
-            <td>${p.retail_price != null ? '¥' + money(p.retail_price) : '-'}</td>
-            <td>${p.member_price != null ? '¥' + money(p.member_price) : '-'}</td>
-            <td>${esc(p.stock || 0)}</td>
-            ${isOwner ? `<td>${st ? `<span class="tag ${st.cls}">${esc(st.text)}</span>` : '<span style="color:#9ca3af">-</span>'}</td>` : ''}
-            <td>${esc(p.sort_order || 0)}</td>
-            <td><span class="tag ${p.status === 'published' ? 'green' : 'gray'}">${p.status === 'published' ? '已上架' : '草稿'}</span></td>
-            <td>
-              <button class="btn sm ghost" onclick="openProductForm('${p.id}')">编辑</button>
-              <button class="btn sm ${p.status === 'published' ? 'ghost' : 'secondary'}" onclick="toggleProductStatus('${p.id}')">${p.status === 'published' ? '下架' : '上架'}</button>
-              <button class="btn sm danger" onclick="deleteProduct('${p.id}')">删除</button>
+            <td data-th="拖动" class="no-th m-drag">⋮⋮</td>
+            <td data-th="缩略图" class="no-th">${thumb}</td>
+            <td data-th="名称"><b>${esc(p.name || '(未命名)')}</b>${p.hot_badge ? ` <span class="tag">${esc(p.hot_badge)}</span>` : ''}</td>
+            <td data-th="分类">${esc(catNames) || '—'}</td>
+            <td data-th="零售价">${p.retail_price != null ? '¥' + money(p.retail_price) : '—'}</td>
+            <td data-th="会员价">${p.member_price != null ? '¥' + money(p.member_price) : '—'}</td>
+            <td data-th="库存">${esc(p.stock || 0)}</td>
+            ${isOwner ? `<td data-th="保质期">${st ? `<span class="tag ${st.cls}">${esc(st.text)}</span>` : '<span style="color:#9ca3af">—</span>'}</td>` : ''}
+            <td data-th="排序">${esc(p.sort_order || 0)}</td>
+            <td data-th="状态"><span class="tag ${p.status === 'published' ? 'green' : 'gray'}">${p.status === 'published' ? '已上架' : '草稿'}</span></td>
+            <td data-th="操作" class="action-cell">
+              <div class="row-act">
+                <button class="btn sm ghost" onclick="openProductForm('${p.id}')">编辑</button>
+                <button class="btn sm ${p.status === 'published' ? 'ghost' : 'secondary'}" onclick="toggleProductStatus('${p.id}')">${p.status === 'published' ? '下架' : '上架'}</button>
+                <button class="btn sm danger" onclick="deleteProduct('${p.id}')">删除</button>
+              </div>
             </td>
           </tr>`;
         }).join('')}
@@ -1314,54 +1556,68 @@ function renderOrders(c) {
     <div class="card">
       <h3>业绩开单</h3>
       <div class="form">
-        <label>客户名（可记忆搜索）</label>
-        <input id="ordCustomer" class="inp" list="custList" placeholder="输入或选择历史客户" />
-        <datalist id="custList">${custOpts}</datalist>
+        <div class="order-meta">
+          <div class="field">
+            <label>客户名（可记忆搜索）</label>
+            <input id="ordCustomer" class="inp" list="custList" placeholder="输入或选择历史客户" />
+            <datalist id="custList">${custOpts}</datalist>
+          </div>
+          <div class="field">
+            <label>开单员工（主员工）</label>
+            ${App.role === 'employee'
+              ? `<input class="inp" value="${esc(selfEmp ? selfEmp.name : '')}" disabled />`
+              : `<select id="ordEmployee" class="inp">${empOpts || '<option value="">（无员工，请先到员工管理添加）</option>'}</select>`}
+          </div>
+        </div>
+        <div class="order-meta-2">
+          <div class="field">
+            <label>开单日期</label>
+            <input id="ordDate" class="inp" type="date" value="${todayStr()}" />
+          </div>
+          <div class="field">
+            <label>支付渠道</label>
+            <select id="ordPay" class="inp">
+              <option value="wechat">微信</option>
+              <option value="alipay">支付宝</option>
+              <option value="cash">现金</option>
+              <option value="douyin">抖音团购</option>
+              <option value="card">银行卡</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>订单备注</label>
+            <textarea id="ordNote" class="inp" rows="1" placeholder="选填"></textarea>
+          </div>
+        </div>
 
-        <label>开单员工（主员工）</label>
-        ${App.role === 'employee'
-          ? `<input class="inp" value="${esc(selfEmp ? selfEmp.name : '')}" disabled />`
-          : `<select id="ordEmployee" class="inp">${empOpts || '<option value="">（无员工，请先到员工管理添加）</option>'}</select>`}
+        <div class="field">
+          <label>明细</label>
+          <div id="orderItems"></div>
+          <button class="btn ghost m-addbtn" type="button" onclick="addOrderItem()">+ 添加明细</button>
+        </div>
 
-        <label>开单日期</label>
-        <input id="ordDate" class="inp" type="date" value="${todayStr()}" />
+        <div class="field">
+          <label>分成（合计需 = 100%）</label>
+          <div id="orderSplits"></div>
+          <button class="btn ghost m-addbtn" type="button" onclick="addOrderSplit()">+ 添加分成员工</button>
+        </div>
 
-        <label>明细</label>
-        <div id="orderItems"></div>
-        <button class="btn ghost" type="button" onclick="addOrderItem()">+ 添加明细</button>
-
-        <label>分成（合计需 = 100%）</label>
-        <div id="orderSplits"></div>
-        <button class="btn ghost" type="button" onclick="addOrderSplit()">+ 添加分成员工</button>
-
-        <label>支付渠道</label>
-        <select id="ordPay" class="inp">
-          <option value="wechat">微信</option>
-          <option value="alipay">支付宝</option>
-          <option value="cash">现金</option>
-          <option value="douyin">抖音团购</option>
-          <option value="card">银行卡</option>
-          <option value="other">其他</option>
-        </select>
-
-        <label>订单备注</label>
-        <textarea id="ordNote" class="inp" rows="2" placeholder="选填"></textarea>
-
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn" type="button" onclick="saveOrder()">保存开单</button>
+        <div class="form-actions">
+          <button class="btn m-savebtn" type="button" onclick="saveOrder()">保存开单</button>
         </div>
       </div>
     </div>
-    <div class="card" style="margin-top:16px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-        <h3 style="margin:0">近期开单记录</h3>
-        <span style="display:inline-flex;gap:6px">
+    <div class="card">
+      <div class="page-head">
+        <h3>近期开单记录</h3>
+        <div class="m-exports">
           <button class="btn sm ghost" onclick="exportCurrent('orders','csv')">CSV</button>
           <button class="btn sm ghost" onclick="exportCurrent('orders','xlsx')">Excel</button>
           <button class="btn sm ghost" onclick="exportCurrent('orders','json')">JSON</button>
-        </span>
+        </div>
       </div>
-      <input id="ordSearch" class="inp" placeholder="搜索客户名" style="width:200px;margin-bottom:8px" />
+      <input id="ordSearch" class="inp" placeholder="搜索客户名" />
       <div id="recentOrders"></div>
     </div>`;
 
@@ -1414,26 +1670,30 @@ function renderOrderItems() {
     const pool = itemPool(row.type);
     const opts = pool.map(x => `<option value="${esc(x.name)}">`).join('');
     const cardOpts = DB.getList('cards').map(c => `<option value="${c.id}" ${row.used_card_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
-    return `<div class="ord-item" data-row="${row.rowId}" style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:8px">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    return `<div class="ord-item" data-row="${row.rowId}">
+      <div class="row">
         <select class="inp itype" style="width:90px">
           <option value="product" ${row.type === 'product' ? 'selected' : ''}>产品</option>
           <option value="project" ${row.type === 'project' ? 'selected' : ''}>项目</option>
           <option value="card" ${row.type === 'card' ? 'selected' : ''}>卡</option>
         </select>
-        <input class="inp iname" list="dl-${row.rowId}" placeholder="搜索选择${row.type === 'product' ? '产品' : row.type === 'project' ? '项目' : '卡'}" style="flex:1;min-width:140px" value="${esc(row.item_name || '')}" />
+        <input class="inp iname" list="dl-${row.rowId}" placeholder="搜索选择${row.type === 'product' ? '产品' : row.type === 'project' ? '项目' : '卡'}" value="${esc(row.item_name || '')}" />
         <datalist id="dl-${row.rowId}">${opts}</datalist>
-        <input class="inp iqty" type="text" inputmode="numeric" value="${row.quantity || 1}" style="width:64px" title="数量" />
-        <input class="inp iamt" type="text" inputmode="decimal" value="${row.actual_amount || 0}" style="width:92px" title="实收金额" />
-        <button class="btn sm red" type="button" onclick="removeOrderItem(${row.rowId})">删</button>
       </div>
-      <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-        <span style="font-size:12px;color:#6b7280">消耗卡:</span>
-        <select class="inp iused" style="width:150px" ${row.type !== 'project' ? 'disabled' : ''}>
+      <div class="qtyamt">
+        <div class="field" style="margin:0"><label>数量</label><input class="inp iqty" type="text" inputmode="numeric" value="${row.quantity || 1}" /></div>
+        <div class="field" style="margin:0"><label>实收金额</label><input class="inp iamt" type="text" inputmode="decimal" value="${row.actual_amount || 0}" /></div>
+      </div>
+      <div class="used-card-row">
+        <span class="m-label">消耗卡</span>
+        <select class="inp iused" style="min-width:140px" ${row.type !== 'project' ? 'disabled' : ''}>
           <option value="">无（单次项目）</option>
           ${cardOpts}
         </select>
-        <input class="inp inote" placeholder="明细备注" style="flex:1" value="${esc(row.note || '')}" />
+        <input class="inp inote" placeholder="明细备注（选填）" value="${esc(row.note || '')}" />
+      </div>
+      <div class="row ord-del">
+        <button class="btn sm danger" type="button" onclick="removeOrderItem(${row.rowId})">删除该明细</button>
       </div>
     </div>`;
   }).join('');
@@ -1475,14 +1735,21 @@ function renderOrderSplits(c) {
   box.innerHTML = orderSplits.map((row, idx) => {
     const locked = idx === 0 && App.role === 'employee';
     const opts = emps.map(e => `<option value="${e.id}" ${row.employee_id === e.id ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
-    return `<div class="ord-split" data-row="${row.rowId}" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-      <span style="font-size:12px;width:48px;color:#6b7280">${idx === 0 ? '主员工' : '分成'}</span>
-      <select class="inp semp" style="width:120px" ${locked ? 'disabled' : ''}>
-        <option value="">选择员工</option>${opts}
-      </select>
-      <input class="inp spercentage" type="text" inputmode="decimal" value="${row.percentage}" style="width:80px" title="百分比" /> %
-      <input class="inp snote" placeholder="分成备注" style="flex:1" value="${esc(row.note || '')}" />
-      ${idx === 0 ? '' : `<button class="btn sm red" type="button" onclick="removeOrderSplit(${row.rowId})">删</button>`}
+    return `<div class="ord-split" data-row="${row.rowId}">
+      <div class="row" style="justify-content:space-between">
+        <span class="tag ${idx === 0 ? 'green' : 'gray'}">${idx === 0 ? '主员工' : '分成员工'}</span>
+        ${idx === 0 ? '' : `<button class="btn sm danger" type="button" onclick="removeOrderSplit(${row.rowId})">删除</button>`}
+      </div>
+      <div class="field" style="margin:0">
+        <label>员工</label>
+        <select class="inp semp" ${locked ? 'disabled' : ''}>
+          <option value="">选择员工</option>${opts}
+        </select>
+      </div>
+      <div class="emppct">
+        <div class="field" style="margin:0"><label>分成比例（%）</label><input class="inp spercentage" type="text" inputmode="decimal" value="${row.percentage}" /></div>
+        <div class="field" style="margin:0"><label>分成备注</label><input class="inp snote" placeholder="选填" value="${esc(row.note || '')}" /></div>
+      </div>
     </div>`;
   }).join('');
 
