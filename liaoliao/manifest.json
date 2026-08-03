@@ -1,0 +1,1 @@
+{"name": "小廖的空间", "short_name": "廖廖的空间", "description": "廖廖的儿童学习成长空间站", "start_url": "./", "display": "standalone", "background_color": "#FFF8E7", "theme_color": "#FFD4B8", "orientation": "any", "icons": [{"src": "liaoliao_icon_192.png", "sizes": "192x192", "type": "image/png"}, {"src": "liaoliao_icon_512.png", "sizes": "512x512", "type": "image/png"}]}
