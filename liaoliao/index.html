@@ -3350,7 +3350,7 @@ function renderEnglishSection(w, section) {
         el('button', { className: 'btn btn-blue', onClick: () => addVocabBatch() }, '📋 批量粘贴添加'),
         el('label', { className: 'btn btn-green', style: { cursor: 'pointer' } },
           '📷 拍照识别',
-          el('input', { type: 'file', accept: 'image/*', capture: 'environment', style: { display: 'none' }, onchange: (e) => {
+          el('input', { type: 'file', accept: 'image/*', style: { display: 'none' }, onchange: (e) => {
             const f = e.target.files && e.target.files[0];
             if (f) { const r = new FileReader(); r.onload = () => addVocabFromImages([r.result]); r.readAsDataURL(f); }
           }})
