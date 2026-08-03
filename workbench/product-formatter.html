@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品排版工具 · 恩子聊美业</title>
+<style>
+  :root{
+    --bg:#faf7f2; --card:#ffffff; --ink:#2b2b2b; --sub:#8a8378;
+    --line:#ece6dc; --brand:#c8794f; --brand2:#e8a87c; --accent:#5b8a72;
+    --danger:#c0392b; --ok:#5b8a72;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 14px 60px}
+  header.top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  header.top .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+  header.top h1{font-size:19px;margin:0}
+  .tag{font-size:12px;color:var(--sub);margin:0 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px;
+    box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  .sec-title{font-size:14px;font-weight:700;margin:0 0 10px;display:flex;align-items:center;gap:6px}
+  .sec-title .dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+  textarea{width:100%;min-height:130px;border:1px solid var(--line);border-radius:10px;padding:12px;
+    font-size:14px;font-family:inherit;resize:vertical;background:#fffdf9;color:var(--ink)}
+  textarea:focus{outline:none;border-color:var(--brand2)}
+  .btn{border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;
+    background:var(--brand);color:#fff;transition:.15s}
+  .btn:hover{filter:brightness(1.05)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  .btn.soft{background:#f1ece4;color:var(--ink)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .status{font-size:13px;color:var(--sub);margin-top:10px;min-height:18px}
+  .status.err{color:var(--danger)}
+  .status.ok{color:var(--ok)}
+  .settings{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
+  .settings summary{cursor:pointer;font-size:13px;color:var(--sub);font-weight:600}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field.full{grid-column:1/-1}
+  .field label{font-size:12px;color:var(--sub)}
+  .field input,.field textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;
+    font-family:inherit;background:#fffdf9;color:var(--ink)}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--brand2)}
+  .field textarea{min-height:60px;resize:vertical}
+  .styles{display:flex;gap:8px;flex-wrap:wrap}
+  .style-tab{border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 14px;font-size:13px;
+    cursor:pointer;color:var(--ink)}
+  .style-tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .preview{background:#fffdf9;border:1px dashed var(--line);border-radius:10px;padding:14px;white-space:pre-wrap;
+    font-size:14px;min-height:160px;word-break:break-word}
+  .copy-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .hidden{display:none}
+  .note{font-size:12px;color:var(--sub);background:#f6f1e9;border-radius:8px;padding:8px 10px;margin-top:8px}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#2b2b2b;color:#fff;
+    padding:10px 18px;border-radius:22px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+  .toast.show{opacity:1}
+  @media(max-width:560px){.field-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">恩</div>
+    <h1>产品排版工具</h1>
+  </header>
+  <p class="tag">粘贴豆包/元宝生成的内容 · 或淘宝/抖音/1688 页面文字 · 一键拆字段 → 多风格重排 → 复制发布</p>
+
+  <div class="card">
+    <p class="sec-title"><span class="dot"></span>第一步：丢内容进来</p>
+    <textarea id="input" placeholder="把下面任意一种粘进来：
+① 豆包/元宝 帮你生成的产品详情文案
+② 淘宝 / 抖音 / 1688 商品页复制的文字（全选→复制→粘贴）
+③ 直接粘贴商品链接（电脑端可自动抓，手机端请复制文字）
+
+粘贴后点「一键识别提取」，自动拆成结构化字段。"></textarea>
+    <div class="row">
+      <button class="btn" id="extractBtn">⚡ 一键识别提取</button>
+      <button class="btn soft" id="demoBtn">👀 看示例效果</button>
+      <button class="btn ghost" id="clearBtn">清空</button>
+    </div>
+    <div class="status" id="status"></div>
+
+    <details class="settings">
+      <summary>⚙️ DeepSeek 设置（首次用填一次，自动记住）</summary>
+      <div class="field-grid" style="margin-top:10px">
+        <div class="field full">
+          <label>DeepSeek API Key（浏览器直连，手机电脑通用）</label>
+          <input id="apiKey" type="password" placeholder="sk-xxxxxxxx" autocomplete="off">
+        </div>
+        <div class="field full">
+          <label>模型（默认 deepseek-v4-flash，快且便宜）</label>
+          <input id="apiModel" value="deepseek-v4-flash">
+        </div>
+      </div>
+      <div class="note">Key 只存在你浏览器本地（localStorage），不会上传到任何地方。没有 Key？去 platform.deepseek.com 注册免费领一个。</div>
+    </details>
+  </div>
+
+  <div class="card hidden" id="editorCard">
+    <p class="sec-title"><span class="dot"></span>第二步：核对 / 修改字段（可随手改）</p>
+    <div class="field-grid">
+      <div class="field"><label>产品名</label><input id="f_name"></div>
+      <div class="field"><label>品牌</label><input id="f_brand"></div>
+      <div class="field"><label>分类</label><input id="f_category"></div>
+      <div class="field"><label>价格</label><input id="f_price" placeholder="如 ¥199"></div>
+      <div class="field"><label>原价（可选）</label><input id="f_originalPrice"></div>
+      <div class="field"><label>容量 / 规格</label><input id="f_capacity" placeholder="如 30ml / 500g"></div>
+      <div class="field"><label>库存</label><input id="f_stock" placeholder="如 有货 / 仅剩3件"></div>
+      <div class="field"><label>适合人群（可选）</label><input id="f_suitableFor"></div>
+      <div class="field full"><label>卖点（每行一条）</label><textarea id="f_highlights"></textarea></div>
+      <div class="field full"><label>产品详情 / 说明</label><textarea id="f_description"></textarea></div>
+      <div class="field full"><label>使用说明</label><textarea id="f_usage"></textarea></div>
+      <div class="field full"><label>标签（每行一个，用于 #话题）</label><textarea id="f_tags"></textarea></div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="styleCard">
+    <p class="sec-title"><span class="dot"></span>第三步：选风格，一键复制</p>
+    <div class="styles" id="styles">
+      <div class="style-tab active" data-style="xhs">📕 小红书风</div>
+      <div class="style-tab" data-style="taobao">🛒 淘宝/抖音上架风</div>
+      <div class="style-tab" data-style="moments">💬 朋友圈/微信群风</div>
+      <div class="style-tab" data-style="official">🏢 品牌官网/专业风</div>
+    </div>
+    <div class="preview" id="preview" style="margin-top:12px"></div>
+    <div class="copy-row">
+      <button class="btn" id="copyText">📋 复制文本</button>
+      <button class="btn ghost" id="copyMd">复制 Markdown</button>
+      <button class="btn ghost" id="copyHtml">复制 HTML</button>
+    </div>
+    <div class="note" id="styleNote"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var LS_KEY="pf_deepseek_key", LS_MODEL="pf_deepseek_model";
+  var product={};
+  var current={text:"",html:"",md:""};
+  var curStyle="xhs";
+
+  var $=function(id){return document.getElementById(id);};
+  function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2200);}
+  function setStatus(msg,type){var s=$("status");s.textContent=msg||"";s.className="status"+(type?(" "+type):"");}
+  function isUrl(s){return /^https?:\/\/\S+$/i.test(s.trim());}
+
+  // ---- settings ----
+  $("apiKey").value=localStorage.getItem(LS_KEY)||"";
+  $("apiModel").value=localStorage.getItem(LS_MODEL)||"deepseek-v4-flash";
+  $("apiKey").addEventListener("change",function(){localStorage.setItem(LS_KEY,this.value.trim());});
+  $("apiModel").addEventListener("change",function(){localStorage.setItem(LS_MODEL,this.value.trim());});
+  function getKey(){return ($("apiKey").value||"").trim();}
+
+  // ---- link fetch (PC backend) ----
+  function tryFetchUrl(url){
+    return new Promise(function(resolve){
+      try{
+        var ctrl;var tid;
+        if(window.AbortController){ctrl=new AbortController();tid=setTimeout(function(){ctrl.abort();},8000);}
+        fetch("http://localhost:8787/fetch?url="+encodeURIComponent(url),{signal:ctrl?ctrl.signal:undefined})
+          .then(function(r){if(tid)clearTimeout(tid);return r.ok?r.text():null;})
+          .then(function(t){resolve(t&&t.length>50?t:null);})
+          .catch(function(){if(tid)clearTimeout(tid);resolve(null);});
+      }catch(e){resolve(null);}
+    });
+  }
+
+  // ---- DeepSeek extraction ----
+  var SYS_PROMPT="你是一个电商产品信息提取助手。用户会给你一段产品相关的文本（可能是AI生成的，或是淘宝/抖音/1688商品页复制的文字，也可能含商品链接的描述）。请从中提取结构化信息，只输出 JSON，不要任何解释。字段说明：name=产品名,brand=品牌,category=分类(如 护肤/彩妆/仪器/保健品),price=价格(含单位如 ¥199),originalPrice=原价(没有则不填),capacity=容量或规格(如 30ml/500g/1盒),stock=库存(如 有货/仅剩3件/100件),suitableFor=适合人群(没有则不填),highlights=卖点数组(3-6条,每条简短),description=产品详情与说明(连贯段落),usage=使用方法或说明, tags=标签数组(用于话题,2-5个)。无法确定的字段留空字符串或空数组。";
+  function callDeepSeek(text){
+    var key=getKey();var model=($("apiModel").value||"deepseek-v4-flash").trim();
+    return fetch("https://api.deepseek.com/chat/completions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
+      body:JSON.stringify({model:model,messages:[
+        {role:"system",content:SYS_PROMPT},
+        {role:"user",content:text}
+      ],temperature:0.2,response_format:{type:"json_object"}})
+    }).then(function(r){
+      if(!r.ok){return r.text().then(function(t){throw new Error("API "+r.status+" "+t.slice(0,140));});}
+      return r.json();
+    }).then(function(j){
+      var c=j.choices&&j.choices[0]&&j.choices[0].message?j.choices[0].message.content:"";
+      c=c.replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
+      return JSON.parse(c);
+    });
+  }
+
+  function normalize(d){
+    d=d||{};
+    function arr(x){if(Array.isArray(x))return x.map(String);if(typeof x==="string"&&x)return x.split(/[\n,，、]/).map(function(s){return s.trim();}).filter(Boolean);return [];}
+    return {
+      name:d.name||"", brand:d.brand||"", category:d.category||"",
+      price:d.price||"", originalPrice:d.originalPrice||"", capacity:d.capacity||"",
+      stock:d.stock||"", suitableFor:d.suitableFor||"",
+      highlights:arr(d.highlights), description:(d.description||"").toString(),
+      usage:(d.usage||"").toString(), tags:arr(d.tags)
+    };
+  }
+
+  // ---- populate / read form ----
+  function populateFields(p){
+    $("f_name").value=p.name;$("f_brand").value=p.brand;$("f_category").value=p.category;
+    $("f_price").value=p.price;$("f_originalPrice").value=p.originalPrice;$("f_capacity").value=p.capacity;
+    $("f_stock").value=p.stock;$("f_suitableFor").value=p.suitableFor;
+    $("f_highlights").value=p.highlights.join("\n");
+    $("f_description").value=p.description;
+    $("f_usage").value=p.usage;
+    $("f_tags").value=p.tags.join("\n");
+  }
+  function readForm(){
+    function lines(id){return $(id).value.split("\n").map(function(s){return s.trim();}).filter(Boolean);}
+    return {
+      name:$("f_name").value, brand:$("f_brand").value, category:$("f_category").value,
+      price:$("f_price").value, originalPrice:$("f_originalPrice").value, capacity:$("f_capacity").value,
+      stock:$("f_stock").value, suitableFor:$("f_suitableFor").value,
+      highlights:lines("f_highlights"), description:$("f_description").value,
+      usage:$("f_usage").value, tags:lines("f_tags")
+    };
+  }
+
+  // ---- style builders -> blocks ----
+  function blocksFor(style,p){
+    var hl=p.highlights.length?p.highlights:["（未提取到卖点，可手动补充）"];
+    if(style==="xhs"){
+      var b=[{t:"title",v:"💡挖到宝了！今天必须安利这款「"+p.name+"」"}];
+      if(p.brand||p.category)b.push({t:"sub",v:[p.brand,p.category].filter(Boolean).join("　|　")});
+      var priceLine="💰 价格："+(p.price||"待定")+(p.originalPrice?("（原价 "+p.originalPrice+"）"):"");
+      b.push({t:"line",v:priceLine});
+      if(p.capacity)b.push({t:"line",v:"📦 容量/规格："+p.capacity});
+      b.push({t:"line",v:"🌟 它的亮点："});
+      b.push({t:"list",items:hl});
+      if(p.description)b.push({t:"line",v:"📝 产品详情：\n"+p.description});
+      if(p.usage)b.push({t:"line",v:"✅ 用法："+p.usage});
+      if(p.suitableFor)b.push({t:"line",v:"👯 适合："+p.suitableFor});
+      if(p.tags.length)b.push({t:"tags",items:p.tags});
+      return b;
+    }
+    if(style==="taobao"){
+      var b2=[{t:"title",v:"【"+p.name+"】"}];
+      b2.push({t:"line",v:"品牌："+(p.brand||"—")+"　分类："+(p.category||"—")});
+      b2.push({t:"line",v:"💰价格："+(p.price||"待定")+"　|　规格："+(p.capacity||"—")+"　|　库存："+(p.stock||"—")});
+      b2.push({t:"hr"});
+      b2.push({t:"line",v:"🔥 核心卖点"});
+      b2.push({t:"list",items:hl});
+      b2.push({t:"hr"});
+      if(p.description)b2.push({t:"line",v:"📦 产品详情\n"+p.description});
+      if(p.usage)b2.push({t:"line",v:"📌 使用说明："+p.usage});
+      if(p.tags.length)b2.push({t:"line",v:"🏷️ 标签："+p.tags.join("、")});
+      return b2;
+    }
+    if(style==="moments"){
+      var first=hl[0]||p.description.slice(0,40)||"用了都说好";
+      var b3=[{t:"line",v:"刚上架一款"+(p.category||"好物")+"——「"+p.name+"」🥰"}];
+      b3.push({t:"line",v:(p.price||"超值")+" 拿下 "+(p.capacity||"正装")+" 装，真心划算"});
+      b3.push({t:"line",v:first});
+      b3.push({t:"line",v:"用过的都说好，想要的私我～"});
+      if(p.tags.length)b3.push({t:"tags",items:p.tags.slice(0,3)});
+      return b3;
+    }
+    // official
+    var b4=[{t:"title",v:p.name}];
+    b4.push({t:"sub",v:[p.category,p.brand].filter(Boolean).join(" · ")});
+    b4.push({t:"line",v:"规格 "+(p.capacity||"—")+"　|　参考价 "+(p.price||"待定")+"　|　库存 "+(p.stock||"—")});
+    b4.push({t:"hr"});
+    if(p.description)b4.push({t:"line",v:"产品概述\n"+p.description});
+    b4.push({t:"line",v:"核心优势"});
+    b4.push({t:"list",items:hl});
+    if(p.suitableFor)b4.push({t:"line",v:"适用人群："+p.suitableFor});
+    if(p.usage)b4.push({t:"line",v:"使用说明："+p.usage});
+    return b4;
+  }
+
+  function renderBlocks(blocks){
+    var text="",md="",html="<div style='font-family:-apple-system,\"PingFang SC\",sans-serif;line-height:1.7;color:#2b2b2b;white-space:pre-wrap'>";
+    blocks.forEach(function(b){
+      if(b.t==="title"){
+        text+="\n"+b.v+"\n"; md+="\n## "+b.v+"\n";
+        html+="<h3 style='margin:6px 0;font-size:16px'>"+esc(b.v)+"</h3>";
+      }else if(b.t==="sub"){
+        text+=b.v+"\n"; md+="**"+b.v+"**\n";
+        html+="<div style='color:#8a8378;font-size:13px'>"+esc(b.v)+"</div>";
+      }else if(b.t==="line"){
+        text+=b.v+"\n"; md+=b.v+"\n";
+        html+="<div style='margin:4px 0'>"+esc(b.v).replace(/\n/g,"<br>")+"</div>";
+      }else if(b.t==="list"){
+        b.items.forEach(function(it){text+="· "+it+"\n";md+="- "+it+"\n";html+="<div style='margin:2px 0'>· "+esc(it)+"</div>";});
+      }else if(b.t==="hr"){
+        text+="——————\n"; md+="\n---\n"; html+="<hr style='border:none;border-top:1px dashed #d8d0c4;margin:8px 0'>";
+      }else if(b.t==="tags"){
+        var s=b.items.map(function(t){return "#"+t;}).join(" ");
+        text+=s+"\n"; md+=s+"\n"; html+="<div style='margin:6px 0;color:#c8794f'>"+esc(s)+"</div>";
+      }
+    });
+    html+="</div>";
+    return {text:text.trim(),md:md.trim(),html:html};
+  }
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+  function render(){
+    product=readForm();
+    var blocks=blocksFor(curStyle,product);
+    current=renderBlocks(blocks);
+    $("preview").textContent=current.text;
+    var notes={xhs:"适合发小红书笔记：口语化+emoji+话题标签，种草感强。",taobao:"适合淘宝/抖音上架：卖点前置、参数清晰，可直接当详情文案。",moments:"适合朋友圈/微信群：短、亲切，像真人发的，引导私聊。",official:"适合官网/公众号：克制、品牌感、参数规范。"};
+    $("styleNote").textContent=notes[curStyle]||"";
+  }
+
+  // ---- events ----
+  $("extractBtn").addEventListener("click",function(){
+    var raw=$("input").value.trim();
+    if(!raw){toast("先粘贴内容或链接");return;}
+    var btn=this;btn.disabled=true;
+    function done(){btn.disabled=false;}
+    if(isUrl(raw)){
+      setStatus("检测到链接，尝试电脑端抓取…");
+      tryFetchUrl(raw).then(function(txt){
+        if(txt&&txt.length>50){
+          setStatus("链接抓取成功，开始识别字段…","ok");
+          runExtract(txt).then(done,done);
+        }else{
+          setStatus("链接抓取失败：手机端请复制页面文字粘进来；电脑端请先启动「抓取后端」。","err");
+          toast("复制页面文字粘进来更快～");
+          done();
+        }
+      });
+    }else{
+      runExtract(raw).then(done,done);
+    }
+  });
+  function runExtract(text){
+    var key=getKey();
+    if(!key){setStatus("请先在下方设置里填写 DeepSeek API Key。","err");$("apiKey").focus();return Promise.reject();}
+    setStatus("正在用 DeepSeek 识别字段…");
+    return callDeepSeek(text).then(function(d){
+      product=normalize(d);
+      populateFields(product);
+      $("editorCard").classList.remove("hidden");
+      $("styleCard").classList.remove("hidden");
+      render();
+      setStatus("识别完成 ✅ 可核对字段、切换风格后复制。","ok");
+    }).catch(function(e){
+      setStatus("识别失败："+(e&&e.message?e.message:e),"err");
+    });
+  }
+
+  $("demoBtn").addEventListener("click",function(){
+    product=normalize({
+      name:"雪绒花修护精华液",brand:"熹美学",category:"护肤",price:"¥199",originalPrice:"¥299",
+      capacity:"30ml",stock:"有货",suitableFor:"熬夜肌、敏感肌",
+      highlights:["雪绒花提取物舒缓泛红","神经酰胺修护屏障","清爽好吸收不黏腻","熬夜后急救提亮"],
+      description:"专为熬夜与敏感受损肌设计，雪绒花精粹搭配神经酰胺，温和修护肌肤屏障，改善泛红干痒，质地清爽易吸收，晨晚皆可用。",
+      usage:"洁面爽肤后，取3-4滴于掌心，轻按上脸至吸收，后续跟进面霜锁水。",
+      tags:["护肤","修护精华","熹美学","熬夜肌"]
+    });
+    populateFields(product);
+    $("editorCard").classList.remove("hidden");
+    $("styleCard").classList.remove("hidden");
+    render();
+    setStatus("示例效果（未调用 AI），改字段看不同风格～","ok");
+  });
+
+  $("clearBtn").addEventListener("click",function(){
+    $("input").value="";product={};
+    $("editorCard").classList.add("hidden");$("styleCard").classList.add("hidden");
+    setStatus("");
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll(".style-tab"),function(tab){
+    tab.addEventListener("click",function(){
+      document.querySelectorAll(".style-tab").forEach(function(t){t.classList.remove("active");});
+      tab.classList.add("active");curStyle=tab.getAttribute("data-style");render();
+    });
+  });
+  ["f_name","f_brand","f_category","f_price","f_originalPrice","f_capacity","f_stock","f_suitableFor","f_highlights","f_description","f_usage","f_tags"]
+    .forEach(function(id){$(id).addEventListener("input",render);});
+
+  function copy(text,label){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){toast(label+"已复制 ✅");},function(){fallbackCopy(text,label);});
+    }else{fallbackCopy(text,label);}
+  }
+  function fallbackCopy(text,label){
+    var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");toast(label+"已复制 ✅");}catch(e){toast("复制失败，请手动选择");}
+    document.body.removeChild(ta);
+  }
+  $("copyText").addEventListener("click",function(){copy(current.text,"文本");});
+  $("copyMd").addEventListener("click",function(){copy(current.md,"Markdown");});
+  $("copyHtml").addEventListener("click",function(){copy(current.html,"HTML");});
+})();
+</script>
+</body>
+</html>
