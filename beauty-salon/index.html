@@ -64,7 +64,7 @@
   .btn.ghost { background: #f3f4f6; color: #374151; }
   .btn.danger { background: #ef4444; }
   .btn.sm { padding: 5px 10px; font-size: 13px; }
-  input, select, textarea { font-family: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; width: 100%; }
+  input, select, textarea { font-family: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; width: 100%; -webkit-user-select: text; -moz-user-select: text; user-select: text; -webkit-touch-callout: default; }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); border-color: var(--brand); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
@@ -378,6 +378,29 @@
   }
   /* —— 列表/卡片化：操作列内的按钮 —— */
   .row-act { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* —— 淘宝/天猫/1688/阿里巴巴/拼多多 一键识别 字段选择面板 —— */
+  .rec-tabs { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .rec-tab { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; color: #374151; }
+  .rec-tab.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+  .rec-pane { margin-bottom: 4px; }
+  .rec-pane input[type=text], .rec-pane input:not([type]), .rec-pane textarea { width: 100%; margin-bottom: 6px; -webkit-user-select: text; user-select: text; pointer-events: auto; }
+  .rec-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .rec-btns .btn { flex: 0 0 auto; }
+  .rec-panel { border: 1px dashed #c4b5fd; background: #faf5ff; border-radius: 10px; padding: 10px; margin-top: 8px; }
+  .rec-panel-head { font-weight: 600; margin-bottom: 8px; font-size: 13px; color: #6d28d9; }
+  .rec-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+  .rec-row .rec-chk { flex: 0 0 auto; width: 16px; height: 16px; }
+  .rec-row .rec-lbl { flex: 0 0 76px; font-size: 13px; color: #374151; }
+  .rec-row .rec-key { flex: 0 0 100px; font-size: 13px; padding: 5px 6px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+  .rec-row .rec-val { flex: 1; min-width: 90px; font-size: 13px; padding: 5px 7px; border: 1px solid #d1d5db; border-radius: 6px; }
+  .rec-row .rec-del { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #ef4444; color: #fff; border: none; cursor: pointer; font-size: 14px; line-height: 1; }
+  .rec-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .rec-actions select { padding: 5px 7px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; }
+  @media (max-width: 640px) {
+    .rec-row .rec-lbl { flex: 0 0 64px; }
+    .rec-row .rec-key { flex: 0 0 84px; }
+    .rec-row .rec-val { flex: 1 1 100%; order: 3; }
+  }
 </style>
 </head>
 <body>
@@ -966,14 +989,40 @@ function openProductForm(id) {
   const isOwner = App.role === 'owner';
   const val = (k, d) => p ? (p[k] != null ? p[k] : (d === undefined ? '' : d)) : (d === undefined ? '' : d);
   App._pfImgs = (p && p.images) ? p.images.slice() : [];
+  App._rec = [];
   const catChecks = productCategoryChecks(p ? (p.category_ids || []) : []);
 
   const html = `
     <h3>${id ? '编辑产品' : '新建产品'}</h3>
-    <div class="field"><label>⚡ 一键识别（粘贴商品信息，自动填充下方字段）</label>
-      <textarea id="pf_paste" rows="3" placeholder="把商品信息粘贴到这里，例如：&#10;名称：某某精华液&#10;分类：护肤 / 清洁&#10;零售价：298元  会员价：238&#10;库存：50  预警阈值：10&#10;生产日期：2026-05-01  保质期：24个月&#10;简介：补水保湿&#10;角标：热销&#10;视频链接：https://v.douyin.com/xxxx"></textarea>
-      <button type="button" class="btn sm" onclick="recognizeProduct()">⚡ 一键识别填充</button>
-      <span id="pf_paste_tip" style="font-size:12px;color:#059669;margin-left:6px"></span>
+    <div class="field"><label>🔗 淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 一键识别（识别后自行勾选要填入的字段）</label>
+      <div class="rec-tabs">
+        <button type="button" class="rec-tab active" id="rec_tab_link" onclick="switchRecTab('link')">链接抓取</button>
+        <button type="button" class="rec-tab" id="rec_tab_text" onclick="switchRecTab('text')">文本粘贴</button>
+      </div>
+      <div class="rec-pane" id="rec_pane_link">
+        <input type="text" id="pf_url" placeholder="粘贴淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 商品链接" oninput="scheduleRecAuto('url')">
+        <div class="rec-btns">
+          <button type="button" class="btn sm" onclick="recognizeUrl()">🔗 识别链接</button>
+          <button type="button" class="btn sm ghost" onclick="pasteFromClipboard('pf_url')">📋 粘贴</button>
+        </div>
+        <span id="pf_url_tip" style="font-size:12px;color:#6b7280;margin-left:4px"></span>
+      </div>
+      <div class="rec-pane" id="rec_pane_text" style="display:none">
+        <textarea id="pf_paste" rows="3" placeholder="把商品信息粘贴到这里，例如：&#10;名称：某某精华液&#10;分类：护肤 / 清洁&#10;零售价：298元  会员价：238&#10;库存：50  预警阈值：10&#10;生产日期：2026-05-01  保质期：24个月&#10;简介：补水保湿&#10;角标：热销&#10;视频链接：https://v.douyin.com/xxxx&#10;（也支持直接粘贴淘宝/天猫/1688/拼多多商品页复制的文字或分享语）" oninput="scheduleRecAuto('text')"></textarea>
+        <div class="rec-btns">
+          <button type="button" class="btn sm" onclick="recognizeProduct()">⚡ 一键识别</button>
+          <button type="button" class="btn sm ghost" onclick="pasteFromClipboard('pf_paste')">📋 粘贴</button>
+        </div>
+      </div>
+      <div id="pf_recognize_panel" class="rec-panel" style="display:none">
+        <div class="rec-panel-head">已识别字段 · 勾选要填入的项，可修改 / 删除 / 添加</div>
+        <div id="pf_recognize_rows"></div>
+        <div class="rec-actions">
+          <button type="button" class="btn sm ghost" onclick="addRecField()">+ 添加字段</button>
+          <button type="button" class="btn sm" onclick="applyRecognized()">✓ 应用到新建产品</button>
+          <button type="button" class="btn sm ghost" onclick="clearRecognizePanel()">清空</button>
+        </div>
+      </div>
     </div>
     <div class="field"><label>名称 *</label><input id="pf_name" value="${esc(val('name'))}"></div>
     <div class="field"><label>图片（最多9张，选填）</label>
@@ -1056,13 +1105,175 @@ function addProductVideo() {
     toast('视频已载入，保存后即可使用');
   }).catch(() => { tip.textContent = '视频读取失败'; });
 }
-function recognizeProduct() {
+/* ============ 淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 一键识别（链接抓取 + 文本粘贴 + 字段选择面板） ============ */
+// 产品字段映射：key -> { 中文标签, 应用函数 }
+const PF_FIELDS = {
+  name:    { label: '商品名称', apply: v => setVal('pf_name', v) },
+  category:{ label: '分类',     apply: v => applyCategory(v) },
+  retail:  { label: '零售价',   apply: v => setVal('pf_retail', v) },
+  member:  { label: '会员价',   apply: v => setVal('pf_member', v) },
+  stock:   { label: '库存',     apply: v => setVal('pf_stock', v) },
+  warn:    { label: '预警阈值', apply: v => setVal('pf_warn', v) },
+  prod:    { label: '生产日期', apply: v => setVal('pf_prod', v) },
+  shelf:   { label: '保质期(月)', apply: v => setVal('pf_shelf', v) },
+  sort:    { label: '排序值',   apply: v => setVal('pf_sort', v) },
+  hot:     { label: '角标文字', apply: v => setVal('pf_hot', v) },
+  intro:   { label: '简介',     apply: v => setVal('pf_intro', v) },
+  video:   { label: '视频链接', apply: v => setVal('pf_video_url', v) },
+  images:  { label: '图片链接', apply: v => applyImages(v) },
+  detail:  { label: '详情',     apply: v => { const d = document.getElementById('pf_detail'); if (d) d.innerHTML = v; } },
+};
+function setVal(id, v) { const el = document.getElementById(id); if (el && v != null && String(v).trim() !== '') el.value = v; }
+function applyCategory(val) {
+  const names = String(val).split(/[、,，/]/).map(s => s.trim()).filter(Boolean);
+  let checked = Array.from(document.querySelectorAll('#pf_cats input:checked')).map(c => c.value);
+  const newNames = [];
+  names.forEach(n => {
+    const c = DB.getList('product_categories').find(x => x.name === n);
+    if (c) { if (!checked.includes(c.id)) checked.push(c.id); }
+    else newNames.push(n);
+  });
+  document.getElementById('pf_cats').innerHTML = productCategoryChecks(checked);
+  if (newNames.length) document.getElementById('pf_newcat').value = newNames.join('、');
+}
+function applyImages(val) {
+  const urls = String(val).split(/[\n,，]/).map(s => s.trim()).filter(u => /^https?:\/\//.test(u));
+  if (!urls.length) return;
+  App._pfImgs = App._pfImgs || [];
+  urls.forEach(u => { if (App._pfImgs.length < 9) App._pfImgs.push(u); });
+  renderImgPreview();
+}
+function switchRecTab(which) {
+  document.getElementById('rec_tab_link').classList.toggle('active', which === 'link');
+  document.getElementById('rec_tab_text').classList.toggle('active', which === 'text');
+  document.getElementById('rec_pane_link').style.display = which === 'link' ? 'block' : 'none';
+  document.getElementById('rec_pane_text').style.display = which === 'text' ? 'block' : 'none';
+}
+// 把识别结果合并进面板（已存在且为空才覆盖，避免冲掉手动修改）
+function mergeRecognized(detected) {
+  App._rec = App._rec || [];
+  (detected || []).forEach(d => {
+    if (d.value == null || String(d.value).trim() === '') return;
+    const exist = App._rec.find(r => r.key === d.key && r.key !== '__custom');
+    if (exist) { if (!exist.value || exist.value.trim() === '') exist.value = String(d.value).trim(); }
+    else App._rec.push({ key: d.key, value: String(d.value).trim(), on: true });
+  });
+  renderRecognizeRows();
+}
+function renderRecognizeRows() {
+  const box = document.getElementById('pf_recognize_rows'); if (!box) return;
+  const rec = App._rec || [];
+  box.innerHTML = rec.map(r => {
+    if (r.key === '__custom') {
+      const opts = Object.entries(PF_FIELDS).map(([k, o]) => `<option value="${k}" ${k === r.customKey ? 'selected' : ''}>${o.label}</option>`).join('');
+      return `<div class="rec-row" data-key="__custom">
+        <input type="checkbox" class="rec-chk" ${r.on !== false ? 'checked' : ''}>
+        <select class="rec-key">${opts}</select>
+        <input class="rec-val" value="${esc(r.value)}" placeholder="填写值">
+        <button type="button" class="rec-del" onclick="delRecRow(this)">×</button>
+      </div>`;
+    }
+    const lbl = PF_FIELDS[r.key] ? PF_FIELDS[r.key].label : r.key;
+    return `<div class="rec-row" data-key="${esc(r.key)}">
+      <input type="checkbox" class="rec-chk" ${r.on !== false ? 'checked' : ''}>
+      <span class="rec-lbl">${lbl}</span>
+      <input class="rec-val" value="${esc(r.value)}">
+      <button type="button" class="rec-del" onclick="delRecRow(this)">×</button>
+    </div>`;
+  }).join('');
+  document.getElementById('pf_recognize_panel').style.display = rec.length ? 'block' : 'none';
+}
+function syncRecFromDOM() {
+  const rows = document.querySelectorAll('#pf_recognize_rows .rec-row');
+  App._rec = Array.from(rows).map(row => {
+    const chk = row.querySelector('.rec-chk');
+    const val = row.querySelector('.rec-val').value.trim();
+    let key = row.getAttribute('data-key');
+    let customKey = null;
+    if (key === '__custom') { const sel = row.querySelector('.rec-key'); customKey = sel ? sel.value : 'name'; key = customKey; }
+    return { key, value: val, on: chk.checked, customKey };
+  });
+}
+function delRecRow(btn) {
+  syncRecFromDOM();
+  const row = btn.closest('.rec-row');
+  const all = Array.from(document.querySelectorAll('#pf_recognize_rows .rec-row'));
+  const idx = all.indexOf(row);
+  if (idx >= 0) App._rec.splice(idx, 1);
+  renderRecognizeRows();
+}
+function addRecField() {
+  App._rec = App._rec || [];
+  App._rec.push({ key: '__custom', customKey: 'name', value: '', on: true });
+  renderRecognizeRows();
+  const rows = document.querySelectorAll('#pf_recognize_rows .rec-row');
+  const last = rows[rows.length - 1];
+  if (last) last.querySelector('.rec-val').focus();
+}
+function clearRecognizePanel() { App._rec = []; renderRecognizeRows(); }
+function applyRecognized() {
+  const rows = document.querySelectorAll('#pf_recognize_rows .rec-row');
+  if (!rows.length) { toast('暂无可应用的字段'); return; }
+  let n = 0;
+  rows.forEach(row => {
+    const chk = row.querySelector('.rec-chk');
+    if (!chk.checked) return;
+    let key = row.getAttribute('data-key');
+    if (key === '__custom') { const sel = row.querySelector('.rec-key'); key = sel ? sel.value : '__custom'; }
+    const val = row.querySelector('.rec-val').value.trim();
+    if (!key || key === '__custom' || !val) return;
+    const f = PF_FIELDS[key];
+    if (!f) return;
+    f.apply(val);
+    n++;
+  });
+  toast('已应用 ' + n + ' 项到新建产品');
+}
+// 文本粘贴识别
+let _recAutoTimer = null;
+function scheduleRecAuto(kind) {
+  clearTimeout(_recAutoTimer);
+  _recAutoTimer = setTimeout(() => {
+    if (kind === 'url') recognizeUrl(true);
+    else recognizeProduct(true);
+  }, 500);
+}
+function scrollRecPanelIntoView() {
+  const panel = document.getElementById('pf_recognize_panel');
+  if (panel && panel.style.display !== 'none') {
+    try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    catch (e) { try { panel.scrollIntoView(); } catch (_) {} }
+  }
+}
+// 一键从系统剪贴板读取并填入（绕开移动端原生粘贴菜单不弹出的问题）
+function pasteFromClipboard(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const fill = (t) => {
+    t = (t || '').trim();
+    if (!t) { toast('剪贴板是空的'); return; }
+    el.value = t;
+    el.focus();
+    if (id === 'pf_url') recognizeUrl(true); else recognizeProduct(true);
+    toast('已从剪贴板填入，正在识别…');
+  };
+  try {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(fill).catch(() => {
+        toast('浏览器拒绝读取剪贴板，请长按输入框 → 粘贴');
+      });
+    } else {
+      toast('当前环境不支持一键读取，请长按输入框 → 粘贴');
+    }
+  } catch (e) {
+    toast('当前环境不支持一键读取，请长按输入框 → 粘贴');
+  }
+}
+function recognizeProduct(auto, textOverride, forceName) {
   const ta = document.getElementById('pf_paste');
-  const text = (ta && ta.value || '').trim();
-  if (!text) { toast('请先粘贴商品信息'); return; }
+  const text = (textOverride != null ? String(textOverride) : (ta && ta.value || '')).trim();
+  if (!text) { if (!auto) toast('请先粘贴商品信息'); return; }
   const lines = text.split(/\r?\n/);
-  const set = (id, v) => { const el = document.getElementById(id); if (el && v != null && v !== '') el.value = v; };
-  // 取"关键词之后"的第一个数字，避免同行多字段互相干扰
   const numAfter = (line, kw) => {
     const idx = line.search(kw);
     if (idx < 0) return null;
@@ -1070,60 +1281,119 @@ function recognizeProduct() {
     return m ? m[1] : null;
   };
   const findDate = (line) => { const m = line.match(/(\d{4})[.\-/年](\d{1,2})[.\-/月](\d{1,2})/); if (m) { const y = m[1], mo = String(m[2]).padStart(2, '0'), d = String(m[3]).padStart(2, '0'); return y + '-' + mo + '-' + d; } return null; };
-  const hit = [];
+  const detected = [];
+  const push = (k, v) => { if (v != null && String(v).trim() !== '') detected.push({ key: k, value: String(v).trim() }); };
+  const isTb = /taobao\.com|tmall\.com|1688\.com|tb\.cn|alibaba\.com|yangkeduo\.com|pinduoduo\.com/i.test(text);
   // 名称
-  for (const ln of lines) {
-    if (/^(名称|品名|商品名|产品名|名字|标题|商品)/.test(ln)) {
-      const v = ln.replace(/^(名称|品名|商品名|产品名|名字|标题|商品)[：:\s]*/, '').trim();
-      if (v) { set('pf_name', v); hit.push('名称'); break; }
-    }
+  let name = null;
+  for (const ln of lines) { if (/^(名称|品名|商品名|产品名|名字|标题|商品)/.test(ln)) { const v = ln.replace(/^(名称|品名|商品名|产品名|名字|标题|商品)[：:\s]*/, '').trim(); if (v) { name = v; break; } } }
+  if (!name && isTb) {
+    for (const ln of lines) { const t = ln.trim(); if (t.length > 3 && !/https?:\/\//.test(t) && !/[¥￥]/.test(t) && !/^(复制|打开|淘宝|天猫|阿里巴巴|拼多多|链接|点击|【|】)/.test(t)) { name = t; break; } }
   }
-  // 分类（尝试匹配已有分类，匹配不到则填入新建框）
+  // 通用兜底：文本里没有平台链接、也没写“名称：”时，把首行实质文字当作商品名（链接框粘贴文本回退时启用）
+  if (!name && forceName) {
+    for (const ln of lines) { const t = ln.trim(); if (t.length > 1 && !/https?:\/\//.test(t) && !/^[¥￥]/.test(t) && !/^(复制|打开|淘宝|天猫|阿里巴巴|拼多多|链接|点击|请|【|】)/.test(t)) { name = t; break; } }
+  }
+  if (name) push('name', name);
+  // 分类
   const catLine = lines.find(l => /^(分类|类别|品类)/.test(l));
-  if (catLine) {
-    const cv = catLine.replace(/^(分类|类别|品类)[：:\s]*/, '').trim();
-    if (cv) {
-      const cats = DB.getList('product_categories');
-      const checked = Array.from(document.querySelectorAll('#pf_cats input:checked')).map(c => c.value);
-      cv.split(/[、,，/]/).forEach(name => {
-        name = name.trim(); if (!name) return;
-        const c = cats.find(x => x.name === name);
-        if (c && !checked.includes(c.id)) checked.push(c.id);
-      });
-      document.getElementById('pf_cats').innerHTML = productCategoryChecks(checked);
-      if (checked.length) hit.push('分类');
-      else { document.getElementById('pf_newcat').value = cv; hit.push('分类(已填入新建框)'); }
-    }
-  }
-  // 价格 / 库存 / 预警（按关键词定位，支持同行多个字段）
+  if (catLine) { const cv = catLine.replace(/^(分类|类别|品类)[：:\s]*/, '').trim(); if (cv) push('category', cv); }
+  // 价格 / 库存 / 预警
   for (const ln of lines) {
-    if (/(零售价|零售|售价|标价|价格)/.test(ln)) { const n = numAfter(ln, /零售价|零售|售价|标价|价格/); if (n) { set('pf_retail', n); hit.push('零售价'); } }
-    if (/(会员价|会员|VIP价|折扣价)/.test(ln)) { const n = numAfter(ln, /会员价|会员|VIP价|折扣价/); if (n) { set('pf_member', n); hit.push('会员价'); } }
-    if (/(库存|数量|存货|余量|现货)/.test(ln)) { const n = numAfter(ln, /库存|数量|存货|余量|现货/); if (n) { set('pf_stock', n); hit.push('库存'); } }
-    if (/(预警|警戒|提醒|低于|补货)/.test(ln)) { const n = numAfter(ln, /预警|警戒|提醒|低于|补货/); if (n) { set('pf_warn', n); hit.push('预警阈值'); } }
+    if (/(零售价|零售|售价|标价|价格|到手价|券后|促销价)/.test(ln)) { const n = numAfter(ln, /零售价|零售|售价|标价|价格|到手价|券后|促销价/); if (n) push('retail', n); }
+    if (/(会员价|会员|VIP价|折扣价)/.test(ln)) { const n = numAfter(ln, /会员价|会员|VIP价|折扣价/); if (n) push('member', n); }
+    if (/(库存|库存件数|数量|存货|余量|现货)/.test(ln)) { const n = numAfter(ln, /库存|库存件数|数量|存货|余量|现货/); if (n) push('stock', n); }
+    if (/(预警|警戒|提醒|低于|补货)/.test(ln)) { const n = numAfter(ln, /预警|警戒|提醒|低于|补货/); if (n) push('warn', n); }
   }
   // 生产日期
+  for (const ln of lines) { if (/(生产日期|出厂日期|生产时间|生产)/.test(ln)) { const d = findDate(ln); if (d) push('prod', d); } }
+  // 保质期
+  for (const ln of lines) { if (/(保质期|有效期|保质)/.test(ln)) { const m = ln.match(/(\d+(?:\.\d+)?)\s*(?:个)?\s*月/); if (m) push('shelf', m[1]); else { const d = findDate(ln); if (d) push('shelf', d); } } }
+  // 排序 / 角标 / 简介 / 视频
   for (const ln of lines) {
-    if (/(生产日期|出厂日期|生产时间|生产)/.test(ln)) { const d = findDate(ln); if (d) { set('pf_prod', d); hit.push('生产日期'); } }
+    if (/(排序|排序值|优先级)/.test(ln)) { const n = numAfter(ln, /排序|排序值|优先级/); if (n) push('sort', n); }
+    if (/(角标|标签)/.test(ln)) { const v = ln.replace(/^(角标|标签)[：:\s]*/, '').trim(); if (v) push('hot', v); }
+    if (/(简介|描述|介绍|卖点|亮点)/.test(ln)) { const v = ln.replace(/^(简介|描述|介绍|卖点|亮点)[：:\s]*/, '').trim(); if (v) push('intro', v); }
+    if (/(视频|视频链接)/.test(ln) || /douyin|bilibili|v\.qq|youku|iqiyi/i.test(ln)) { const m = ln.match(/(https?:\/\/[^\s]+)/); if (m) push('video', m[1]); }
   }
-  // 保质期（优先"X个月"，否则尝试日期）
-  for (const ln of lines) {
-    if (/(保质期|有效期|保质)/.test(ln)) {
-      const m = ln.match(/(\d+(?:\.\d+)?)\s*(?:个)?\s*月/);
-      if (m) { set('pf_shelf', m[1]); hit.push('保质期'); }
-      else { const d = findDate(ln); if (d) { set('pf_shelf', d); hit.push('保质期(日期)'); } }
+  // 任意行里的图片链接
+  const imgUrls = [];
+  for (const ln of lines) { const ms = ln.match(/(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp))(?:\?[^\s]*)?/gi); if (ms) imgUrls.push(...ms); }
+  if (imgUrls.length) push('images', imgUrls.join('\n'));
+  mergeRecognized(detected);
+  scrollRecPanelIntoView();
+  if (!detected.length && !auto) toast('未识别到字段，请检查格式或改用链接抓取');
+}
+// 链接抓取（淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多）
+// auto=true 时由输入框 oninput 触发：只解析链接里能直接拿到的参数，不发起联网抓取，避免误报错
+function recognizeUrl(auto) {
+  const inp = document.getElementById('pf_url');
+  const raw = (inp && inp.value || '').trim();
+  const tip = document.getElementById('pf_url_tip');
+  if (!raw) { if (!auto) toast('请粘贴淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 商品链接'); return; }
+  const m = raw.match(/https?:\/\/[^\s]+/);
+  // 没有 URL 但有较多文字 → 当作文本解析，避免“粘贴文本到链接框无反应”
+  if (!m) {
+    if (auto || raw.length > 12) {
+      recognizeProduct(true, raw, true);
+      if (tip) { tip.style.color = '#6b7280'; tip.textContent = '未检测到链接，已按【文本粘贴】方式识别（如需链接解析请粘贴以 http 开头的商品链接）。'; }
+      return;
     }
+    toast('请粘贴以 http 开头的淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 商品链接'); return;
   }
-  // 排序值 / 角标 / 简介 / 视频链接
-  for (const ln of lines) {
-    if (/(排序|排序值|优先级)/.test(ln)) { const n = numAfter(ln, /排序|排序值|优先级/); if (n) { set('pf_sort', n); hit.push('排序值'); } }
-    if (/(角标|标签)/.test(ln)) { const v = ln.replace(/^(角标|标签)[：:\s]*/, '').trim(); if (v) { set('pf_hot', v); hit.push('角标'); } }
-    if (/(简介|描述|介绍|卖点|亮点)/.test(ln)) { const v = ln.replace(/^(简介|描述|介绍|卖点|亮点)[：:\s]*/, '').trim(); if (v) { set('pf_intro', v); hit.push('简介'); } }
-    if (/(视频|视频链接|链接)/.test(ln)) { const m = ln.match(/(https?:\/\/[^\s]+)/); if (m) { set('pf_video_url', m[1]); hit.push('视频链接'); } }
+  const link = m[0];
+  let platform = '其他';
+  if (/taobao\.com|tb\.cn|taobao\.cn/i.test(link)) platform = '淘宝';
+  else if (/tmall\.com/i.test(link)) platform = '天猫';
+  else if (/1688\.com/i.test(link)) platform = '1688（阿里巴巴）';
+  else if (/alibaba\.com/i.test(link)) platform = '阿里巴巴国际站';
+  else if (/yangkeduo\.com|pinduoduo\.com/i.test(link)) platform = '拼多多';
+  const idm = link.match(/[?&](?:id|goods_id)=(\d+)/i) || link.match(/\/(\d{11,})/) || link.match(/item\/(\d+)/i) || link.match(/goods\/(\d+)/i);
+  const id = idm ? idm[1] : '';
+  const tm = link.match(/[?&](?:title|q|query|keyword|goods_name|name)=([^&]+)/i);
+  const title = tm ? decodeURIComponent(tm[1].replace(/\+/g, ' ')) : '';
+  const detected = [];
+  if (title) detected.push({ key: 'name', value: title });
+  mergeRecognized(detected);
+  if (auto) {
+    if (tip) {
+      tip.style.color = '#6b7280';
+      tip.textContent = (platform !== '其他' ? '已识别平台：' + platform + (id ? '，商品ID：' + id : '') + '。' : '') + '已解析链接参数（如需抓取页面详情请点“识别链接”）。';
+    }
+    scrollRecPanelIntoView();
+    return;
   }
-  const tip = document.getElementById('pf_paste_tip');
-  if (hit.length) tip.textContent = '✓ 已识别 ' + hit.length + ' 项：' + hit.join('、');
-  else tip.textContent = '未识别到字段，请检查格式';
+  // 手动点击：最佳努力联网抓取（各电商平台均禁止跨域，绝大多数情况会被浏览器拦截）
+  const base = (platform !== '其他' ? '已识别平台：' + platform + (id ? '，商品ID：' + id : '') + '。' : '') + '浏览器出于跨域安全限制无法直接抓取该电商页面内容，';
+  if (typeof fetch !== 'function') {
+    tip.style.color = '#6b7280';
+    tip.textContent = base + '当前环境不支持联网，请复制商品页文字到【文本粘贴】自动识别。';
+    return;
+  }
+  tip.style.color = '#6b7280';
+  tip.textContent = base + '正在尝试联网抓取…';
+  let done = false;
+  const timer = setTimeout(() => {
+    if (done) return; done = true;
+    tip.style.color = '#dc2626';
+    tip.textContent = '浏览器跨域限制，无法直接抓取（' + platform + '页面受反爬限制）。请复制商品页文字，切到【文本粘贴】即可自动识别。';
+  }, 4000);
+  fetch(link, { redirect: 'follow' }).then(r => r.text()).then(html => {
+    if (done) return; done = true; clearTimeout(timer);
+    const ogTitle = (html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) || [])[1];
+    const ogImage = (html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) || [])[1];
+    const priceM = html.match(/[¥￥]\s*(\d+(?:\.\d+)?)/);
+    const more = [];
+    if (ogTitle) more.push({ key: 'name', value: ogTitle });
+    if (ogImage) more.push({ key: 'images', value: ogImage });
+    if (priceM) more.push({ key: 'retail', value: priceM[1] });
+    if (more.length) { mergeRecognized(more); tip.style.color = '#059669'; tip.textContent = '✓ 已从链接解析到 ' + more.length + ' 项（可继续用文本粘贴补全 / 在面板中勾选应用）。'; }
+    else { tip.style.color = '#dc2626'; tip.textContent = '浏览器跨域限制，无法直接抓取页面内容，请复制商品页文字用【文本粘贴】补全。'; }
+  }).catch(() => {
+    if (done) return; done = true; clearTimeout(timer);
+    tip.style.color = '#dc2626';
+    tip.textContent = '浏览器跨域限制，无法直接抓取（' + platform + '页面受反爬限制）。请复制商品页文字，切到【文本粘贴】即可自动识别。';
+  });
 }
 function productCategoryChecks(selectedIds) {
   const cats = DB.getList('product_categories');
