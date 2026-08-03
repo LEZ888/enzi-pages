@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌟 小廖的学习工作台</title>
+<style>
+  :root{
+    --purple:#6C5CE7; --purple-d:#5849c4; --yellow:#FDCB6E; --teal:#00B894;
+    --bg:#F3F0FF; --card:#FFFFFF; --ink:#3d3d52; --soft:#8a86a8;
+    --red:#ff6b6b; --green:#00B894; --shadow:0 6px 18px rgba(108,92,231,.15);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg);color:var(--ink);font-size:18px;}
+  body{padding-top:64px;padding-bottom:74px;}
+  button{font-family:inherit;cursor:pointer;border:none;outline:none;}
+  .btn{background:var(--purple);color:#fff;border-radius:16px;padding:12px 18px;font-size:18px;
+    font-weight:700;box-shadow:var(--shadow);transition:transform .12s,filter .12s;}
+  .btn:hover{filter:brightness(1.07);} .btn:active{transform:scale(.94);}
+  .btn.y{background:var(--yellow);color:#7a5b00;} .btn.t{background:var(--teal);color:#fff;}
+  .btn.ghost{background:#efeaff;color:var(--purple);box-shadow:none;}
+  .btn.sm{font-size:15px;padding:8px 12px;border-radius:12px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .card{background:var(--card);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin:14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .center{text-align:center;}
+  /* top bar */
+  #topbar{position:fixed;top:0;left:0;right:0;height:64px;background:linear-gradient(90deg,var(--purple),#8a7bf0);
+    display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:50;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.15);}
+  #topbar .logo{font-weight:800;font-size:18px;display:flex;align-items:center;gap:6px;}
+  #topbar .scores{display:flex;gap:10px;font-size:15px;font-weight:700;}
+  #topbar .scores span{background:rgba(255,255,255,.18);padding:5px 9px;border-radius:12px;}
+  #modeBtn{background:rgba(255,255,255,.2);color:#fff;border-radius:12px;padding:6px 10px;font-weight:700;font-size:14px;}
+  /* bottom nav */
+  #bottomnav{position:fixed;bottom:0;left:0;right:0;height:74px;background:#fff;display:flex;
+    justify-content:space-around;align-items:center;z-index:50;box-shadow:0 -3px 12px rgba(0,0,0,.08);}
+  #bottomnav a{flex:1;text-align:center;color:var(--soft);text-decoration:none;font-size:12px;font-weight:700;padding:6px 0;}
+  #bottomnav a .ic{font-size:24px;display:block;margin-bottom:2px;}
+  #bottomnav a.active{color:var(--purple);}
+  /* views */
+  .view{display:none;max-width:760px;margin:0 auto;padding:6px 0 20px;animation:fade .35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  h2.t{color:var(--purple);margin:14px 14px 4px;font-size:22px;}
+  .sub{color:var(--soft);font-size:14px;margin:0 14px 6px;}
+  /* subject cards */
+  .subj{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:22px;
+    padding:18px 8px;color:#fff;font-weight:800;font-size:18px;box-shadow:var(--shadow);text-align:center;}
+  .subj .ic{font-size:40px;margin-bottom:6px;}
+  .subj.cn{background:linear-gradient(135deg,#6C5CE7,#a78bfa);}
+  .subj.mt{background:linear-gradient(135deg,#00B894,#34e0c4);}
+  .subj.en{background:linear-gradient(135deg,#FDCB6E,#ffb14e);color:#7a5b00;}
+  .subj.sp{background:linear-gradient(135deg,#ff7675,#fd9644);}
+  .quick{display:flex;gap:10px;margin:14px;}
+  .quick .q{flex:1;background:#fff;border-radius:18px;padding:14px;text-align:center;box-shadow:var(--shadow);font-weight:700;position:relative;}
+  .quick .q .ic{font-size:30px;display:block;}
+  .badge{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border-radius:50%;min-width:22px;height:22px;line-height:22px;font-size:13px;font-weight:800;padding:0 4px;}
+  /* module list */
+  .modbtn{display:flex;align-items:center;gap:12px;background:#fff;border-radius:18px;padding:14px 16px;margin:10px 14px;box-shadow:var(--shadow);text-align:left;width:calc(100% - 28px);font-weight:700;font-size:17px;}
+  .modbtn .ic{font-size:26px;} .modbtn small{display:block;color:var(--soft);font-weight:500;font-size:13px;}
+  /* quiz */
+  .qtext{font-size:20px;font-weight:800;margin:6px 0 12px;line-height:1.5;}
+  .opt{display:block;width:100%;text-align:left;background:#f1eeff;border:none;border-radius:14px;padding:13px 16px;margin:8px 0;font-size:17px;font-weight:600;color:var(--ink);}
+  .opt:hover{background:#e6e0ff;} .opt.correct{background:#d6f7ec;color:#067a5e;} .opt.wrong{background:#ffe0e0;color:#b3322c;}
+  .opt:disabled{cursor:default;}
+  .feedback{margin:10px 0;font-weight:800;font-size:17px;min-height:24px;}
+  .feedback.ok{color:var(--teal);} .feedback.no{color:var(--red);}
+  input.ans{width:100%;padding:12px 14px;font-size:20px;border-radius:14px;border:2px solid #e0dbff;margin:8px 0;font-weight:700;}
+  input.ans:focus{border-color:var(--purple);}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .pill{background:#efeaff;color:var(--purple);border-radius:20px;padding:6px 12px;font-size:14px;font-weight:700;}
+  .timer{font-weight:800;color:var(--purple);}
+  /* moles */
+  .moles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:14px 0;}
+  .hole{background:#cdbff5;border-radius:0 0 60px 60px;height:90px;display:flex;align-items:flex-end;justify-content:center;position:relative;overflow:hidden;}
+  .mole{font-size:30px;font-weight:800;background:var(--yellow);border-radius:16px;padding:10px 8px;margin-bottom:6px;color:#7a5b00;cursor:pointer;transition:transform .1s;user-select:none;}
+  .mole:active{transform:scale(.92);}
+  /* match grid */
+  .mtile{background:#fff;border-radius:16px;padding:16px 8px;text-align:center;font-size:22px;font-weight:800;box-shadow:var(--shadow);user-select:none;}
+  .mtile.sel{outline:3px solid var(--purple);} .mtile.done{visibility:hidden;}
+  /* poem */
+  .poem{font-size:19px;line-height:1.9;text-align:center;font-weight:600;}
+  .puzzle .ptile{display:inline-block;background:#efeaff;border-radius:12px;padding:8px 12px;margin:5px;font-weight:700;cursor:grab;}
+  /* table */
+  table.mt{width:100%;border-collapse:collapse;margin:8px 0;font-size:16px;}
+  table.mt td,table.mt th{border:1px solid #e6e2ff;padding:8px;text-align:center;}
+  /* pet canvas */
+  #petCanvas{width:100%;max-width:320px;height:240px;background:#eafaf4;border-radius:20px;display:block;margin:10px auto;}
+  .bar{height:18px;background:#eee;border-radius:10px;overflow:hidden;margin:4px 0 10px;}
+  .bar>i{display:block;height:100%;border-radius:10px;}
+  /* wheel */
+  #wheel{width:260px;height:260px;border-radius:50%;margin:10px auto;display:block;transition:transform 3.5s cubic-bezier(.17,.67,.3,1);}
+  /* generic */
+  .listrow{background:#fff;border-radius:14px;padding:12px 14px;margin:8px 14px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .muted{color:var(--soft);font-size:13px;}
+  .tag{font-size:12px;background:#efeaff;color:var(--purple);border-radius:8px;padding:2px 8px;font-weight:700;}
+  .scrollx{overflow-x:auto;white-space:nowrap;}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#3d3d52;color:#fff;padding:10px 18px;border-radius:14px;font-weight:700;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:300;}
+  .modal.show{display:flex;}
+  .modal .box{background:#fff;border-radius:22px;padding:22px;max-width:90%;width:360px;text-align:center;}
+  .clr{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;}
+  .emo{font-size:34px;cursor:pointer;padding:6px;border-radius:12px;}
+  .emo.sel{background:#efeaff;}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal div{background:#fff;border-radius:10px;padding:8px 2px;text-align:center;font-size:18px;min-height:46px;}
+  .cal .hd{background:transparent;font-size:12px;color:var(--soft);font-weight:800;}
+  .back{margin:10px 14px;display:inline-flex;align-items:center;gap:6px;color:var(--purple);font-weight:700;}
+  .big{font-size:40px;text-align:center;margin:10px 0;}
+  .coinbig{font-size:30px;text-align:center;}
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">🌟 小廖的学习工作台</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="scores">
+      <span>⭐ <span id="tStars">0</span></span>
+      <span>💰 <span id="tPoints">0</span></span>
+      <span>🪙 <span id="tCoins">0</span></span>
+    </div>
+    <button id="modeBtn" onclick="toggleMode()">📅 工作日</button>
+  </div>
+</div>
+
+<div id="app"></div>
+
+<div id="bottomnav">
+  <a href="#/home" data-r="home"><span class="ic">🏠</span>主页</a>
+  <a href="#/learn" data-r="learn"><span class="ic">📚</span>学习</a>
+  <a href="#/games" data-r="games"><span class="ic">🎮</span>游戏</a>
+  <a href="#/reward" data-r="reward"><span class="ic">🎁</span>奖励</a>
+  <a href="#/mine" data-r="mine"><span class="ic">👤</span>我的</a>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="modal" class="modal"><div class="box" id="modalBox"></div></div>
+
+<script>
+/* ============================ 数据 ============================ */
+const D = {
+  pinyin:[
+    ["景象","jǐng xiàng"],["沙滩","shā tān"],["旅游","lǚ yóu"],["翠绿","cuì lǜ"],["雄伟","xióng wěi"],
+    ["环绕","huán rào"],["隐藏","yǐn cáng"],["梦想","mèng xiǎng"],["形状","xíng zhuàng"],["茂密","mào mì"],
+    ["黄昏","huáng hūn"],["骄傲","jiāo ào"],["葡萄","pú tao"],["狐狸","hú li"],["观察","guān chá"],
+    ["奇迹","qí jì"],["灿烂","càn làn"],["仿佛","fǎng fú"],["注意","zhù yì"]
+  ],
+  chars:[ // 上册20 + 下册20
+    ["宜","yí","适宜"],["实","shí","果实"],["色","sè","颜色"],["华","huá","中华"],["谷","gǔ","山谷"],
+    ["金","jīn","金色"],["尽","jìn","尽力"],["层","céng","层次"],["丰","fēng","丰收"],["壮","zhuàng","壮大"],
+    ["秀丽","xiù lì","秀丽"],["神","shén","神奇"],["尤","yóu","尤其"],["其","qí","其他"],["区","qū","地区"],
+    ["巨","jù","巨大"],["位","wèi","座位"],["每","měi","每天"],["升","shēng","升起"],["闪","shǎn","闪电"],
+    ["脱","tuō","脱掉"],["冻","dòng","冻结"],["溪","xī","小溪"],["棉","mián","棉花"],["探","tàn","探索"],
+    ["摇","yáo","摇摆"],["野","yě","野外"],["躲","duǒ","躲藏"],["解","jiě","解开"],["嫩","nèn","嫩绿"],
+    ["符号","fú hào","符号"],["鹃","juān","杜鹃"],["烂","làn","灿烂"],["宿","sù","住宿"],["徐","xú","徐徐"],
+    ["篱","lí","篱笆"],["疏","shū","疏远"],["未","wèi","未来"],["追","zhuī","追赶"],["店","diàn","商店"]
+  ],
+  similar:[["园","圆"],["进","近"],["做","作"],["带","戴"],["峰","锋"],["宝","玉"],["底","低"],["纸","低"]],
+  reading:[
+    {t:"小马过河",txt:"小马要过河，可是不知道水有多深。他问老牛，老牛说：'水很浅，刚到小腿。'小马正要过河，松鼠拦住他说：'别过河，水很深，会淹死的！'小马不知道该怎么办，回家问妈妈。妈妈说：'你自己试试就知道了。'小马回到河边，小心地下了水。原来河水既不像老牛说的那么浅，也不像松鼠说的那么深。",
+     q:[["老牛说河水怎么样？","很浅","很深","不知道",0],["妈妈让小马怎么做？","自己试试","不要过河","问别人",0]]},
+    {t:"五彩池",txt:"在我国四川的一个山上，有许多五彩池。这些池子大大小小，形状各不相同。有的像葫芦，有的像镰刀，有的像盘子。池子的水五颜六色，有的是蓝色，有的是绿色，有的是黄色。阳光照在水面上，池子就像一块块宝石，美丽极了。每年都有很多人来看五彩池。",
+     q:[["五彩池在哪里？","四川山上","北京","海边",0],["池子的水是什么颜色的？","五颜六色","只有蓝色","只有绿色",0]]},
+    {t:"小蝌蚪找妈妈",txt:"池塘里有一群小蝌蚪，大大的脑袋，黑灰色的身子，甩着长长的尾巴。他们看见鲤鱼妈妈在教小鲤鱼捕食，就想：'我们的妈妈在哪里呢？'他们游啊游，遇到了乌龟，就叫她妈妈。乌龟笑着说：'我不是你们的妈妈，你们的妈妈有四条腿，宽嘴巴。'最后他们找到了青蛙妈妈，青蛙穿着绿衣服，露着白肚皮。",
+     q:[["小蝌蚪先遇到了谁？","鲤鱼妈妈","乌龟","青蛙",0],["青蛙妈妈长什么样？","绿衣服白肚皮","黑灰色","红色",0]]},
+    {t:"坐井观天",txt:"一只青蛙坐在井里。一只小鸟飞来，落在井沿上。青蛙问小鸟：'你从哪里来呀？'小鸟说：'我从天上来，飞了一百多里，口渴了，下来找点水喝。'青蛙说：'别说大话了！天不过井口那么大，还用飞那么远吗？'小鸟笑了：'你弄错了。天无边无际，大得很哪！'",
+     q:[["青蛙觉得天有多大？","井口那么大","无边无际","不知道",0],["谁说得对？","小鸟","青蛙","都对",0]]},
+    {t:"骄傲的孔雀",txt:"森林里住着一只孔雀。它长着美丽的尾巴，张开时像一把大扇子。孔雀很骄傲，经常对其他动物说：'看，我多美丽！'有一天，孔雀看到一只仙鹤，嘲笑它说：'你的羽毛太白了，一点都不好看。'仙鹤说：'我虽然不漂亮，但是我能飞得很高，你能吗？'孔雀想飞，可是怎么也飞不高。它惭愧地低下了头。",
+     q:[["孔雀为什么嘲笑仙鹤？","仙鹤羽毛太白","仙鹤飞太高","仙鹤太小",0],["这个故事告诉我们什么？","不能骄傲","要穿花衣服","要飞得高",0]]}
+  ],
+  picture:[
+    {sc:"公园放风筝",em:"🪁🌸",model:"星期天，天气晴朗，小明和小红来到公园放风筝。小明拿着线轴跑，小红在后面举着风筝。风筝越飞越高，像一只小鸟在天空飞翔。他们开心地笑了。",
+     tpl:["晴朗","放风筝","线轴","举着风筝","高","小鸟","笑了"],fill:["___","___","___","___","___","___","___"]},
+    {sc:"植树节",em:"🌳🌱",model:"植树节到了，同学们来到山坡上植树。小明挖了一个坑，小红把小树苗放进去。小明填土，小红浇水。小树苗种好了，他们希望小树快快长大。",
+     tpl:["山坡上","坑","小树苗","填土","浇水","小树快快长大"],fill:["___","___","___","___","___","___"]},
+    {sc:"下雪了",em:"❄️⛄",model:"早上起来，窗外白茫茫一片。下雪了！小明穿上棉衣跑出去。他堆了一个大雪人，用纽扣做眼睛，用胡萝卜做鼻子。小狗在旁边跑来跑去，留下了一串脚印。",
+     tpl:["白茫茫","棉衣","大雪人","做眼睛","做鼻子","跑来跑去","脚印"],fill:["___","___","___","___","___","___","___"]}
+  ],
+  goodwords:["五颜六色","绿油油","金灿灿","蹦蹦跳跳","东张西望","小心翼翼","兴高采烈","眉开眼笑","垂头丧气","哗啦啦","叽叽喳喳","轰隆隆","阳光明媚","风和日丽","倾盆大雨","鸟语花香","山清水秀","枝繁叶茂","一望无际","绚丽多彩"],
+  antonyms:[["大","小"],["多","少"],["高","矮"],["长","短"],["快","慢"],["冷","热"],["胖","瘦"],["美","丑"],["新","旧"],["上","下"],["安全","危险"],["简单","复杂"],["高兴","难过"],["成功","失败"],["勤劳","懒惰"],["明亮","黑暗"],["热情","冷淡"],["干燥","潮湿"],["安静","吵闹"],["勇敢","胆小"]],
+  xiehouyu:[["竹篮打水","一场空"],["十五个吊桶打水","七上八下"],["小葱拌豆腐","一清二白"],["哑巴吃黄连","有苦说不出"],["肉包子打狗","有去无回"],["泥菩萨过江","自身难保"],["黄鼠狼给鸡拜年","没安好心"],["老鼠过街","人人喊打"],["热锅上的蚂蚁","团团转"],["兔子的尾巴","长不了"],["八仙过海","各显神通"],["铁公鸡","一毛不拔"],["骑驴看唱本","走着瞧"],["孔夫子搬家","净是书(输)"],["猪八戒照镜子","里外不是人"]],
+  idioms:[
+    ["画蛇添足","比喻做了多余的事。","古人比赛画蛇，有人先画完又给蛇添脚，结果输了。"],
+    ["亡羊补牢","比喻出了问题后想办法补救。","羊丢了之后修补羊圈，还不算晚。"],
+    ["守株待兔","比喻不主动努力，只想侥幸。","农夫看到兔子撞树桩，就天天等兔子。"],
+    ["掩耳盗铃","比喻自欺欺人。","捂住自己耳朵偷铃铛，以为自己听不到别人也听不到。"],
+    ["刻舟求剑","比喻拘泥固执不知变通。","剑掉水里，在船上刻记号，船走了剑没走。"],
+    ["狐假虎威","比喻借别人的势力欺压人。","狐狸借老虎的威风吓跑百兽。"],
+    ["井底之蛙","比喻见识短浅。","青蛙在井里以为天只有井口大。"],
+    ["拔苗助长","比喻急于求成反而坏事。","把禾苗拔高想让它快长，结果枯死了。"],
+    ["对牛弹琴","比喻对不懂的人说道理。","给牛弹琴，牛只顾吃草。"],
+    ["愚公移山","比喻坚持不懈。","老人决心挖掉门前两座大山，最终感动天帝。"],
+    ["自相矛盾","比喻言行不一。","卖矛和盾的人说矛什么都能刺穿，盾什么都刺不破。"],
+    ["叶公好龙","比喻口头爱好实际害怕。","叶公说爱龙，真龙来了他却吓跑了。"],
+    ["鹬蚌相争","比喻双方争斗第三方得利。","鹬啄蚌，蚌夹鹬，渔翁把它们都抓了。"],
+    ["杯弓蛇影","比喻疑神疑鬼。","把杯中弓影当蛇，吓得生病。"],
+    ["一箭双雕","比喻一举两得。","一箭射中两只雕。"]
+  ],
+  poems:[
+    {t:"登鹳雀楼",a:"王之涣(唐)",o:["白日依山尽","黄河入海流","欲穷千里目","更上一层楼"],
+     p:["bái rì yī shān jìn","huáng hé rù hǎi liú","yù qióng qiān lǐ mù","gèng shàng yī céng lóu"],
+     m:"太阳依山落下，黄河流入大海。想看更远，再上一层楼。"},
+    {t:"望庐山瀑布",a:"李白(唐)",o:["日照香炉生紫烟","遥看瀑布挂前川","飞流直下三千尺","疑是银河落九天"],
+     p:["rì zhào xiāng lú shēng zǐ yān","yáo kàn pù bù guà qián chuān","fēi liú zhí xià sān qiān chǐ","yí shì yín hé luò jiǔ tiān"],
+     m:"阳光照香炉峰生紫烟，远看瀑布挂在山前。飞流直下三千尺，像是银河从九天落下。"},
+    {t:"夜宿山寺",a:"李白(唐)",o:["危楼高百尺","手可摘星辰","不敢高声语","恐惊天上人"],
+     p:["wēi lóu gāo bǎi chǐ","shǒu kě zhāi xīng chén","bù gǎn gāo shēng yǔ","kǒng jīng tiān shàng rén"],
+     m:"楼高百尺，手可摘星辰。不敢大声说话，怕惊动天上的人。"},
+    {t:"敕勒歌",a:"北朝民歌",o:["敕勒川","阴山下","天似穹庐","笼盖四野","天苍苍","野茫茫","风吹草低见牛羊"],
+     p:["chì lè chuān","yīn shān xià","tiān sì qióng lú","lóng gài sì yě","tiān cāng cāng","yě máng máng","fēng chuī cǎo dī xiàn niú yáng"],
+     m:"敕勒川在阴山下。天像帐篷盖着四野。天苍苍野茫茫，风吹草低见到牛羊。"},
+    {t:"江雪",a:"柳宗元(唐)",o:["千山鸟飞绝","万径人踪灭","孤舟蓑笠翁","独钓寒江雪"],
+     p:["qiān shān niǎo fēi jué","wàn jìng rén zōng miè","gū zhōu suō lì wēng","dú diào hán jiāng xuě"],
+     m:"千山鸟飞尽，万径人迹灭。孤舟蓑笠翁，独钓寒江雪。"},
+    {t:"小池",a:"杨万里(宋)",o:["泉眼无声惜细流","树阴照水爱晴柔","小荷才露尖尖角","早有蜻蜓立上头"],
+     p:["quán yǎn wú shēng xī xì liú","shù yīn zhào shuǐ ài qíng róu","xiǎo hé cái lù jiān jiān jiǎo","zǎo yǒu qīng tíng lì shàng tóu"],
+     m:"泉眼无声惜细流，树阴照水爱晴柔。小荷才露尖尖角，早有蜻蜓立上头。"},
+    {t:"村居",a:"高鼎(清)",o:["草长莺飞二月天","拂堤杨柳醉春烟","儿童散学归来早","忙趁东风放纸鸢"],
+     p:["cǎo zhǎng yīng fēi èr yuè tiān","fú dī yáng liǔ zuì chūn yān","ér tóng sàn xué guī lái zǎo","máng chèn dōng fēng fàng zhǐ yuān"],
+     m:"草长莺飞二月天，杨柳拂堤醉春烟。儿童放学归来早，忙趁东风放风筝。"},
+    {t:"咏柳",a:"贺知章(唐)",o:["碧玉妆成一树高","万条垂下绿丝绦","不知细叶谁裁出","二月春风似剪刀"],
+     p:["bì yù zhuāng chéng yī shù gāo","wàn tiáo chuí xià lǜ sī tāo","bù zhī xì yè shuí cái chū","èr yuè chūn fēng sì jiǎn dāo"],
+     m:"碧玉妆成一树高，万条垂下绿丝绦。不知细叶谁裁出，二月春风似剪刀。"}
+  ],
+  mathLevels:[
+    {n:"100以内加减法",time:180,q:[[23,15,38,"+"],[56,23,33,"-"],47,36,83,"+"],}, // placeholder fixed below
+  ],
+  // properly defined:
+  mental:[
+    {n:"100以内加减法",time:180,q:[["23+15",38],["56-23",33],["47+36",83],["82-45",37],["39+48",87],["71-28",43],["58+25",83],["94-57",37],["16+68",84],["63-29",34]]},
+    {n:"乘法口诀(2-5)",time:120,q:[["2×3",6],["4×5",20],["3×7",21],["5×6",30],["2×8",16],["4×4",16],["5×9",45],["3×8",24],["4×7",28],["5×5",25]]},
+    {n:"乘法口诀(6-9)",time:120,q:[["6×7",42],["8×9",72],["7×8",56],["9×6",54],["6×8",48],["7×9",63],["8×4",32],["9×7",63],["6×9",54],["7×7",49]]},
+    {n:"除法(上册基础)",time:150,q:[["12÷3",4],["20÷5",4],["18÷6",3],["24÷8",3],["15÷5",3],["16÷4",4],["27÷9",3],["28÷7",4],["30÷6",5],["36÷6",6]]},
+    {n:"混合运算",time:240,q:[["3×4+5",17],["20-2×6",8],["4×5-3",17],["18÷3+6",12],["2×9-7",11],["15+3×4",27],["24÷4-2",4],["6×3+8",26],["32÷8+5",9],["7×4-9",19]]},
+    {n:"万以内加减(下册)",time:240,q:[["120+300",420],["580-200",380],["340+150",490],["760-240",520],["450+380",830],["900-360",540],["270+430",700],["850-280",570],["610+190",800],["930-450",480]]}
+  ],
+  life:[
+    {sc:"购物场景",q:[["一支铅笔2元，买6支多少元？","12元","10元","14元",0],["每本笔记本5元，买4本多少元？","20元","18元","25元",0],["小明有50元，买8元/个的文具盒2个，剩多少？","34元","36元","32元",0],["3人去公园，门票9元/人，一共多少元？","27元","24元","30元",0],["妈妈买了4千克苹果，每千克6元，付30元找多少？","6元","4元","8元",0]]},
+    {sc:"时间场景",q:[["8:30再过45分钟几点？","9:15","9:45","10:15",0],["一节课40分钟，9:10上课几点下课？","9:50","9:40","10:00",0],["动画片6:15播到6:40播了多少分钟？","25分钟","30分钟","20分钟",0],["从家到学校要走20分钟，7:50出发几点到？","8:10","8:30","7:30",0],["小明7:15起床，7:45吃早饭，中间用了多久？","30分钟","20分钟","45分钟",0]]},
+    {sc:"测量场景",q:[["绳子1米20厘米，剪掉35厘米剩多少？","85厘米","55厘米","95厘米",0],["桌子高80厘米，椅子比桌子矮35厘米，椅子多高？","45厘米","55厘米","35厘米",0],["三根绳子分别长45cm、38cm、27cm，共多长？","110cm","100cm","120cm",0],["教室长8米，比宽长3米，教室宽多少？","5米","3米","11米",0],["小明身高1米25厘米，爸爸比他高50厘米，爸爸多高？","1米75厘米","1米55厘米","2米",0]]}
+  ],
+  wordprob:[
+    {ty:"乘法应用",q:[["一盒铅笔6支，4盒共几支？",24],["每行种8棵树，种了5行，共几棵？",40],["一本书每天看9页，看了7天，共看几页？",63],["教室有6排桌子，每排7张，共几张？",42],["一只手5根手指，4只手共几根？",20]]},
+    {ty:"除法应用",q:[["24颗糖平均分给4人，每人几颗？",6],["30个苹果每5个装一袋，装几袋？",6],["18名同学每6人一组，分几组？",3],["42本书平均分给7个班，每班几本？",6],["35朵花每7朵扎一束，扎几束？",5]]},
+    {ty:"两步运算",q:[["一班24人，二班少5人，共几人？",43],["苹果8元/斤买3斤付30元找多少？",6],["铅笔2元×5支+笔记本6元×2本，共多少？",22],["停车场32辆走了15辆又来8辆，现几辆？",25],["每天8页看5天还剩12页，书共几页？",52]]},
+    {ty:"比多少",q:[["小明15颗糖，小红多8颗，小红几颗？",23],["一班28人，二班少6人，二班几人？",22],["上册45页，下册多12页，两册共几页？",102],["苹果树42棵，梨树少15棵，共几棵？",69],["哥哥135cm，弟弟矮18cm，两人共多高？",252]]}
+  ],
+  patterns:[["2,4,6,8,?,12",10],["3,6,9,12,?,18",15],["1,4,9,16,?,36",25],["2,5,8,11,?,17",14],["1,2,4,8,?,32",16]],
+  alphabet:[["A","a","/æ/","apple"],["B","b","/b/","ball"],["C","c","/k/","cat"],["D","d","/d/","dog"],["E","e","/e/","egg"],["F","f","/f/","fish"],["G","g","/g/","girl"],["H","h","/h/","hat"],["I","i","/ɪ/","igloo"],["J","j","/dʒ/","juice"],["K","k","/k/","kite"],["L","l","/l/","lion"],["M","m","/m/","moon"],["N","n","/n/","nose"],["O","o","/ɒ/","orange"],["P","p","/p/","pen"],["Q","q","/kw/","queen"],["R","r","/r/","rain"],["S","s","/s/","sun"],["T","t","/t/","tree"],["U","u","/ʌ/","umbrella"],["V","v","/v/","van"],["W","w","/w/","water"],["X","x","/ks/","box"],["Y","y","/j/","yellow"],["Z","z","/z/","zoo"]],
+  words:{colors:[["red","红","🔴"],["blue","蓝","🔵"],["yellow","黄","🟡"],["green","绿","🟢"],["orange","橙","🟠"],["purple","紫","🟣"],["pink","粉","💗"],["white","白","⚪"],["black","黑","⚫"],["brown","棕","🟤"]],
+    animals:[["cat","猫","🐱"],["dog","狗","🐶"],["fish","鱼","🐟"],["bird","鸟","🐦"],["rabbit","兔","🐰"],["duck","鸭","🦆"],["pig","猪","🐷"],["cow","牛","🐄"],["horse","马","🐴"],["sheep","羊","🐑"],["monkey","猴","🐵"],["elephant","象","🐘"],["tiger","虎","🐯"],["lion","狮","🦁"],["bear","熊","🐻"]],
+    food:[["apple","苹果","🍎"],["banana","香蕉","🍌"],["orange","橙子","🍊"],["grape","葡萄","🍇"],["watermelon","西瓜","🍉"],["rice","米饭","🍚"],["noodle","面条","🍜"],["bread","面包","🍞"],["egg","鸡蛋","🥚"],["milk","牛奶","🥛"],["cake","蛋糕","🎂"],["candy","糖","🍬"],["ice cream","冰淇淋","🍦"],["chicken","鸡肉","🍗"],["pizza","披萨","🍕"]]},
+  phonics:[
+    {st:"字母音",q:[["/æ/","a","b","c","d",0],["/b/","b","a","c","d",0],["/k/","c","a","b","d",0],["/d/","d","a","b","c",0],["/e/","e","a","b","d",0],["/f/","f","a","b","c",0],["/g/","g","a","b","c",0],["/h/","h","a","g","c",0]]},
+    {st:"CVC短元音",q:[["cat","猫","蝙蝠","帽子","地图",0],["bat","蝙蝠","猫","帽子","地图",0],["hat","帽子","猫","蝙蝠","地图",0],["map","地图","猫","蝙蝠","帽子",0],["bed","床","红","笔","母鸡",0],["red","红","床","笔","母鸡",0],["pen","笔","红","床","母鸡",0],["hen","母鸡","红","床","笔",0],["pig","猪","大","坐","鱼",0],["big","大","猪","坐","鱼",0],["sit","坐","猪","大","鱼",0],["fish","鱼","猪","大","坐",0]]},
+    {st:"Magic E",q:[["cake","蛋糕","自行车","家","鼻子",0],["bike","自行车","蛋糕","家","鼻子",0],["home","家","蛋糕","自行车","鼻子",0],["nose","鼻子","蛋糕","自行车","家",0],["kite","风筝","绳子","蛋糕","家",0],["rope","绳子","风筝","蛋糕","家",0]]}
+  ],
+  dialogue:[
+    {sc:"问候",q:[["Hello! How are you?","I'm fine, thank you!","I'm seven.","My name is Xiao Liao.",0],["Good morning!","Good morning!","Good night!","Goodbye!",0]]},
+    {sc:"自我介绍",q:[["What's your name?","My name is Xiao Liao.","I'm happy.","It's red.",0],["How old are you?","I'm seven years old.","I'm fine.","Thank you.",0]]},
+    {sc:"购物",q:[["Can I help you?","I want an apple, please.","I'm seven.","Goodbye.",0],["How much is it?","It's two yuan.","It's red.","I'm fine.",0]]}
+  ],
+  songs:[
+    {t:"Twinkle Twinkle Little Star",lyr:["Twinkle, twinkle, little star,","How I wonder what you are!","Up above the world so high,","Like a diamond in the sky.","Twinkle, twinkle, little star,","How I wonder what you are!"],zh:"一闪一闪小星星，我想知道你是什么！高高挂在世界之上，像天空中的钻石。"},
+    {t:"Head Shoulders Knees and Toes",lyr:["Head, shoulders, knees and toes, knees and toes!","Head, shoulders, knees and toes, knees and toes!","Eyes and ears and mouth and nose,","Head, shoulders, knees and toes, knees and toes!"],zh:"头、肩膀、膝盖和脚趾！眼睛、耳朵、嘴巴和鼻子！"}
+  ],
+  sports:[
+    {n:"跳绳",em:"🪢",goal:80,pt:3,unit:"个"},
+    {n:"仰卧起坐",em:"🏋️",goal:20,pt:3,unit:"个"},
+    {n:"开合跳",em:"⭐",goal:30,pt:2,unit:"个"},
+    {n:"深蹲",em:"🦵",goal:15,pt:2,unit:"个"},
+    {n:"平板支撑",em:"💪",goal:30,pt:4,unit:"秒"}
+  ],
+  parent:[
+    {n:"镜像模仿",em:"🪞",time:30,desc:"家长做动作孩子模仿，30秒"},
+    {n:"动物爬行",em:"🐊",time:60,desc:"模仿动物爬行，60秒"},
+    {n:"亲子跳绳",em:"🪢",time:120,desc:"一起跳绳，120秒完成+3积分"}
+  ],
+  exercises:[
+    {n:"护眼操",em:"👀",steps:["看远20秒","看近20秒(循环5次)","眼球上下10次","眼球左右10次","闭眼30秒"]},
+    {n:"脊柱操",em:"🧘",steps:["颈部拉伸左右各10秒","肩绕圈各10圈","猫式伸展10次","坐姿转体各5次"]}
+  ],
+  plans:[
+    {n:"室内方案",em:"🏠",steps:["原地踏步1分钟","跳绳80个","开合跳30个","深蹲15个","拉伸2分钟"]},
+    {n:"室外方案",em:"🌳",steps:["慢跑2分钟","跳绳100个","50米跑3次","青蛙跳20米","拉伸2分钟"]},
+    {n:"雨天方案",em:"🌧️",steps:["原地跑1分钟","仰卧起坐20个","开合跳30个","深蹲15个","亲子模仿3分钟"]}
+  ],
+  rewards:[["看动画片15分钟",20,"📺"],["选周末电影",30,"🎬"],["小零食一份",15,"🍬"],["去公园玩",50,"🎡"],["晚睡10分钟",25,"🌙"],["免做一次家务",40,"🧹"]],
+  bus:["7:10 上学公交","7:30 放学公交","16:40 兴趣班公交","17:20 回家公交"]
+};
+
+/* ============================ 状态 ============================ */
+const KEY="wb_";
+const def={stars:0,points:0,coins:0,mode:"weekday",checkin:{},homework:[],mood:{},pet:null,recIn:[],recOut:[],vocab:[["window","窗户"],["door","门"],["school","学校"]],rules:{}};
+function load(){try{let s=JSON.parse(localStorage.getItem(KEY+"state"));return Object.assign({},def,s||{});}catch(e){return JSON.parse(JSON.stringify(def));}}
+function save(){localStorage.setItem(KEY+"state",JSON.stringify(S));}
+let S=load();
+
+function nowStr(){const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+" "+d.getHours()+":"+(d.getMinutes()<10?"0":"")+d.getMinutes();}
+function weekKey(){const d=new Date();const onejan=new Date(d.getFullYear(),0,1);const wk=Math.ceil((((d-onejan)/86400000)+onejan.getDay()+1)/7);return d.getFullYear()+"-W"+wk;}
+function todayIdx(){const d=new Date().getDay();return d===0?6:d-1;}
+
+function addStars(n,src){S.stars+=n; if(n>0)S.recIn.push({t:"⭐",n,src:src||"",time:nowStr()}); refreshTop(); save();}
+function addPoints(n,src){S.points+=n; if(n>0)S.recIn.push({t:"💰",n,src:src||"",time:nowStr()}); else if(n<0){S.points=Math.max(0,S.points);S.recOut.push({t:"💰",n:-n,src:src||"",time:nowStr()});} refreshTop(); save();}
+function addCoins(n,src){S.coins+=n; if(n>0)S.recIn.push({t:"🪙",n,src:src||"",time:nowStr()}); else if(n<0){S.coins=Math.max(0,S.coins);S.recOut.push({t:"🪙",n:-n,src:src||"",time:nowStr()});} refreshTop(); save();}
+function spend(n){if(S.points<n){toast("积分不够，继续学习赚积分吧！");return false;} addPoints(-n,"消费"); return true;}
+
+function refreshTop(){
+  document.getElementById("tStars").textContent=S.stars;
+  document.getElementById("tPoints").textContent=S.points;
+  document.getElementById("tCoins").textContent=S.coins;
+  document.getElementById("modeBtn").textContent = S.mode==="weekday"?"📅 工作日":"🎉 周末";
+}
+function toggleMode(){S.mode=S.mode==="weekday"?"weekend":"weekday"; save(); refreshTop();}
+
+/* ============================ 工具 ============================ */
+function speak(txt,lang){try{const u=new SpeechSynthesisUtterance(txt);u.lang=lang||"zh-CN";u.rate=0.9;window.speechSynthesis.cancel();window.speechSynthesis.speak(u);}catch(e){}}
+function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1600);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function $(h){const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;}
+/* view() attaches the container to #app immediately so that getElementById lookups
+   on its inner elements resolve during build (router later re-appends the same node). */
+function view(){const v=document.createElement("div");v.className="view active";document.getElementById("app").appendChild(v);return v;}
+function modal(html){const m=document.getElementById("modal");document.getElementById("modalBox").innerHTML=html;m.classList.add("show");}
+function closeModal(){document.getElementById("modal").classList.remove("show");}
+
+/* generic multiple-choice quiz */
+function mcQuiz(questions,onDone,eachPt,addToScore){
+  let i=0,score=0;
+  const wrap=$('<div class="card"></div>');
+  function render(){
+    if(i>=questions.length){wrap.innerHTML='<div class="big">🎉 完成！</div><div class="center">本组获得 <b>'+score+'</b> 积分</div><div class="center" style="margin-top:12px"><button class="btn" onclick="document.getElementById(\'app\').innerHTML=\'\';location.hash=location.hash;">再来一组</button></div>';if(onDone)onDone(score);return;}
+    const q=questions[i];
+    const ans=q[q.length-1];
+    const opts=q.slice(1,1+ (q.length-2));
+    wrap.innerHTML='<div class="muted">第 '+(i+1)+' / '+questions.length+' 题</div><div class="qtext">'+q[0]+'</div>';
+    opts.forEach((o,k)=>{
+      const b=$('<button class="opt"></button>');b.textContent=o;b.onclick=()=>{
+        wrap.querySelectorAll(".opt").forEach(x=>x.disabled=true);
+        if(k===ans){b.classList.add("correct");score+=(eachPt||1);if(addToScore)addPoints(eachPt||1,"答题");toast("✅ 正确 +"+(eachPt||1));}
+        else{b.classList.add("wrong");wrap.querySelectorAll(".opt")[ans].classList.add("correct");toast("❌ 正确答案："+opts[ans]);}
+        i++;setTimeout(render,700);
+      };
+      wrap.appendChild(b);
+    });
+  }
+  render();
+  return wrap;
+}
+
+/* ============================ 路由 ============================ */
+const routes={};
+function reg(p,fn){routes[p]=fn;}
+function router(){
+  let h=location.hash.replace(/^#\//,""); if(!h)h="home";
+  document.querySelectorAll("#bottomnav a").forEach(a=>a.classList.toggle("active",a.dataset.r===h||(h.startsWith("chinese")&&a.dataset.r==="learn")||(h.startsWith("math")&&a.dataset.r==="learn")||(h.startsWith("english")&&a.dataset.r==="learn")||(h.startsWith("sport")&&a.dataset.r==="learn")||(h.startsWith("games")&&a.dataset.r==="games")||(h.startsWith("spend")&&a.dataset.r==="games")||(["pet","wallet","homework","mood","stats","settings"].includes(h)&&a.dataset.r==="mine")||(h==="reward"&&a.dataset.r==="reward")||(h==="home"&&a.dataset.r==="home")));
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  if(routes[h]){const v=routes[h](); if(v)app.appendChild(v);}
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",router);
+
+/* ============================ 视图：主页 ============================ */
+reg("home",()=>{
+  const v=view();
+  // growth tree
+  const wk=weekKey(); if(!S.checkin[wk])S.checkin[wk]=[false,false,false,false,false,false,false];
+  let tree='<div class="card center"><div class="muted">本周打卡（点击今天打卡）</div><div class="grid2" style="margin-top:8px">';
+  const names=["一","二","三","四","五","六","日"];
+  const tIdx=todayIdx();
+  S.checkin[wk].forEach((d,i)=>{
+    const done=d; const today=(i===tIdx);
+    tree+='<button class="btn '+(done?'t':'ghost')+'" style="border-radius:14px;padding:14px 6px;" onclick="doCheckin('+i+')">'+(done?'⭐':'🌱')+'<br><span style="font-size:13px">周'+names[i]+(today?'·今':'')+'</span></button>';
+  });
+  tree+='</div></div>';
+  // subject cards
+  let subs='<h2 class="t">📚 学习科目</h2><div class="grid2" style="padding:0 14px">';
+  subs+='<button class="subj cn" onclick="location.hash=\'#/chinese\'"><span class="ic">📖</span>语文天地</button>';
+  subs+='<button class="subj mt" onclick="location.hash=\'#/math\'"><span class="ic">🔢</span>数学王国</button>';
+  subs+='<button class="subj en" onclick="location.hash=\'#/english\'"><span class="ic">🔤</span>英语乐园</button>';
+  subs+='<button class="subj sp" onclick="location.hash=\'#/sport\'"><span class="ic">🏃</span>运动达人</button>';
+  subs+='</div>';
+  // quick
+  const hwCount=S.homework.filter(h=>!h.done).length;
+  let quick='<div class="quick">';
+  quick+='<button class="q" onclick="location.hash=\'#/homework\'">📝<br>今天作业'+(hwCount?'<span class="badge">'+hwCount+'</span>':'')+'</button>';
+  quick+='<button class="q" onclick="location.hash=\'#/pet\'">🐶<br>我的宠物</button>';
+  quick+='<button class="q" onclick="location.hash=\'#/bus\'">🚌<br>我的公交</button>';
+  quick+='</div>';
+  v.innerHTML=tree+subs+quick;
+  return v;
+});
+window.doCheckin=function(i){
+  const wk=weekKey(); if(!S.checkin[wk])S.checkin[wk]=[false,false,false,false,false,false,false];
+  if(S.checkin[wk][i]){toast("今天已经打卡啦");return;}
+  S.checkin[wk][i]=true; addStars(1,"打卡"); save(); toast("⭐ 打卡成功 +1"); router();
+};
+
+/* bus page */
+reg("bus",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="history.back()">← 返回</a><h2 class="t">🚌 我的公交</h2><div class="sub">常用班次</div>';
+  const c=$('<div class="card"></div>');
+  D.bus.forEach(b=>{const r=$('<div class="listrow"></div>');r.innerHTML='<span>'+b+'</span><span class="tag">🚌</span>';c.appendChild(r);});
+  v.appendChild(c);
+  return v;
+});
+
+/* ============================ 学习中心 ============================ */
+function subjectHub(title,emo,mods){
+  const v=view();
+  let h='<a class="back" onclick="location.hash=\'#/learn\'">← 学习中心</a><h2 class="t">'+emo+' '+title+'</h2>';
+  mods.forEach(m=>{h+='<button class="modbtn" onclick="location.hash=\'#/'+m.r+'\'"><span class="ic">'+m.ic+'</span><span>'+m.n+'<small>'+m.d+'</small></span></button>';});
+  v.innerHTML=h;return v;
+}
+reg("learn",()=>{
+  const v=view();
+  v.innerHTML='<h2 class="t">📚 学习中心</h2><div class="grid2" style="padding:0 14px">'+
+    '<button class="subj cn" onclick="location.hash=\'#/chinese\'"><span class="ic">📖</span>语文天地</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/math\'"><span class="ic">🔢</span>数学王国</button>'+
+    '<button class="subj en" onclick="location.hash=\'#/english\'"><span class="ic">🔤</span>英语乐园</button>'+
+    '<button class="subj sp" onclick="location.hash=\'#/sport\'"><span class="ic">🏃</span>运动达人</button></div>';
+  return v;
+});
+
+/* ============================ 语文 ============================ */
+reg("chinese",()=>subjectHub("语文天地","📖",[
+  {r:"cn_pinyin",ic:"🔊",n:"拼音打地鼠",d:"3×3九宫格，听音选拼音"},
+  {r:"cn_char",ic:"🔤",n:"识字闯关",d:"看拼音选汉字，逐组解锁"},
+  {r:"cn_similar",ic:"🃏",n:"相近字消消乐",d:"4×4配对消除"},
+  {r:"cn_read",ic:"📖",n:"每日阅读",d:"5篇短文+朗读+答题"},
+  {r:"cn_pic",ic:"🖊️",n:"看图写话",d:"emoji场景+填空模板"},
+  {r:"cn_word",ic:"✍️",n:"好词好句造句",d:"20个好词随机造句"},
+  {r:"cn_anto",ic:"🔗",n:"正反义词配对",d:"连线配对"},
+  {r:"cn_idiom",ic:"📜",n:"歇后语成语",d:"15歇后语+15成语"},
+  {r:"cn_poem",ic:"🌟",n:"古诗学习",d:"8首必背+拼图游戏"}
+]));
+
+/* 拼音打地鼠 */
+reg("cn_pinyin",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🔊 拼音打地鼠</h2><div class="sub">听发音，点出正确的拼音地鼠（60秒）</div>';
+  const bar=$('<div class="card center"></div>');
+  bar.innerHTML='<div class="row" style="justify-content:center"><span class="timer" id="pmTime">60</span><button class="btn sm" onclick="startPinyin()">开始 ▶</button></div><div class="moles" id="pmMoles"></div><div class="feedback" id="pmFb"></div>';
+  v.appendChild(bar);
+  return v;
+});
+window.startPinyin=function(){
+  let time=60,score=0;
+  const moles=document.getElementById("pmMoles");
+  const fb=document.getElementById("pmFb");const timeEl=document.getElementById("pmTime");
+  const timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0){clearInterval(timer);moles.innerHTML="";fb.className="feedback ok";fb.textContent="🎉 时间到！本局获得 "+score+" 积分";addPoints(score,"拼音打地鼠");}},1000);
+  function round(){
+    if(time<=0)return;
+    const q=shuffle(D.pinyin)[0];
+    const wrong=shuffle(D.pinyin.filter(x=>x[1]!==q[1])).slice(0,2).map(x=>x[1]);
+    const opts=shuffle([q[1],...wrong]);
+    moles.innerHTML="";
+    speak(q[0]); // hear the word, pick its pinyin
+    fb.textContent="🔊 听发音，选出拼音："+q[0];
+    opts.forEach(o=>{
+      const h=$('<div class="hole"></div>');const m=$('<div class="mole"></div>');m.textContent=o;
+      m.onclick=()=>{if(o===q[1]){score+=10;fb.className="feedback ok";fb.textContent="✅ +10 正确！";addPoints(10,"拼音打地鼠");}else{fb.className="feedback no";fb.textContent="❌ 正确是 "+q[1];}round();};
+      h.appendChild(m);moles.appendChild(h);
+    });
+  }
+  round();
+};
+
+/* 识字闯关 */
+reg("cn_char",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🔤 识字闯关</h2><div class="sub">每5字一组，通过解锁下一组</div><div id="charBox"></div>';
+  renderCharGroup(0);
+  return v;
+});
+function renderCharGroup(g){
+  const box=document.getElementById("charBox");
+  const start=g*5, items=D.chars.slice(start,start+5);
+  if(items.length===0){box.innerHTML='<div class="card center"><div class="big">🎉</div>全部生字闯关完成！</div>';return;}
+  const wrap=$('<div class="card"></div>');
+  wrap.innerHTML='<div class="pill">第 '+(g+1)+' 组（共 '+Math.ceil(D.chars.length/5)+' 组）</div>';
+  let done=0;
+  items.forEach(it=>{
+    const c=$('<div class="card" style="margin:10px 0;box-shadow:none;background:#f7f5ff"></div>');
+    c.innerHTML='<div class="qtext center">'+it[0]+' <span class="muted">'+it[1]+'</span> · '+it[2]+'</div><div class="muted center">看拼音，选出正确汉字：</div>';
+    const correct=it[0];
+    const others=shuffle(D.chars.map(x=>x[0]).filter(x=>x!==correct)).slice(0,2);
+    const opts=shuffle([correct,...others]);
+    opts.forEach(o=>{
+      const b=$('<button class="opt"></button>');b.textContent=o;
+      b.onclick=()=>{c.querySelectorAll(".opt").forEach(x=>x.disabled=true);if(o===correct){b.classList.add("correct");done++;addPoints(2,"识字");toast("✅ +2");if(done===items.length){setTimeout(()=>{const ng=g+1;if(ng*5<D.chars.length){toast("🔓 解锁下一组！");renderCharGroup(ng);}else{box.innerHTML='<div class="card center"><div class="big">🎉</div>全部生字闯关完成！</div>';}},500);}}else{b.classList.add("wrong");c.querySelector(".opt[disabled]")&&0;c.querySelectorAll(".opt").forEach(x=>{if(x.textContent===correct)x.classList.add("correct");});toast("❌ 正确是 "+correct);}};
+      c.appendChild(b);
+    });
+    wrap.appendChild(c);
+  });
+  // replace content
+  box.innerHTML="";box.appendChild(wrap);
+}
+
+/* 相近字消消乐 */
+reg("cn_similar",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🃏 相近字消消乐</h2><div class="sub">点两张相同的字配对消除（每对+5）</div>';
+  const board=$('<div class="card"><div class="grid2" id="simBoard" style="gap:10px"></div><div class="feedback" id="simFb"></div></div>');
+  v.appendChild(board);
+  const cards=shuffle(D.similar.flat());
+  let first=null,lock=false,pairs=0;
+  cards.forEach(ch=>{
+    const t=$('<div class="mtile"></div>');t.textContent=ch;t.dataset.c=ch;
+    t.onclick=()=>{
+      if(lock||t.classList.contains("done")||t===first)return;
+      t.classList.add("sel");
+      if(!first){first=t;return;}
+      lock=true;
+      if(first.dataset.c===t.dataset.c){
+        first.classList.add("done");t.classList.add("done");pairs++;addPoints(5,"相近字");document.getElementById("simFb").textContent="✅ 配对成功 +5（"+pairs+"/8）";if(pairs===8){setTimeout(()=>document.getElementById("simFb").textContent="🎉 全部消除，过关！",300);}
+        first=null;lock=false;
+      }else{
+        document.getElementById("simFb").textContent="❌ 不一样";
+        setTimeout(()=>{first.classList.remove("sel");t.classList.remove("sel");first=null;lock=false;},600);
+      }
+    };
+    board.querySelector("#simBoard").appendChild(t);
+  });
+  return v;
+});
+
+/* 每日阅读 */
+reg("cn_read",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">📖 每日阅读</h2><div class="sub">每篇朗读+2题，完成+5积分</div>';
+  D.reading.forEach((p,idx)=>{
+    const c=$('<div class="card"></div>');
+    c.innerHTML='<div class="qtext">📄 '+p.t+'</div><div class="poem" style="font-size:16px;text-align:left">'+p.txt+'</div><div class="row" style="margin-top:8px"><button class="btn sm" onclick="speak(\''+p.txt.replace(/'/g,"")+'\')">🔊 朗读</button></div>';
+    c.appendChild(mcQuiz(p.q.map(q=>[q[0],q[1],q[2],q[3],q[4]]),()=>{addPoints(5,"阅读·"+p.t);toast("📖 "+p.t+" 完成 +5");},1));
+    v.appendChild(c);
+  });
+  return v;
+});
+
+/* 看图写话 */
+reg("cn_pic",()=>{
+  const v=view();
+  let h='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🖊️ 看图写话</h2><div class="sub">看场景，填一填，提交+5积分</div>';
+  D.picture.forEach((p,idx)=>{
+    h+='<div class="card"><div class="big">'+p.em+'</div><div class="qtext center">'+p.sc+'</div>';
+    h+='<div class="muted">范文：</div><div class="poem" style="font-size:15px;text-align:left">'+p.model+'</div>';
+    h+='<div class="muted" style="margin-top:10px">填空：</div>';
+    h+='<div id="pic'+idx+'">';
+    p.tpl.forEach((w,i)=>{h+='<div style="margin:6px 0"><span class="muted">'+w+'：</span><input class="ans" id="pic'+idx+'_'+i+'" placeholder="填写"></div>';});
+    h+='</div>';
+    h+='<button class="btn t" onclick="submitPic('+idx+')">提交 ✅</button></div>';
+  });
+  v.innerHTML=h;return v;
+});
+window.submitPic=function(idx){
+  const p=D.picture[idx];let ok=true;
+  p.fill.forEach((f,i)=>{if(!document.getElementById("pic"+idx+"_"+i).value.trim())ok=false;});
+  if(!ok){toast("还有空没填哦");return;}
+  addPoints(5,"看图写话·"+p.sc);toast("✅ 写话完成 +5");
+  const box=document.getElementById("pic"+idx);box.innerHTML='<div class="feedback ok">🎉 已提交！你真棒！</div>';
+};
+
+/* 好词好句造句 */
+reg("cn_word",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">✍️ 好词好句造句</h2><div class="sub">用下面的好词造一个句子（提交+3）</div><div class="card" id="wordBox"></div>';
+  const box=document.getElementById("wordBox");
+  function next(){
+    const w=D.goodwords[Math.floor(Math.random()*D.goodwords.length)];
+    box.innerHTML='<div class="big">「'+w+'」</div><input class="ans" id="wInput" placeholder="用这个词写一句话…"><div class="row" style="margin-top:6px"><button class="btn t" onclick="submitWord()">提交 ✅</button><button class="btn ghost" onclick="nextWord()">换一个 🔄</button></div>';
+    window.nextWord=next;
+  }
+  next();
+  return v;
+});
+window.submitWord=function(){
+  const v=document.getElementById("wInput").value.trim();
+  if(v.length<3){toast("写一句话吧");return;}
+  addPoints(3,"好词造句");toast("✅ 造句完成 +3");
+  document.getElementById("wordBox").innerHTML='<div class="big">🎉</div><div class="center">你的句子真棒！+3积分</div><div class="center" style="margin-top:10px"><button class="btn" onclick="nextWord()">再来一个</button></div>';
+};
+
+/* 正反义词配对 */
+reg("cn_anto",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🔗 正反义词配对</h2><div class="sub">左列点一个，右列点它的反义词（每对+1，全对+3）</div>';
+  const pick=shuffle(D.antonyms).slice(0,5);
+  const left=shuffle(pick.map(p=>p[0]));
+  const right=shuffle(pick.map(p=>p[1]));
+  const wrap=$('<div class="card"><div class="grid2" id="antoL"></div><div class="muted center" style="margin:6px">⇅</div><div class="grid2" id="antoR"></div><div class="feedback" id="antoFb"></div></div>');
+  let selL=null,selR=null,matched=0;
+  left.forEach(w=>{const t=$('<div class="mtile"></div>');t.textContent=w;t.dataset.w=w;t.onclick=()=>{if(t.classList.contains("done"))return;wrap.querySelectorAll("#antoL .mtile").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");selL=t;checkA();};wrap.querySelector("#antoL").appendChild(t);});
+  right.forEach(w=>{const t=$('<div class="mtile"></div>');t.textContent=w;t.dataset.w=w;t.onclick=()=>{if(t.classList.contains("done"))return;wrap.querySelectorAll("#antoR .mtile").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");selR=t;checkA();};wrap.querySelector("#antoR").appendChild(t);});
+  function checkA(){if(selL&&selR){const pair=D.antonyms.find(p=>(p[0]===selL.dataset.w&&p[1]===selR.dataset.w)||(p[1]===selL.dataset.w&&p[0]===selR.dataset.w));if(pair){selL.classList.add("done");selR.classList.add("done");matched++;addPoints(1,"反义词");document.getElementById("antoFb").textContent="✅ 配对成功 +1（"+matched+"/5）";if(matched===5){addPoints(3,"反义词全对");document.getElementById("antoFb").textContent="🎉 全对！额外+3";}}else{document.getElementById("antoFb").textContent="❌ 再试试";setTimeout(()=>{selL.classList.remove("sel");selR.classList.remove("sel");},500);}selL=null;selR=null;}}
+  v.appendChild(wrap);return v;
+});
+
+/* 歇后语成语 */
+reg("cn_idiom",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">📜 歇后语 & 成语</h2>';
+  // 歇后语填空
+  v.appendChild($('<h2 class="t" style="font-size:18px">歇后语填空（每对+2）</h2>'));
+  D.xiehouyu.forEach((x,i)=>{
+    const c=$('<div class="card"></div>');
+    c.innerHTML='<div class="qtext">'+x[0]+'——？</div>';
+    const b=$('<button class="btn sm"></button>');b.textContent="显示答案";
+    b.onclick=()=>{c.querySelector(".fb")?0:0;const f=$('<div class="feedback ok"></div>');f.textContent="答案："+x[1]+"  (+2)";c.appendChild(f);addPoints(2,"歇后语");b.disabled=true;};
+    c.appendChild(b);
+    v.appendChild(c);
+  });
+  // 成语
+  v.appendChild($('<h2 class="t" style="font-size:18px">成语卡片（每个+3）</h2>'));
+  D.idioms.forEach(id=>{
+    const c=$('<div class="card"></div>');
+    c.innerHTML='<div class="qtext">'+id[0]+'</div><div class="muted">'+id[1]+'</div><div style="font-size:15px;margin:6px 0">📖 '+id[2]+'</div>';
+    const b=$('<button class="btn sm t"></button>');b.textContent="我学会啦 +3";b.onclick=()=>{addPoints(3,"成语·"+id[0]);b.disabled=true;toast("✅ +3");};
+    c.appendChild(b);v.appendChild(c);
+  });
+  return v;
+});
+
+/* 古诗 */
+reg("cn_poem",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/chinese\'">← 语文天地</a><h2 class="t">🌟 古诗学习</h2><div class="sub">8首必背古诗，可朗读、看译文、玩拼图</div>';
+  D.poems.forEach((p,idx)=>{
+    const c=$('<div class="card"></div>');
+    c.innerHTML='<div class="qtext center">《'+p.t+'》 '+p.a+'</div><div class="poem">'+p.o.join("<br>")+'</div><div class="muted center" style="margin-top:6px">'+p.p.join(" / ")+'</div><div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm" onclick="speak(\''+p.o.join("，")+'\')">🔊 朗读</button><button class="btn sm ghost" onclick="togglePoemM(\''+idx+'\')">译文</button><button class="btn sm y" onclick="poemPuzzle(\''+idx+'\')">🧩 拼图</button></div><div id="pm'+idx+'" class="hidden" style="margin-top:8px">'+p.m+'</div>';
+    v.appendChild(c);
+  });
+  return v;
+});
+window.togglePoemM=function(i){const e=document.getElementById("pm"+i);e.classList.toggle("hidden");};
+window.poemPuzzle=function(i){
+  const p=D.poems[i];
+  const lines=p.o.slice();
+  const shuffled=shuffle(lines);
+  let html='<div class="card"><div class="qtext">把诗句按顺序排好（拖拽或点击交换）</div><div class="puzzle" id="pz'+i+'">';
+  shuffled.forEach((l,k)=>{html+='<span class="ptile" draggable="true" data-k="'+k+'">'+l+'</span>';});
+  html+='</div><div class="feedback" id="pzf'+i+'"></div><button class="btn t" onclick="checkPuzzle(\''+i+'\')">检查 ✅</button></div>';
+  modal(html);
+  // simple drag swap
+  let dragEl=null;
+  setTimeout(()=>{
+    const cont=document.getElementById("pz"+i);
+    cont.querySelectorAll(".ptile").forEach(t=>{
+      t.ondragstart=()=>dragEl=t;
+      t.ondragover=e=>e.preventDefault();
+      t.ondrop=()=>{if(dragEl&&dragEl!==t){const a=dragEl.textContent,b=t.textContent;dragEl.textContent=b;t.textContent=a;}};
+      t.ondblclick=()=>{if(dragEl&&dragEl!==t){const a=dragEl.textContent,b=t.textContent;dragEl.textContent=b;t.textContent=a;dragEl=null;}else dragEl=(dragEl===t?null:t);};
+    });
+  },50);
+};
+window.checkPuzzle=function(i){
+  const p=D.poems[i];const cont=document.getElementById("pz"+i);
+  const cur=[...cont.querySelectorAll(".ptile")].map(t=>t.textContent);
+  if(JSON.stringify(cur)===JSON.stringify(p.o)){document.getElementById("pzf"+i).className="feedback ok";document.getElementById("pzf"+i).textContent="🎉 排对啦！+5";addPoints(5,"古诗拼图·"+p.t);setTimeout(closeModal,1000);}
+  else{document.getElementById("pzf"+i).className="feedback no";document.getElementById("pzf"+i).textContent="❌ 顺序还不对，再试试";}
+};
+
+/* ============================ 数学 ============================ */
+reg("math",()=>subjectHub("数学王国","🔢",[
+  {r:"mt_mental",ic:"⚡",n:"口算闯关",d:"6关×10题，限时"},
+  {r:"mt_table",ic:"🔢",n:"乘法口诀",d:"九九表+填空练习"},
+  {r:"mt_life",ic:"🛒",n:"生活数学",d:"3场景选择题"},
+  {r:"mt_word",ic:"📝",n:"应用题",d:"4类题型输入答案"},
+  {r:"mt_think",ic:"🧠",n:"思维拓展",d:"找规律+数字华容道"}
+]));
+
+/* 口算闯关 */
+reg("mt_mental",()=>{
+  const v=view();
+  let h='<a class="back" onclick="location.hash=\'#/math\'">← 数学王国</a><h2 class="t">⚡ 口算闯关</h2><div class="sub">选关卡，限时作答，全对+10</div><div class="grid2" style="padding:0 14px">';
+  D.mental.forEach((lv,i)=>{h+='<button class="btn '+(i%2?'t':'')+'" style="margin:8px 0" onclick="startMental('+i+')">第'+(i+1)+'关 '+lv.n+'<br><small>⏱'+lv.time+'秒</small></button>';});
+  h+='</div><div id="mentalBox"></div>';v.innerHTML=h;return v;
+});
+window.startMental=function(i){
+  const lv=D.mental[i];const box=document.getElementById("mentalBox");
+  let qIdx=0,time=lv.time,correct=0,timer=null;
+  function show(){
+    box.innerHTML='<div class="card center"><div class="row" style="justify-content:center"><span class="timer">⏱ <span id="mT">'+time+'</span></span><span class="pill">第'+(qIdx+1)+'/'+lv.q.length+'题</span></div><div class="qtext" style="font-size:30px">'+lv.q[qIdx][0]+' = ?</div><input class="ans" id="mA" type="number" placeholder="答案"><div class="feedback" id="mF"></div><div class="row" style="justify-content:center"><button class="btn" onclick="submitMental()">提交</button></div></div>';
+    clearInterval(timer);timer=setInterval(()=>{time--;const e=document.getElementById("mT");if(e)e.textContent=time;if(time<=0){clearInterval(timer);end();}},1000);
+  }
+  window.submitMental=function(){
+    const ans=parseInt(document.getElementById("mA").value,10);
+    const f=document.getElementById("mF");
+    if(ans===lv.q[qIdx][1]){correct++;f.className="feedback ok";f.textContent="✅ 正确！";}
+    else{f.className="feedback no";f.textContent="❌ 正确答案："+lv.q[qIdx][1];}
+    qIdx++;
+    if(qIdx>=lv.q.length){clearInterval(timer);end();}
+    else setTimeout(show,500);
+  };
+  function end(){
+    const allRight=correct===lv.q.length;
+    box.innerHTML='<div class="card center"><div class="big">'+(allRight?'🎉 全对！':'💪 完成')+'</div><div>答对 '+correct+'/'+lv.q.length+'</div><div class="feedback '+(allRight?'ok':'no')+'" style="margin-top:8px">'+(allRight?('+10 积分'):'继续加油！')+'</div><button class="btn" onclick="startMental('+i+')" style="margin-top:8px">再做一次</button></div>';
+    if(allRight)addPoints(10,"口算·"+lv.n);else addPoints(0,"");
+  }
+  show();
+};
+
+/* 乘法口诀 */
+reg("mt_table",()=>{
+  const v=view();
+  let tbl='<table class="mt"><tr>';
+  for(let i=1;i<=9;i++)tbl+='<th>×'+i+'</th>';tbl+='</tr>';
+  const colors=["#6C5CE7","#7c6ef0","#8a7bf0","#00B894","#16c79a","#FDCB6E","#ffb14e","#ff9a3d","#ff7675"];
+  for(let r=1;r<=9;r++){tbl+='<tr>';for(let c=1;c<=9;c++){tbl+='<td style="background:'+colors[r-1]+';color:#fff;font-weight:700">'+r*c+'</td>';}tbl+='</tr>';}
+  tbl+='</table>';
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/math\'">← 数学王国</a><h2 class="t">🔢 乘法口诀</h2><div class="card" style="overflow-x:auto">'+tbl+'</div><div class="card" id="mtFillBox"></div>';
+  const box=document.getElementById("mtFillBox");
+  function fill(){
+    const qs=[];for(let k=0;k<20;k++){const a=1+Math.floor(Math.random()*9),b=1+Math.floor(Math.random()*9);qs.push([a+"×"+b,a*b]);}
+    box.innerHTML='<div class="qtext">乘法填空（20题，每对+1）</div><div id="mfArea"></div><button class="btn t" onclick="checkFill(\'mfArea\',\''+"mul"+'\')">提交</button>';
+    const area=document.getElementById("mfArea");
+    qs.forEach((q,k)=>{const r=$('<div class="row" style="margin:6px 0"><span style="min-width:70px">'+q[0]+'=</span><input class="ans" style="width:100px" id="mf'+k+'" type="number"><span class="fb"></span></div>');area.appendChild(r);});
+    window._mf=qs;
+  }
+  function divi(){
+    const qs=[];for(let k=0;k<10;k++){const b=1+Math.floor(Math.random()*9),a=b*(1+Math.floor(Math.random()*9));qs.push([a+"÷"+b,a/b]);}
+    box.innerHTML='<div class="qtext">除法填空（10题，每对+1）</div><div id="dvArea"></div><button class="btn t" onclick="checkFill(\'dvArea\',\'div\')">提交</button>';
+    const area=document.getElementById("dvArea");
+    qs.forEach((q,k)=>{const r=$('<div class="row" style="margin:6px 0"><span style="min-width:70px">'+q[0]+'=</span><input class="ans" style="width:100px" id="dv'+k+'" type="number"><span class="fb"></span></div>');area.appendChild(r);});
+    window._dv=qs;
+  }
+  window.checkFill=function(areaId,kind){
+    const qs=kind==="mul"?window._mf:window._dv;const pre=kind==="mul"?"mf":"dv";let right=0;
+    qs.forEach((q,k)=>{const inp=document.getElementById(pre+k);const fb=inp.parentElement.querySelector(".fb");if(parseInt(inp.value,10)===q[1]){right++;fb.textContent="✅";fb.style.color="var(--teal)";}else{fb.textContent="❌"+q[1];fb.style.color="var(--red)";}});
+    addPoints(right,(kind==="mul"?"乘法练习":"除法练习"));toast("答对 "+right+" 题，+"+right+"积分");
+  };
+  fill();
+  // add buttons to switch
+  const sw=$('<div class="row" style="padding:0 14px;margin-bottom:10px"></div>');
+  sw.innerHTML='<button class="btn sm" onclick="mtFillMode(\'mul\')">乘法填空</button><button class="btn sm ghost" onclick="mtFillMode(\'div\')">除法填空</button>';
+  v.appendChild(sw);
+  window.mtFillMode=function(m){if(m==="mul")fill();else divi();};
+  return v;
+});
+
+/* 生活数学 */
+reg("mt_life",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/math\'">← 数学王国</a><h2 class="t">🛒 生活数学</h2><div class="sub">3个场景，每题+2</div>';
+  D.life.forEach(sc=>{
+    const c=$('<div class="card"></div>');c.innerHTML='<div class="qtext">'+sc.sc+'</div>';
+    c.appendChild(mcQuiz(sc.q.map(q=>[q[0],q[1],q[2],q[3],q[4]]),()=>{},2,true));
+    v.appendChild(c);
+  });
+  return v;
+});
+
+/* 应用题 */
+reg("mt_word",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/math\'">← 数学王国</a><h2 class="t">📝 应用题</h2><div class="sub">每题+3，答错显示解析</div><div id="wordBox"></div>';
+  const box=document.getElementById("wordBox");
+  D.wordprob.forEach(wp=>{
+    const c=$('<div class="card"></div>');c.innerHTML='<div class="pill">'+wp.ty+'</div>';
+    wp.q.forEach((q,k)=>{
+      const r=$('<div class="row" style="margin:8px 0"><span style="flex:1">'+q[0]+'</span><input class="ans" style="width:90px" id="w'+wp.ty+k+'" type="number"><span class="fb"></span></div>');
+      c.appendChild(r);
+    });
+    const b=$('<button class="btn t"></button>');b.textContent="提交本组";
+    b.onclick=()=>{let right=0;wp.q.forEach((q,k)=>{const inp=document.getElementById("w"+wp.ty+k);const fb=inp.parentElement.querySelector(".fb");if(parseInt(inp.value,10)===q[1]){right++;fb.textContent="✅";fb.style.color="var(--teal)";}else{fb.textContent="❌ 解析："+q[1];fb.style.color="var(--red)";}});addPoints(right*(3),"应用题·"+wp.ty);toast("答对 "+right+" 题，+"+(right*3)+"积分");};
+    c.appendChild(b);v.appendChild(c);
+  });
+  return v;
+});
+
+/* 思维拓展 */
+reg("mt_think",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/math\'">← 数学王国</a><h2 class="t">🧠 思维拓展</h2><div class="sub">找规律（每题+3）+ 数字华容道</div><div id="thinkBox"></div>';
+  const box=document.getElementById("thinkBox");
+  D.patterns.forEach((p,i)=>{
+    const c=$('<div class="card"></div>');
+    c.innerHTML='<div class="qtext">'+p[0]+' = ?</div><input class="ans" id="pt'+i+'" type="number" placeholder="答案"><span class="fb"></span>';
+    const b=$('<button class="btn sm t"></button>');b.textContent="提交";
+    b.onclick=()=>{const inp=document.getElementById("pt"+i);const fb=inp.parentElement.querySelector(".fb");if(parseInt(inp.value,10)===p[1]){fb.textContent="✅ +3";fb.style.color="var(--teal)";addPoints(3,"找规律");}else{fb.textContent="❌ 正确："+p[1];fb.style.color="var(--red)";}};
+    c.appendChild(b);box.appendChild(c);
+  });
+  // 3x3 puzzle
+  const p=$('<div class="card center"></div>');
+  p.innerHTML='<div class="qtext">🔢 数字华容道（按1-8顺序排列）</div><div class="grid3" id="hrd" style="max-width:260px;margin:0 auto"></div><button class="btn sm" onclick="initHrd()">打乱 🔀</button><span class="fb" id="hrdFb"></span>';
+  box.appendChild(p);
+  window.initHrd=function(){
+    let arr=[1,2,3,4,5,6,7,8,0];
+    for(let k=0;k<200;k++){const z=arr.indexOf(0);const nb=[];if(z%3>0)nb.push(z-1);if(z%3<2)nb.push(z+1);if(z>2)nb.push(z-3);if(z<6)nb.push(z+3);const t=nb[Math.floor(Math.random()*nb.length)];[arr[z],arr[t]]=[arr[t],arr[z]];}
+    renderHrd(arr);
+  };
+  function renderHrd(arr){
+    const g=document.getElementById("hrd");g.innerHTML="";
+    arr.forEach((n,k)=>{const t=$('<div class="mtile" style="height:60px;display:flex;align-items:center;justify-content:center"></div>');if(n===0){t.style.visibility="hidden";}else{t.textContent=n;t.onclick=()=>moveHrd(arr,k);}g.appendChild(t);});
+  }
+  window.moveHrd=function(arr,k){
+    const z=arr.indexOf(0);const ok=[k-1,k+1,k-3,k+3].includes(z)&&((Math.abs(k%3-z%3)===1&&Math.floor(k/3)===Math.floor(z/3))||(Math.abs(Math.floor(k/3)-Math.floor(z/3))===1&&k%3===z%3));
+    if(ok){[arr[k],arr[z]]=[arr[z],arr[k]];renderHrd(arr);if(arr.join("")==="123456780"){document.getElementById("hrdFb").textContent="🎉 完成！+5";document.getElementById("hrdFb").style.color="var(--teal)";addPoints(5,"数字华容道");}}
+  };
+  setTimeout(window.initHrd,50);
+  return v;
+});
+
+/* ============================ 英语 ============================ */
+reg("english",()=>subjectHub("英语乐园","🔤",[
+  {r:"en_alpha",ic:"🔤",n:"字母复习",d:"26字母+大小写配对"},
+  {r:"en_word",ic:"🃏",n:"单词卡片",d:"颜色/动物/食物翻卡配对"},
+  {r:"en_phonics",ic:"🔊",n:"自然拼读",d:"3阶段选择题"},
+  {r:"en_dialog",ic:"💬",n:"日常对话",d:"角色扮演选择题"},
+  {r:"en_song",ic:"🎵",n:"英文儿歌",d:"歌词+录音跟读"},
+  {r:"en_vocab",ic:"📚",n:"我的词库",d:"添加单词+录音"}
+]));
+
+reg("en_alpha",()=>{
+  const v=view();
+  let tbl='<table class="mt">';
+  D.alphabet.forEach(a=>{tbl+='<tr><td style="font-weight:800;font-size:18px">'+a[0]+' '+a[1]+'</td><td>'+a[2]+'</td><td>'+a[3]+' 🔊</td><td><button class="btn sm ghost" onclick="speak(\''+a[3]+'\',\'en-US\')">听</button></td></tr>';});
+  tbl+='</table>';
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">🔤 字母复习</h2><div class="card" style="overflow-x:auto">'+tbl+'</div><div class="card" id="alphaBox"></div>';
+  const box=document.getElementById("alphaBox");
+  const ups=D.alphabet.map(a=>a[0]);const lows=D.alphabet.map(a=>a[1]);
+  const shuffledLow=shuffle(lows);
+  let matched=0;
+  box.innerHTML='<div class="qtext center">大小写配对（每对+1）</div><div class="grid3" id="aU"></div><div class="grid3" id="aL"></div><div class="feedback" id="aFb"></div>';
+  let selU=null;
+  ups.forEach((u,i)=>{const t=$('<div class="mtile"></div>');t.textContent=u;t.dataset.c=u;t.onclick=()=>{if(t.classList.contains("done"))return;box.querySelectorAll("#aU .mtile").forEach(x=>x.classList.remove("sel"));t.classList.add("sel");selU=t;chk();};box.querySelector("#aU").appendChild(t);});
+  shuffledLow.forEach(l=>{const t=$('<div class="mtile"></div>');t.textContent=l;t.dataset.c=l;t.onclick=()=>{if(t.classList.contains("done"))return;if(!selU)return;if(selU.dataset.c.toLowerCase()===l.toLowerCase()){selU.classList.add("done");t.classList.add("done");matched++;addPoints(1,"字母配对");document.getElementById("aFb").textContent="✅ +1（"+matched+"/26）";if(matched===26)document.getElementById("aFb").textContent="🎉 全部配对完成！";selU=null;}else{document.getElementById("aFb").textContent="❌ 再试试";setTimeout(()=>{selU.classList.remove("sel");selU=null;},400);}};box.querySelector("#aL").appendChild(t);});
+  function chk(){}
+  return v;
+});
+
+reg("en_word",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">🃏 单词卡片</h2><div class="sub">选主题，翻卡配对（每对+2）</div><div class="row" id="wordTheme" style="padding:0 14px"></div><div id="wordBox"></div>';
+  const themeBar=document.getElementById("wordTheme");
+  Object.keys(D.words).forEach((k,i)=>{
+    const names={colors:"颜色",animals:"动物",food:"食物"};
+    const b=$('<button class="btn sm '+(i===0?'':'ghost')+'"></button>');b.textContent=names[k];
+    b.onclick=()=>{themeBar.querySelectorAll("button").forEach(x=>x.className="btn sm ghost");b.className="btn sm";renderWords(k);};
+    themeBar.appendChild(b);
+  });
+  window.renderWords=function(k){
+    const list=D.words[k];const box=document.getElementById("wordBox");box.innerHTML="";
+    list.forEach(w=>{const c=$('<div class="card"></div>');c.innerHTML='<div class="qtext">'+w[2]+' '+w[0]+' <span class="muted">'+w[1]+'</span> <button class="btn sm ghost" onclick="speak(\''+w[0]+'\',\'en-US\')">🔊</button></div>';box.appendChild(c);});
+    // 4x4 flip match using 8 pairs (need 16; take 8 words -> but need pairs of same word) use 8 words each shown twice
+    const pick=shuffle(list).slice(0,8);
+    const tiles=shuffle([...pick,...pick]);
+    const g=$('<div class="card"><div class="qtext">翻卡配对（点两张相同的英文）</div><div class="grid2" id="wflip" style="gap:8px"></div><div class="feedback" id="wFb"></div></div>');
+    let f=null,lock=false,pairs=0;
+    tiles.forEach(w=>{const t=$('<div class="mtile"></div>');t.textContent="❓";t.dataset.w=w[0];t.onclick=()=>{if(lock||t.classList.contains("done")||t===f)return;t.textContent=w[2]+w[0];t.classList.add("sel");if(!f){f=t;return;}lock=true;if(f.dataset.w===t.dataset.w){f.classList.add("done");t.classList.add("done");pairs++;addPoints(2,"单词配对");document.getElementById("wFb").textContent="✅ +2（"+pairs+"/8）";if(pairs===8)document.getElementById("wFb").textContent="🎉 全部配对！";f=null;lock=false;}else{document.getElementById("wFb").textContent="❌";setTimeout(()=>{f.textContent="❓";t.textContent="❓";f.classList.remove("sel");t.classList.remove("sel");f=null;lock=false;},600);}};g.querySelector("#wflip").appendChild(t);});
+    box.appendChild(g);
+  };
+  renderWords("colors");
+  return v;
+});
+
+reg("en_phonics",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">🔊 自然拼读</h2><div class="sub">每题+2</div>';
+  D.phonics.forEach(st=>{
+    const c=$('<div class="card"></div>');c.innerHTML='<div class="qtext">'+st.st+'</div>';
+    c.appendChild(mcQuiz(st.q.map(q=>[q[0],q[1],q[2],q[3],q[4],q[5]]),()=>{},2,true));
+    v.appendChild(c);
+  });
+  return v;
+});
+
+reg("en_dialog",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">💬 日常对话</h2><div class="sub">完成每个场景+3</div>';
+  D.dialogue.forEach(sc=>{
+    const c=$('<div class="card"></div>');c.innerHTML='<div class="qtext">场景：'+sc.sc+'</div>';
+    c.appendChild(mcQuiz(sc.q.map(q=>[q[0],q[1],q[2],q[3],q[4]]),null,3,true));
+    v.appendChild(c);
+  });
+  return v;
+});
+
+reg("en_song",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">🎵 英文儿歌</h2><div class="sub">逐句显示+朗读+录音跟读（学完每首+5）</div>';
+  D.songs.forEach((s,i)=>{
+    const c=$('<div class="card"></div>');
+    let h='<div class="qtext center">'+s.t+'</div><div class="poem" style="font-size:16px">'+s.lyr.join("<br>")+'</div><div class="muted center" style="margin-top:6px">'+s.zh+'</div>';
+    h+='<div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm" onclick="speak(\''+s.lyr.join(". ")+'\',\'en-US\')">🔊 朗读</button><button class="btn sm t" onclick="recSong('+i+')">🎙️ 录音跟读</button><button class="btn sm y" onclick="learnSong('+i+')">学完 +5</button></div><div id="rec'+i+'"></div>';
+    c.innerHTML=h;v.appendChild(c);
+  });
+  return v;
+});
+window.learnSong=function(i){addPoints(5,"儿歌·"+D.songs[i].t);toast("🎵 学会啦 +5");};
+window.recSong=function(i){
+  const box=document.getElementById("rec"+i);box.innerHTML="录音中…";
+  try{
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+      const rec=new MediaRecorder(stream);const ch=[];rec.ondataavailable=e=>ch.push(e.data);
+      rec.onstop=()=>{const blob=new Blob(ch);const url=URL.createObjectURL(blob);box.innerHTML='<audio controls src="'+url+'"></audio>';stream.getTracks().forEach(t=>t.stop());};
+      rec.start();setTimeout(()=>rec.stop(),8000);
+    }).catch(e=>{box.innerHTML="无法录音（需允许麦克风）";});
+  }catch(e){box.innerHTML="无法录音";}
+};
+
+reg("en_vocab",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/english\'">← 英语乐园</a><h2 class="t">📚 我的词库</h2><div class="sub">添加单词+朗读+录音（添加+1）</div><div class="card"><input class="ans" id="vwEn" placeholder="英文"><input class="ans" id="vwCn" placeholder="中文"><input class="ans" id="vwPy" placeholder="谐音(可选)"><button class="btn t" onclick="addVocab()">添加 +1</button></div><div id="vocabList"></div>';
+  const list=document.getElementById("vocabList");
+  function render(){list.innerHTML="";S.vocab.forEach((w,i)=>{const r=$('<div class="listrow"></div>');r.innerHTML='<span>'+w[0]+' · '+w[1]+(w[2]?'（'+w[2]+'）':'')+'</span><span><button class="btn sm ghost" onclick="speak(\''+w[0]+'\',\'en-US\')">🔊</button> <button class="btn sm" onclick="recVocab('+i+')">🎙️</button></span>';list.appendChild(r);});}
+  window.addVocab=function(){const e=document.getElementById("vwEn").value.trim();const c=document.getElementById("vwCn").value.trim();if(!e||!c){toast("英文和中文都要填");return;}S.vocab.push([e,c,document.getElementById("vwPy").value.trim()]);save();addPoints(1,"添加单词");render();toast("✅ 添加成功 +1");document.getElementById("vwEn").value="";document.getElementById("vwCn").value="";document.getElementById("vwPy").value="";};
+  window.recVocab=function(i){toast("🎙️ 录音功能同儿歌页");};
+  render();
+  return v;
+});
+
+/* ============================ 运动 ============================ */
+reg("sport",()=>subjectHub("运动达人","🏃",[
+  {r:"sp_fit",ic:"🏋️",n:"体能闯关",d:"5个项目计时挑战"},
+  {r:"sp_parent",ic:"🪞",n:"亲子运动",d:"3个游戏+计时"},
+  {r:"sp_exercise",ic:"🧘",n:"护体小操",d:"2套操分步计时"},
+  {r:"sp_plan",ic:"📋",n:"每日推荐",d:"3套方案卡片"}
+]));
+
+reg("sp_fit",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/sport\'">← 运动达人</a><h2 class="t">🏋️ 体能闯关</h2><div class="sub">选项目→设目标→开始计时→完成得积分</div><div id="fitBox"></div>';
+  const box=document.getElementById("fitBox");
+  D.sports.forEach((s,i)=>{
+    const c=$('<div class="card center"></div>');
+    c.innerHTML='<div class="big">'+s.em+'</div><div class="qtext">'+s.n+'</div><div class="muted">目标 '+s.goal+s.unit+' · 完成+'+s.pt+'</div><div class="row" style="justify-content:center"><button class="btn" onclick="startFit('+i+')">开始计时 ⏱</button></div><div id="fit'+i+'"></div>';
+    box.appendChild(c);
+  });
+  return v;
+});
+window.startFit=function(i){
+  const s=D.sports[i];const box=document.getElementById("fit"+i);
+  let t=0;box.innerHTML='<div class="timer" id="ft'+i+'">00:00</div><div class="row" style="justify-content:center"><input class="ans" style="width:120px" id="fc'+i+'" type="number" placeholder="完成'+s.unit+'"></div><button class="btn t" onclick="finishFit('+i+')">完成打卡</button>';
+  const timer=setInterval(()=>{t++;const e=document.getElementById("ft"+i);if(e){const m=String(Math.floor(t/60)).padStart(2,"0"),ss=String(t%60).padStart(2,"0");e.textContent=m+":"+ss;}},1000);
+  window._fitTimer=window._fitTimer||{};window._fitTimer[i]=timer;
+  window.finishFit=function(i){const s=D.sports[i];clearInterval(window._fitTimer[i]);const num=parseInt(document.getElementById("fc"+i).value,10);const box=document.getElementById("fit"+i);if(num>=s.goal){addPoints(s.pt,"运动·"+s.n);box.innerHTML='<div class="feedback ok">🎉 达标！+'+s.pt+'</div>';}else{box.innerHTML='<div class="feedback no">差一点点，下次加油！</div>';}};
+};
+
+reg("sp_parent",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/sport\'">← 运动达人</a><h2 class="t">🪞 亲子运动</h2><div class="sub">说明卡片+计时器</div>';
+  D.parent.forEach(p=>{const c=$('<div class="card"></div>');c.innerHTML='<div class="big">'+p.em+'</div><div class="qtext">'+p.n+'</div><div class="muted">'+p.desc+'</div><div class="row" style="justify-content:center"><button class="btn sm" onclick="startTimer('+p.time+',this)">开始 '+p.time+'秒 ⏱</button></div>';v.appendChild(c);});
+  return v;
+});
+window.startTimer=function(sec,btn){btn.disabled=true;let t=sec;btn.textContent=t+"秒";const tm=setInterval(()=>{t--;btn.textContent=t+"秒";if(t<=0){clearInterval(tm);btn.textContent="完成✅";toast("⏱ 时间到！");}},1000);};
+
+reg("sp_exercise",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/sport\'">← 运动达人</a><h2 class="t">🧘 护体小操</h2><div class="sub">跟着步骤做，每步可计时</div>';
+  D.exercises.forEach(ex=>{const c=$('<div class="card"></div>');let h='<div class="qtext">'+ex.em+' '+ex.n+'</div><ol style="font-size:16px">';ex.steps.forEach(s=>h+='<li style="margin:6px 0">'+s+' <button class="btn sm ghost" onclick="startTimer(20,this)">20秒</button></li>');h+='</ol><div class="center"><button class="btn t" onclick="addPoints(3,\'护体小操\');toast(\'✅ +3\')">完成 +3</button></div>';c.innerHTML=h;v.appendChild(c);});
+  return v;
+});
+
+reg("sp_plan",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/sport\'">← 运动达人</a><h2 class="t">📋 每日推荐</h2><div class="sub">完成方案+3积分</div>';
+  D.plans.forEach(p=>{const c=$('<div class="card"></div>');let h='<div class="qtext">'+p.em+' '+p.n+'</div>';p.steps.forEach((s,k)=>h+='<div class="listrow" style="margin:6px 0"><span>'+s+'</span></div>');h+='<div class="center"><button class="btn t" onclick="addPoints(3,\'每日方案\');toast(\'✅ +3\')">完成 +3</button></div>';c.innerHTML=h;v.appendChild(c);});
+  return v;
+});
+
+/* ============================ 游戏大厅 ============================ */
+reg("games",()=>{
+  const v=view();
+  v.innerHTML='<h2 class="t">🎮 游戏大厅</h2><div class="sub">综合游戏 + 积分消费</div><div class="grid2" style="padding:0 14px">'+
+    '<button class="subj cn" onclick="location.hash=\'#/g_monopoly\'"><span class="ic">🎲</span>知识大富翁</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/g_tower\'"><span class="ic">🗼</span>答题闯关塔</button>'+
+    '<button class="subj en" onclick="location.hash=\'#/g_race\'"><span class="ic">🏎️</span>口算赛车</button>'+
+    '<button class="subj sp" onclick="location.hash=\'#/g_defend\'"><span class="ic">🛡️</span>单词守卫战</button>'+
+    '<button class="subj cn" onclick="location.hash=\'#/g_idiom\'"><span class="ic">📜</span>成语故事屋</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/spend\'"><span class="ic">🎰</span>积分消费乐园</button>'+
+    '</div>';
+  return v;
+});
+
+function randQA(){ // pull a random question from subjects
+  const pools=[];
+  D.pinyin.forEach(p=>pools.push({q:"「"+p[0]+"」的拼音？",a:[p[1]],ans:p[1],type:"text"}));
+  D.chars.forEach(c=>pools.push({q:"「"+c[2]+"」的汉字是？",a:[c[0]],ans:c[0],type:"text"}));
+  D.mental.forEach(l=>l.q.forEach(x=>pools.push({q:x[0]+"=?",a:[String(x[1])],ans:String(x[1]),type:"text"})));
+  D.alphabet.forEach(a=>pools.push({q:a[3]+" 的字母？",a:[a[0]],ans:a[0],type:"text"}));
+  D.words.colors.concat(D.words.animals,D.words.food).forEach(w=>pools.push({q:w[1]+" 的英文？",a:[w[0]],ans:w[0],type:"text"}));
+  return pools[Math.floor(Math.random()*pools.length)];
+}
+
+reg("g_monopoly",()=>{
+  const v=view();
+  if(!spend(3)){v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🎲 知识大富翁</h2><div class="sub">需要3积分/局</div>';return v;}
+  let pos=0;
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🎲 知识大富翁</h2><div class="sub">掷骰子前进，答对前进2格，答错后退1格，到终点+10</div><div class="card center"><div class="big" id="monPos">🏁 第 '+pos+' 格</div><button class="btn" onclick="rollMono()">🎲 掷骰子</button><div id="monQ"></div></div>';
+  window.rollMono=function(){
+    const step=1+Math.floor(Math.random()*6);pos+=step;if(pos>14)pos=14;
+    const q=randQA();
+    const box=document.getElementById("monQ");
+    box.innerHTML='<div class="qtext">第'+pos+'格：'+q.q+'</div><input class="ans" id="monA" placeholder="答案"><button class="btn t" onclick="ansMono(\''+q.ans.replace(/'/g,"")+'\')">提交</button>';
+    document.getElementById("monPos").textContent="🏁 第 "+pos+" 格";
+  };
+  window.ansMono=function(ans){
+    const val=document.getElementById("monA").value.trim();
+    const box=document.getElementById("monQ");
+    if(val===ans){pos+=2;if(pos>=14){pos=14;box.innerHTML='<div class="feedback ok">🎉 到达终点！+10</div>';addPoints(10,"大富翁");return;}box.innerHTML='<div class="feedback ok">✅ 前进2格！</div>';}
+    else{pos=Math.max(0,pos-1);box.innerHTML='<div class="feedback no">❌ 后退1格（答案：'+ans+'）</div>';}
+    document.getElementById("monPos").textContent="🏁 第 "+pos+" 格";
+  };
+  return v;
+});
+
+reg("g_tower",()=>{
+  const v=view();
+  if(!spend(2)){v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🗼 答题闯关塔</h2><div class="sub">需要2积分/次</div>';return v;}
+  let lv=1;
+  function q(){const qu=randQA();const box=document.getElementById("twBox");box.innerHTML='<div class="pill">第 '+lv+' 层</div><div class="qtext">'+qu.q+'</div><input class="ans" id="twA" placeholder="答案"><button class="btn t" onclick="ansTower(\''+qu.ans.replace(/'/g,"")+'\')">上一层 ⬆️</button>';}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🗼 答题闯关塔</h2><div class="sub">答对上一层，答错回到第1层，到顶+15</div><div class="card center"><div class="big" id="twLv">第 1 层</div><div id="twBox"></div></div>';
+  window.ansTower=function(ans){const val=document.getElementById("twA").value.trim();const box=document.getElementById("twBox");if(val===ans){lv++;if(lv>5){box.innerHTML='<div class="feedback ok">🎉 登顶！+15</div>';addPoints(15,"闯关塔");return;}document.getElementById("twLv").textContent="第 "+lv+" 层";q();}else{lv=1;document.getElementById("twLv").textContent="第 1 层";box.innerHTML='<div class="feedback no">❌ 回到第1层（答案：'+ans+'）</div>';setTimeout(q,800);}};
+  q();
+  return v;
+});
+
+reg("g_race",()=>{
+  const v=view();
+  if(!spend(2)){v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🏎️ 口算赛车</h2><div class="sub">需要2积分/局</div>';return v;}
+  let you=0,cpu=0,bank=shuffle(D.mental.flatMap(l=>l.q)).slice(0,5);
+  function q(){if(you>=5||cpu>=5){const win=you>cpu;const box=document.getElementById("rcBox");box.innerHTML='<div class="feedback '+(win?'ok':'no')+'">'+(win?'🏆 你赢了！+8':'💻 电脑赢了，再试一次')+'</div>';if(win)addPoints(8,"口算赛车");return;}const qu=bank[you];document.getElementById("rcBox").innerHTML='<div class="row" style="justify-content:center"><span class="pill">你 '+you+' : '+cpu+' 电脑</span></div><div class="qtext center">'+qu[0]+'=?</div><input class="ans" id="rcA" type="number" style="max-width:200px;margin:0 auto"><button class="btn t" onclick="ansRace('+qu[1]+')">提交</button>';}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🏎️ 口算赛车</h2><div class="sub">你vs电脑各答5题，先答完赢+8</div><div class="card center" id="rcBox"></div>';
+  window.ansRace=function(ans){const val=parseInt(document.getElementById("rcA").value,10);if(val===ans)you++;else cpu++;q();};
+  q();
+  return v;
+});
+
+reg("g_defend",()=>{
+  const v=view();
+  if(!spend(2)){v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🛡️ 单词守卫战</h2><div class="sub">需要2积分/局</div>';return v;}
+  const all=D.words.colors.concat(D.words.animals,D.words.food);let left=10;
+  function q(){if(left<=0){document.getElementById("dfBox").innerHTML='<div class="feedback ok">🎉 通关！消灭10个敌人 +8</div>';addPoints(8,"单词守卫战");return;}const w=shuffle(all)[0];const opts=shuffle([w[0],...shuffle(all.filter(x=>x[0]!==w[0])).slice(0,3).map(x=>x[0])]);document.getElementById("dfBox").innerHTML='<div class="pill">剩余敌人 '+left+'</div><div class="qtext center">'+w[1]+' 的英文是？</div>'+opts.map(o=>'<button class="opt" onclick="ansDefend(\''+o+'\',\''+w[0]+'\')">'+o+'</button>').join("");}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🛡️ 单词守卫战</h2><div class="sub">显示中文，选正确英文，10个敌人通关+8</div><div class="card" id="dfBox"></div>';
+  window.ansDefend=function(o,ans){if(o===ans){left--;q();}else{document.getElementById("dfBox").insertAdjacentHTML("beforeend",'<div class="feedback no">❌ 正确：'+ans+'</div>');}};
+  q();
+  return v;
+});
+
+reg("g_idiom",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">📜 成语故事屋</h2><div class="sub">看故事答1题，答对解锁下一个+3（免费）</div><div id="idBox"></div>';
+  let idx=0;
+  function show(){if(idx>=D.idioms.length){document.getElementById("idBox").innerHTML='<div class="card center"><div class="big">🎉</div>所有成语故事都看完啦！</div>';return;}const id=D.idioms[idx];const box=document.getElementById("idBox");box.innerHTML='<div class="card"><div class="qtext">'+id[0]+'</div><div class="muted">'+id[1]+'</div><div style="font-size:15px;margin:6px 0">📖 '+id[2]+'</div><div class="qtext" style="font-size:16px">这个成语告诉我们什么？</div><button class="opt" onclick="ansIdiom(\''+id[0]+'\')">'+id[1]+'</button><div class="feedback" id="idF"></div></div>';}
+  window.ansIdiom=function(name){document.getElementById("idF").className="feedback ok";document.getElementById("idF").textContent="✅ 正确！+3";addPoints(3,"成语故事·"+name);idx++;setTimeout(show,900);};
+  show();
+  return v;
+});
+
+/* ============================ 积分消费 ============================ */
+reg("spend",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/games\'">← 游戏大厅</a><h2 class="t">🎰 积分消费乐园</h2><div class="sub">用积分玩游戏赢奖励</div><div class="grid2" style="padding:0 14px">'+
+    '<button class="subj cn" onclick="location.hash=\'#/sp_egg\'"><span class="ic">🥚</span>砸金蛋 3积分</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/sp_wheel\'"><span class="ic">🎡</span>幸运大转盘 5积分</button>'+
+    '<button class="subj en" onclick="location.hash=\'#/sp_box\'"><span class="ic">🎁</span>盲盒 10积分</button>'+
+    '<button class="subj sp" onclick="location.hash=\'#/sp_card\'"><span class="ic">🃏</span>翻牌抽奖 2积分</button>'+
+    '<button class="subj cn" onclick="location.hash=\'#/sp_balloon\'"><span class="ic">🎈</span>打气球 3积分</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/sp_fruit\'"><span class="ic">🍉</span>切水果 3积分</button>'+
+    '</div>';
+  return v;
+});
+
+reg("sp_egg",()=>{
+  const v=view();
+  if(!spend(3)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🥚 砸金蛋</h2><div class="sub">需要3积分</div>';return v;}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🥚 砸金蛋</h2><div class="sub">选1个金蛋砸开</div><div class="card"><div class="grid2" id="eggs"></div></div>';
+  const prizes=[()=>{addPoints(5,"金蛋");return"🎉 +5积分";},()=>{addCoins(1,"金蛋");return"🪙 +1金币";},()=>{addStars(3,"金蛋");return"⭐ +3星星";},()=>"😅 空蛋"];
+  const eggs=document.getElementById("eggs");
+  for(let i=0;i<8;i++){const e=$('<button class="btn y" style="font-size:30px;padding:24px">🥚</button>');e.onclick=()=>{const p=prizes[Math.floor(Math.random()*prizes.length)]();e.textContent="💥";eggs.querySelectorAll("button").forEach(b=>b.disabled=true);const r=$('<div class="feedback ok" style="text-align:center;margin-top:10px"></div>');r.textContent=p;eggs.parentElement.appendChild(r);toast(p);};eggs.appendChild(e);}
+  return v;
+});
+
+reg("sp_wheel",()=>{
+  const v=view();
+  if(!spend(5)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎡 幸运大转盘</h2><div class="sub">需要5积分</div>';return v;}
+  const seg=["+10积分","+2金币","+5星星","再来一次","空","+10积分","+2金币","+5星星"];
+  const cv=$('<canvas id="wheel" width="260" height="260"></canvas>');
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎡 幸运大转盘</h2><div class="card center" id="whBox"></div>';
+  const box=document.getElementById("whBox");box.appendChild(cv);
+  const btn=$('<button class="btn" style="margin-top:10px">开始旋转 🎯</button>');box.appendChild(btn);
+  const fb=$('<div class="feedback" id="whFb"></div>');box.appendChild(fb);
+  const ctx=cv.getContext("2d");const cols=["#6C5CE7","#00B894","#FDCB6E","#ff7675","#8a7bf0","#16c79a","#ffb14e","#fd9644"];
+  ctx.clearRect(0,0,260,260);
+  for(let i=0;i<8;i++){ctx.beginPath();ctx.moveTo(130,130);ctx.arc(130,130,130,i*Math.PI/4,(i+1)*Math.PI/4);ctx.fillStyle=cols[i];ctx.fill();ctx.fillStyle="#fff";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(seg[i],130+78*Math.cos(i*Math.PI/4+Math.PI/8),130+78*Math.sin(i*Math.PI/4+Math.PI/8));}
+  let spun=false;
+  btn.onclick=()=>{if(spun)return;spun=true;const idx=Math.floor(Math.random()*8);const deg=360*5+ (360- (idx*45+22));cv.style.transform="rotate("+deg+"deg)";setTimeout(()=>{const r=seg[idx];if(r.startsWith("+10积分")){addPoints(10,"转盘");fb.textContent="🎉 +10积分";}else if(r.startsWith("+2金币")){addCoins(2,"转盘");fb.textContent="🪙 +2金币";}else if(r.startsWith("+5星星")){addStars(5,"转盘");fb.textContent="⭐ +5星星";}else if(r==="再来一次"){fb.textContent="🔄 再来一次！";spun=false;}else{fb.textContent="😅 空奖";}toast(r);},3600);};
+  return v;
+});
+
+reg("sp_box",()=>{
+  const v=view();
+  if(!spend(10)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎁 盲盒</h2><div class="sub">需要10积分</div>';return v;}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎁 盲盒</h2><div class="sub">选系列开盒：普通70% / 稀有25% / 隐藏5%</div><div class="card center"><div class="big" id="boxEm">📦</div><div class="row" style="justify-content:center" id="boxSel"></div><div class="feedback" id="boxFb"></div></div>';
+  const series={animal:["🐱","🐶","🐰","🐯","🦁","🐼"],space:["🚀","🛸","🌟","🪐","👽","🌙"],ocean:["🐟","🐠","🐙","🦀","🐳","🐬"]};
+  const sel=document.getElementById("boxSel");
+  Object.keys(series).forEach(k=>{const names={animal:"动物",space:"太空",ocean:"海洋"};const b=$('<button class="btn"></button>');b.textContent=names[k];b.onclick=()=>{const r=Math.random();let rarity,extra="";if(r<0.7){rarity="普通";}else if(r<0.95){rarity="稀有";extra=" +5积分";addPoints(5,"盲盒稀有");}else{rarity="隐藏";extra=" +5积分";addPoints(5,"盲盒隐藏");}const em=shuffle(series[k])[0];document.getElementById("boxEm").textContent=em;document.getElementById("boxFb").className="feedback ok";document.getElementById("boxFb").textContent="🎉 "+rarity+"款！"+extra;sel.querySelectorAll("button").forEach(x=>x.disabled=true);};sel.appendChild(b);});
+  return v;
+});
+
+reg("sp_card",()=>{
+  const v=view();
+  if(!spend(2)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🃏 翻牌抽奖</h2><div class="sub">需要2积分</div>';return v;}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🃏 翻牌抽奖</h2><div class="sub">翻1张牌</div><div class="card"><div class="grid3" id="cards9"></div><div class="feedback" id="cardFb"></div></div>';
+  const prizes=[()=>{addPoints(3,"翻牌");return"🎉 +3积分";},()=>{addCoins(1,"翻牌");return"🪙 +1金币";},()=>"😅 空"];
+  const g=document.getElementById("cards9");let opened=false;
+  for(let i=0;i<9;i++){const c=$('<div class="mtile" style="height:60px;display:flex;align-items:center;justify-content:center;font-size:28px">❓</div>');c.onclick=()=>{if(opened)return;opened=true;const p=prizes[Math.floor(Math.random()*prizes.length)]();c.textContent="🎊";g.querySelectorAll(".mtile").forEach(x=>x.style.visibility="hidden");c.style.visibility="visible";document.getElementById("cardFb").className="feedback ok";document.getElementById("cardFb").textContent=p;toast(p);};g.appendChild(c);}
+  return v;
+});
+
+/* Canvas: 打气球 */
+reg("sp_balloon",()=>{
+  const v=view();
+  if(!spend(3)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎈 打气球</h2><div class="sub">需要3积分</div>';return v;}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🎈 打气球</h2><div class="sub">30秒：红+3 蓝+2 绿+1 黑炸弹-5</div><div class="card center"><canvas id="blCv" width="320" height="360" style="background:#eaf6ff;border-radius:16px"></canvas><div class="row" style="justify-content:center"><span class="timer" id="blT">30</span> 分：<b id="blS">0</b></div></div>';
+  setTimeout(runBalloon,50);
+  return v;
+});
+function runBalloon(){
+  const cv=document.getElementById("blCv");if(!cv)return;const ctx=cv.getContext("2d");
+  const balls=[];let score=0,time=30;
+  const cols=[{c:"#ff6b6b",p:3},{c:"#4a90e2",p:2},{c:"#00B894",p:1},{c:"#222",p:-5}];
+  const timer=setInterval(()=>{time--;document.getElementById("blT").textContent=time;if(time<=0){clearInterval(timer);clearInterval(sp);const fb=score>=61?"大奖 +10":score>=31?"中奖 +5":"小奖 +2";addPoints(score>=61?10:score>=31?5:2,"打气球");ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(0,0,320,360);ctx.fillStyle="#fff";ctx.font="bold 22px sans-serif";ctx.textAlign="center";ctx.fillText("时间到！"+fb,160,180);}},1000);
+  const sp=setInterval(()=>{if(balls.length<6){const col=cols[Math.random()<0.15?3:Math.floor(Math.random()*3)];balls.push({x:20+Math.random()*280,y:360,r:18,col,s:0.8+Math.random()*0.8});}},400);
+  function loop(){ctx.clearRect(0,0,320,360);for(let i=balls.length-1;i>=0;i--){const b=balls[i];b.y-=b.s*2;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,7);ctx.fillStyle=b.col.c;ctx.fill();if(b.y<-20)balls.splice(i,1);}requestAnimationFrame(loop);}
+  loop();
+  cv.onclick=e=>{const rct=cv.getBoundingClientRect();const x=(e.clientX-rct.left)*(320/rct.width);const y=(e.clientY-rct.top)*(360/rct.height);for(let i=balls.length-1;i>=0;i--){const b=balls[i];if((x-b.x)**2+(y-b.y)**2<b.r*b.r){score+=b.col.p;document.getElementById("blS").textContent=score;balls.splice(i,1);break;}}};
+}
+
+/* Canvas: 切水果 */
+reg("sp_fruit",()=>{
+  const v=view();
+  if(!spend(3)){v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🍉 切水果</h2><div class="sub">需要3积分</div>';return v;}
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/spend\'">← 积分消费</a><h2 class="t">🍉 切水果</h2><div class="sub">30秒：划过水果+1，炸弹-3</div><div class="card center"><canvas id="frCv" width="320" height="360" style="background:#eafaf0;border-radius:16px"></canvas><div class="row" style="justify-content:center"><span class="timer" id="frT">30</span> 分：<b id="frS">0</b></div></div>';
+  setTimeout(runFruit,50);
+  return v;
+});
+function runFruit(){
+  const cv=document.getElementById("frCv");if(!cv)return;const ctx=cv.getContext("2d");
+  const items=[];let score=0,time=30;
+  const fr=[{e:"🍉",p:1},{e:"🍎",p:1},{e:"🍓",p:1},{e:"💣",p:-3}];
+  const timer=setInterval(()=>{time--;document.getElementById("frT").textContent=time;if(time<=0){clearInterval(timer);clearInterval(sp);const fb=score>=61?"大奖 +10":score>=31?"中奖 +5":"小奖 +2";addPoints(score>=61?10:score>=31?5:2,"切水果");ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(0,0,320,360);ctx.fillStyle="#fff";ctx.font="bold 22px sans-serif";ctx.textAlign="center";ctx.fillText("时间到！"+fb,160,180);}},1000);
+  const sp=setInterval(()=>{if(items.length<5){const f=fr[Math.random()<0.18?3:Math.floor(Math.random()*3)];items.push({x:20+Math.random()*280,y:360,r:20,f,s:1+Math.random()});}},400);
+  function loop(){ctx.clearRect(0,0,320,360);for(let i=items.length-1;i>=0;i--){const b=items[i];b.y-=b.s*2.5;ctx.font="32px serif";ctx.textAlign="center";ctx.fillText(b.f,b.x,b.y);if(b.y<-20)items.splice(i,1);}requestAnimationFrame(loop);}
+  loop();
+  let lastX=0,lastY=0;
+  cv.onmousemove=e=>{const rct=cv.getBoundingClientRect();const x=(e.clientX-rct.left)*(320/rct.width);const y=(e.clientY-rct.top)*(360/rct.height);if(lastX){for(let i=items.length-1;i>=0;i--){const b=items[i];if((x-b.x)**2+(y-b.y)**2<b.r*b.r){score+=b.f.p;document.getElementById("frS").textContent=score;items.splice(i,1);}}}lastX=x;lastY=y;};
+}
+
+/* ============================ 我的宠物 ============================ */
+reg("pet",()=>{
+  const v=view();
+  if(!S.pet){
+    v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">🐶 我的宠物</h2><div class="sub">先选一只宠物并起名</div><div class="card center"><div class="big">🐱 🐶 🐰 🦕</div><div class="row" style="justify-content:center">'+["🐱","🐶","🐰","🦕"].map(e=>'<button class="btn" onclick="choosePet(\''+e+'\')">'+e+'</button>').join("")+'</div><div style="margin-top:10px"><input class="ans" id="petName" placeholder="给宠物起个名字"></div></div>';
+    window.choosePet=function(em){const n=document.getElementById("petName").value.trim();if(!n){toast("先起个名字吧");return;}S.pet={em,name:n,food:80,happy:80,last:Date.now()};save();toast("🎉 宠物"+n+" 来了！");router();};
+    return v;
+  }
+  // decay
+  const now=Date.now();const hrs=(now-S.pet.last)/3600000;S.pet.food=Math.max(0,Math.round(S.pet.food-hrs*5));S.pet.happy=Math.max(0,Math.round(S.pet.happy-hrs*4));S.pet.last=now;save();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">🐶 我的宠物</h2><div class="card center"><div class="qtext">'+S.pet.em+' '+S.pet.name+'</div><canvas id="petCanvas" width="320" height="240"></canvas>'+
+    '<div class="muted" style="text-align:left">饱食度 '+S.pet.food+'%</div><div class="bar"><i style="width:'+S.pet.food+'%;background:var(--yellow)"></i></div>'+
+    '<div class="muted" style="text-align:left">开心度 '+S.pet.happy+'%</div><div class="bar"><i style="width:'+S.pet.happy+'%;background:var(--teal)"></i></div>'+
+    '<div id="petTalk" class="feedback" style="min-height:24px">'+petTalk()+'</div>'+
+    '<div class="row" style="justify-content:center"><button class="btn y" onclick="feedPet()">🍖 喂食(-3积分)</button><button class="btn t" onclick="playPet()">🎾 玩耍(-2积分)</button></div>'+
+    (S.pet.food===0?'<div class="feedback no">好饿…</div>':'')+(S.pet.happy===0?'<div class="feedback no">不开心…</div>':'')+
+    '<button class="btn ghost sm" style="margin-top:8px" onclick="resetPet()">换一只宠物</button></div>';
+  setTimeout(drawPet,50);
+  return v;
+});
+function petTalk(){const a=["我想吃东西~","和我玩吧！","小廖最棒！","今天也要加油哦！","最喜欢小廖了~"];return a[Math.floor(Math.random()*a.length)];}
+window.feedPet=function(){if(!spend(3))return;S.pet.food=Math.min(100,S.pet.food+20);save();toast("🍖 饱食度+20");router();};
+window.playPet=function(){if(!spend(2))return;S.pet.happy=Math.min(100,S.pet.happy+20);save();toast("🎾 开心度+20");router();};
+window.resetPet=function(){S.pet=null;save();router();};
+function drawPet(){const cv=document.getElementById("petCanvas");if(!cv)return;const ctx=cv.getContext("2d");ctx.clearRect(0,0,320,240);ctx.font="120px serif";ctx.textAlign="center";ctx.fillText(S.pet.em,160,150);}
+
+/* ============================ 财富 ============================ */
+reg("wallet",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">💰 我的财富</h2><div class="card center"><div class="grid3"><div><div class="big">💰</div><div>'+S.points+' 积分</div></div><div><div class="big">🪙</div><div>'+S.coins+' 金币</div></div><div><div class="big">⭐</div><div>'+S.stars+' 星星</div></div></div>'+
+    '<div class="row" style="justify-content:center"><button class="btn sm y" onclick="exchange(100,1,\'coin\')">100积分→1金币</button><button class="btn sm t" onclick="exchange(10,1,\'point\')">10星星→1积分</button></div></div>'+
+    '<h2 class="t" style="font-size:18px">收入记录</h2><div id="recIn"></div><h2 class="t" style="font-size:18px">支出记录</h2><div id="recOut"></div>';
+  const ri=document.getElementById("recIn");(S.recIn.slice(-20).reverse()).forEach(r=>{const x=$('<div class="listrow"></div>');x.innerHTML='<span>'+r.t+' +'+r.n+' <span class="muted">'+r.src+'</span></span><span class="muted">'+r.time+'</span>';ri.appendChild(x);});
+  const ro=document.getElementById("recOut");if(S.recOut.length===0)ro.innerHTML='<div class="muted" style="padding:0 14px">暂无支出</div>';else(S.recOut.slice(-20).reverse()).forEach(r=>{const x=$('<div class="listrow"></div>');x.innerHTML='<span>'+r.t+' -'+r.n+' <span class="muted">'+r.src+'</span></span><span class="muted">'+r.time+'</span>';ro.appendChild(x);});
+  return v;
+});
+window.exchange=function(from,to,kind){if(kind==="coin"){if(S.points<from){toast("积分不够");return;}S.points-=from;S.coins+=to;addCoins(0);S.recOut.push({t:"💰",n:from,src:"兑换金币",time:nowStr()});}else{if(S.stars<from){toast("星星不够");return;}S.stars-=from;S.points+=to;S.recIn.push({t:"⭐",n:-from,src:"兑换积分",time:nowStr()});}save();refreshTop();toast("兑换成功");router();};
+
+/* ============================ 作业 ============================ */
+reg("homework",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">📝 今天作业</h2><div class="card"><input class="ans" id="hwText" placeholder="作业内容"><div class="row" style="margin:8px 0"><span class="muted">重要性：</span>'+[1,2,3,4,5].map(i=>'<button class="btn sm '+(i===3?'':'ghost')+'" onclick="selImp('+i+')" id="imp'+i+'">'+i+'⭐</button>').join("")+'</div><button class="btn t" onclick="addHw()">添加作业</button></div><div id="hwList"></div>';
+  window._imp=3;window.selImp=function(i){window._imp=i;[1,2,3,4,5].forEach(k=>document.getElementById("imp"+k).className="btn sm "+(k===i?"":"ghost"));};
+  window.addHw=function(){const t=document.getElementById("hwText").value.trim();if(!t){toast("写点作业内容");return;}S.homework.push({text:t,imp:window._imp,done:false});save();document.getElementById("hwText").value="";renderHw();toast("✅ 已添加");};
+  const list=document.getElementById("hwList");
+  window.renderHw=function(){list.innerHTML="";const arr=S.homework.slice().sort((a,b)=>b.imp-a.imp);if(arr.length===0){list.innerHTML='<div class="muted" style="padding:0 14px">还没有作业，添加一条吧</div>';}arr.forEach(h=>{if(S.homework.indexOf(h)===-1)return;const idx=S.homework.indexOf(h);const r=$('<div class="listrow"></div>');r.innerHTML='<div><div style="'+(h.done?'text-decoration:line-through;color:var(--soft)':'')+'">'+h.text+'</div><span class="tag">'+h.imp+'⭐</span>'+(h.done?' ✅':'')+'</div><button class="btn sm '+(h.done?'ghost':'t')+'" onclick="toggleHw('+idx+')">'+(h.done?'撤销':'完成')+'</button>';list.appendChild(r);});};
+  window.toggleHw=function(i){S.homework[i].done=!S.homework[i].done;save();renderHw();refreshTop();};
+  renderHw();
+  return v;
+});
+
+/* ============================ 心情日记 ============================ */
+reg("mood",()=>{
+  const v=view();
+  const dkey=()=>{const d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();};
+  const emos=[["😊","开心"],["😢","难过"],["😡","生气"],["😴","疲惫"],["🤩","兴奋"],["😨","害怕"],["🤗","温暖"],["🥳","超棒"]];
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">😊 心情日记</h2><div class="sub">每天记录一次心情（+2积分）</div><div class="card center"><div class="clr" id="emoPick"></div><input class="ans" id="moodText" placeholder="今天想说点什么（可选）"><div id="moodDone"></div></div><h2 class="t" style="font-size:18px">本月日历</h2><div class="card"><div class="cal" id="cal"></div></div>';
+  const pick=document.getElementById("emoPick");
+  emos.forEach(e=>{const s=$('<span class="emo"></span>');s.textContent=e[0];s.title=e[1];s.onclick=()=>{pick.querySelectorAll(".emo").forEach(x=>x.classList.remove("sel"));s.classList.add("sel");s.dataset.e=e[0];const txt=document.getElementById("moodText").value.trim();S.mood[dkey()]={e:e[0],t:txt};save();addPoints(2,"心情日记");document.getElementById("moodDone").innerHTML='<div class="feedback ok">已记录今天的心情 '+e[0]+' +2</div>';drawCal();};pick.appendChild(s);});
+  if(S.mood[dkey()])document.getElementById("moodDone").innerHTML='<div class="feedback ok">今天已记录：'+S.mood[dkey()].e+'</div>';
+  function drawCal(){const cal=document.getElementById("cal");cal.innerHTML='<div class="hd">日</div><div class="hd">一</div><div class="hd">二</div><div class="hd">三</div><div class="hd">四</div><div class="hd">五</div><div class="hd">六</div>';const d=new Date();const y=d.getFullYear(),m=d.getMonth();const first=new Date(y,m,1).getDay();const days=new Date(y,m+1,0).getDate();for(let i=0;i<first;i++)cal.appendChild($('<div></div>'));for(let dd=1;dd<=days;dd++){const c=$('<div></div>');const k=y+"-"+(m+1)+"-"+dd;c.textContent=S.mood[k]?S.mood[k].e:dd;cal.appendChild(c);}}
+  drawCal();
+  return v;
+});
+
+/* ============================ 打卡统计 ============================ */
+reg("stats",()=>{
+  const v=view();
+  const wk=weekKey();
+  // weekly bar from records
+  const days=[0,0,0,0,0,0,0];
+  S.recIn.forEach(r=>{const d=new Date(r.time.replace(/-/g,"/"));const idx=(d.getDay()+6)%7;days[idx]+=r.n;});
+  let todayMods="";
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">📊 打卡统计</h2>'+
+    '<div class="card"><div class="qtext">今日学习汇总</div><div class="muted">累计：⭐'+S.stars+' Ⓙ'+S.points+' 🪙'+S.coins+'</div><div class="muted">本周打卡：'+(S.checkin[wk]?S.checkin[wk].filter(Boolean).length:0)+'/7 天</div></div>'+
+    '<div class="card"><div class="qtext">本周积分柱状图</div><canvas id="stCv" width="320" height="180" style="background:#f7f5ff;border-radius:12px"></canvas></div>'+
+    '<div class="card"><div class="qtext">最近获得记录</div><div id="stList"></div></div>';
+  const sl=document.getElementById("stList");S.recIn.slice(-10).reverse().forEach(r=>{const x=$('<div class="listrow" style="margin:4px 0"></div>');x.innerHTML='<span>'+r.t+' +'+r.n+' <span class="muted">'+r.src+'</span></span><span class="muted">'+r.time+'</span>';sl.appendChild(x);});
+  setTimeout(()=>{const cv=document.getElementById("stCv");if(!cv)return;const ctx=cv.getContext("2d");const max=Math.max(1,...days);const bw=320/7;days.forEach((d,i)=>{const h=d/max*150;ctx.fillStyle="#6C5CE7";ctx.fillRect(i*bw+8,170-h,bw-16,h);ctx.fillStyle="#3d3d52";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.fillText(["一","二","三","四","五","六","日"][i],i*bw+bw/2,178);});},50);
+  return v;
+});
+
+/* ============================ 奖励中心 ============================ */
+reg("reward",()=>{
+  const v=view();
+  v.innerHTML='<h2 class="t">🎁 奖励中心</h2><div class="sub">用积分兑换奖励（当前积分：'+S.points+'）</div><div class="card"><div class="grid3" id="rwGrid"></div></div>';
+  const g=document.getElementById("rwGrid");
+  D.rewards.forEach(r=>{const c=$('<div class="card" style="text-align:center;box-shadow:none;background:#f7f5ff;margin:6px"></div>');c.innerHTML='<div class="big">'+r[2]+'</div><div style="font-weight:700">'+r[0]+'</div><div class="muted">'+r[1]+'积分</div><button class="btn t sm" onclick="redeem('+r[1]+',\''+r[0]+'\')">兑换</button>';g.appendChild(c);});
+  window.redeem=function(cost,name){if(S.points<cost){toast("积分不够，继续学习赚积分吧！");return;}if(!confirm("确认用 "+cost+" 积分兑换「"+name+"」？"))return;addPoints(-cost,"兑换·"+name);toast("🎉 兑换成功："+name);router();};
+  return v;
+});
+
+/* ============================ 我的 ============================ */
+reg("mine",()=>{
+  const v=view();
+  v.innerHTML='<h2 class="t">👤 我的</h2><div class="grid2" style="padding:0 14px">'+
+    '<button class="subj cn" onclick="location.hash=\'#/pet\'"><span class="ic">🐶</span>我的宠物</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/wallet\'"><span class="ic">💰</span>我的财富</button>'+
+    '<button class="subj en" onclick="location.hash=\'#/homework\'"><span class="ic">📝</span>今天作业</button>'+
+    '<button class="subj sp" onclick="location.hash=\'#/mood\'"><span class="ic">😊</span>心情日记</button>'+
+    '<button class="subj cn" onclick="location.hash=\'#/stats\'"><span class="ic">📊</span>打卡统计</button>'+
+    '<button class="subj mt" onclick="location.hash=\'#/settings\'"><span class="ic">⚙️</span>设置</button>'+
+    '</div>';
+  return v;
+});
+
+/* ============================ 设置 ============================ */
+reg("settings",()=>{
+  const v=view();
+  v.innerHTML='<a class="back" onclick="location.hash=\'#/mine\'">← 我的</a><h2 class="t">⚙️ 设置</h2>'+
+    '<div class="card"><div class="qtext">积分规则（可调整每模块奖励）</div><div id="rulesBox"></div><button class="btn sm t" onclick="saveRules()">保存规则</button></div>'+
+    '<div class="card"><div class="qtext">数据管理</div><button class="btn sm" style="background:var(--red)" onclick="clearAll()">清除所有数据</button><div class="muted" style="margin-top:6px">会清空积分、作业、宠物等全部数据，需确认。</div></div>'+
+    '<div class="card"><div class="qtext">关于</div><div class="muted">🌟 小廖的学习工作台\n为二年级小朋友打造的有趣学习助手。所有数据保存在本机浏览器中。</div></div>';
+  const box=document.getElementById("rulesBox");
+  const defaultRules={pinyin:10,char:2,read:5,pic:5,word:3,anto:1,idiom:3,poem:5,mental:10,life:2,wordprob:3,think:3,enalpha:1,enword:2,endialog:3,ensong:5,spfit:3,spparent:3,spex:3,spplan:3};
+  if(!S.rules||Object.keys(S.rules).length===0)S.rules=defaultRules;
+  Object.keys(S.rules).forEach(k=>{const r=$('<div class="row" style="margin:4px 0"><span style="min-width:120px">'+k+'</span><input class="ans" style="width:80px" id="rl_'+k+'" type="number" value="'+S.rules[k]+'"></div>');box.appendChild(r);});
+  window.saveRules=function(){Object.keys(S.rules).forEach(k=>{S.rules[k]=parseInt(document.getElementById("rl_"+k).value,10)||0;});save();toast("✅ 规则已保存");};
+  window.clearAll=function(){if(confirm("确定清除所有数据？此操作不可恢复！")){localStorage.removeItem(KEY+"state");S=load();refreshTop();toast("已清除");router();}};
+  return v;
+});
+
+/* ============================ 启动 ============================ */
+refreshTop();
+router();
+</script>
+</body>
+</html>

@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#D4453A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LESLEY公司仓储">
+<title>LESLEY公司仓储</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/jpeg" href="logo.jpg">
+<style>
+:root{
+  --red:#D4453A;--red-light:#F5E6E4;--blue:#4A90C8;--blue-light:#E4EFF7;
+  --green:#6BAF5A;--green-light:#EDF5EA;--yellow:#F0C848;--yellow-light:#FCF5E4;
+  --yellow-badge:#FFF3CD;--purple:#9B7BC0;--purple-light:#F0EBF7;
+  --cream:#FAF6EE;--white:#FFF;--gray-50:#F9FAFB;--gray-100:#F3F4F6;
+  --gray-200:#E5E7EB;--gray-300:#D1D5DB;--gray-400:#9CA3AF;--gray-500:#6B7280;
+  --gray-600:#4B5563;--gray-700:#374151;--gray-800:#1F2937;--gray-900:#111827;
+  --danger:#EF4444;--danger-light:#FEE2E2;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05);--shadow:0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.12);
+  --radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-xl:20px
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;font-size:14px;color:var(--gray-800);background:var(--cream);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+input,textarea,select,button{font-family:inherit;font-size:inherit;outline:none;border:none}
+img{max-width:100%;display:block}
+#app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--cream);position:relative;padding-bottom:70px}
+.page{display:none;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Header */
+.app-header{background:linear-gradient(135deg,var(--red),#E85A4F);padding:16px 16px 20px;color:#fff;position:relative;overflow:hidden}
+.app-header::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08)}
+.app-header::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05)}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;position:relative;z-index:1}
+.header-title{font-size:18px;font-weight:700;letter-spacing:.5px}
+.header-actions{display:flex;gap:8px}
+.header-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;cursor:pointer;border:none;transition:background .2s}
+.header-btn:active{background:rgba(255,255,255,.35)}
+
+/* Search */
+.search-bar{position:relative;z-index:1}
+.search-input{width:100%;height:40px;border-radius:20px;background:rgba(255,255,255,.95);padding:0 16px 0 38px;font-size:14px;color:var(--gray-800);transition:all .2s}
+.search-input::placeholder{color:var(--gray-400)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:16px;pointer-events:none}
+
+/* Alert Banner */
+.alert-banner{margin:12px 16px 0;border-radius:var(--radius);overflow:hidden;display:none}
+.alert-banner.show{display:block}
+.alert-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.alert-header.expired{background:var(--danger-light);border-left:4px solid var(--danger)}
+.alert-header.warning{background:var(--yellow-badge);border-left:4px solid var(--yellow)}
+.alert-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.alert-title.expired{color:var(--danger)}.alert-title.warning{color:#B8860B}
+.alert-count{font-size:12px;background:rgba(0,0,0,.06);padding:2px 8px;border-radius:10px}
+.alert-list{padding:0 14px 10px;background:var(--white)}
+.alert-item{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-100);cursor:pointer}
+.alert-item:last-child{border-bottom:none}
+.alert-dot{width:8px;height:8px;border-radius:50%;margin-right:10px;flex-shrink:0}
+.alert-dot.red{background:var(--danger)}.alert-dot.yellow{background:var(--yellow)}
+.alert-info{flex:1;min-width:0}
+.alert-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-meta{font-size:11px;color:var(--gray-400);margin-top:2px}
+.alert-days{font-size:12px;font-weight:600;flex-shrink:0;margin-left:8px}
+.alert-days.red{color:var(--danger)}.alert-days.yellow{color:#B8860B}
+
+/* Module Grid */
+.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px}
+.module-card{background:var(--white);border-radius:var(--radius-lg);padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:all .2s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.module-card:active{transform:scale(.96)}
+.module-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff}
+.module-icon.m1{background:linear-gradient(135deg,var(--red),#E85A4F)}.module-icon.m2{background:linear-gradient(135deg,var(--blue),#6AAAD9)}
+.module-icon.m3{background:linear-gradient(135deg,var(--green),#8BC77A)}.module-icon.m4{background:linear-gradient(135deg,var(--yellow),#F5DB6A)}
+.module-icon.m5{background:linear-gradient(135deg,var(--purple),#B59BD4)}.module-icon.m6{background:linear-gradient(135deg,#E07050,#F09868)}
+.module-icon.m7{background:linear-gradient(135deg,#50B8D0,#70D0E8)}.module-icon.m8{background:linear-gradient(135deg,#7B68A0,#9B88C0)}
+.module-icon.m9{background:linear-gradient(135deg,#608060,#80A080)}
+.module-name{font-size:12px;font-weight:600;color:var(--gray-700);text-align:center}
+.module-count{font-size:11px;color:var(--gray-400);background:var(--gray-100);padding:1px 8px;border-radius:10px}
+
+/* Quick Add FAB on Home */
+.home-fab-row{display:flex;justify-content:center;padding:8px 16px 4px;gap:10px}
+.mini-fab{height:38px;padding:0 18px;border-radius:19px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;border:none;transition:all .2s;color:#fff}
+.mini-fab.primary{background:linear-gradient(135deg,var(--red),#E85A4F);box-shadow:0 2px 10px rgba(212,69,58,.35)}
+.mini-fab.success{background:linear-gradient(135deg,var(--green),#8BC77A);box-shadow:0 2px 10px rgba(107,175,90,.35)}
+.mini-fab:active{transform:scale(.95)}
+
+/* Category Tabs */
+.category-bar{display:flex;gap:8px;padding:12px 16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.category-bar::-webkit-scrollbar{display:none}
+.cat-tab{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent;white-space:nowrap}
+.cat-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.cat-tab:not(.active){background:var(--white);color:var(--gray-600);border-color:var(--gray-200)}
+.cat-add{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--white);border:2px dashed var(--gray-300);display:flex;align-items:center;justify-content:center;color:var(--gray-400);font-size:16px;cursor:pointer;align-self:center}
+
+/* Item List */
+.item-list{padding:12px 16px}
+.item-card{background:var(--white);border-radius:var(--radius);padding:12px;margin-bottom:10px;display:flex;gap:12px;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .2s;position:relative}
+.item-card:active{transform:scale(.98)}
+.item-img{width:64px;height:64px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item-img img{width:100%;height:100%;object-fit:cover}
+.item-img .placeholder-icon{font-size:28px;color:var(--gray-300)}
+.item-body{flex:1;min-width:0;display:flex;flex-direction-column;gap:4px}
+.item-name-row{display:flex;align-items:center;justify-content:space-between}
+.item-name{font-size:15px;font-weight:600;color:var(--gray-800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.item-qty{font-size:15px;font-weight:700;color:var(--red)}
+.item-location{font-size:12px;color:var(--gray-400);display:flex;align-items:center;gap:4px}
+.item-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.tag-expired{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--danger-light);color:var(--danger);font-weight:600}
+.tag-warning{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--yellow-badge);color:#B8860B;font-weight:600}
+.tag-cat{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gray-100);color:var(--gray-500)}
+
+/* FAB Button */
+.fab-btn{position:fixed;right:20px;bottom:80px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--red),#E85A4F);color:#fff;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(212,69,58,.4);cursor:pointer;border:none;z-index:100;transition:transform .2s}
+.fab-btn:active{transform:scale(.92)}
+
+/* Detail Page */
+.detail-header{position:relative}
+.detail-images{width:100%;height:260px;background:var(--gray-100);position:relative;overflow:hidden}
+.detail-images img{width:100%;height:100%;object-fit:cover}
+.image-dots{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.image-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.5)}
+.image-dot.active{background:#fff;width:18px;border-radius:3px}
+.detail-back{position:absolute;top:12px;left:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;z-index:2}
+.detail-info{padding:16px;background:var(--white);margin-top:-20px;border-radius:var(--radius-xl) var(--radius-xl) 0 0;position:relative;z-index:1}
+.detail-name{font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:4px}
+.detail-qty-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.detail-qty{font-size:28px;font-weight:800;color:var(--red)}
+.detail-qty-label{font-size:13px;color:var(--gray-500)}
+.detail-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-field{padding:8px 0;border-bottom:1px solid var(--gray-100)}
+.field-label{font-size:11px;color:var(--gray-400);margin-bottom:2px}
+.field-value{font-size:14px;color:var(--gray-700)}
+.field-value.expiry-expired{color:var(--danger);font-weight:600;background:var(--danger-light);padding:2px 6px;border-radius:4px}
+.field-value.expiry-warning{color:#B8860B;font-weight:600;background:var(--yellow-badge);padding:2px 6px;border-radius:4px}
+.detail-actions{display:flex;gap:8px;padding:16px;background:var(--white);margin-top:8px;flex-wrap:wrap}
+.action-btn{flex:1;min-width:calc(50% - 4px);height:44px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all .2s;border:none}
+.action-btn.primary{background:var(--red);color:#fff}.action-btn.success{background:var(--green);color:#fff}
+.action-btn.warning{background:var(--yellow);color:var(--gray-800)}.action-btn.default{background:var(--gray-100);color:var(--gray-700)}
+.action-btn.danger{background:var(--danger-light);color:var(--danger)}
+
+/* Record List */
+.record-section{background:var(--white);margin-top:8px;padding:16px}
+.record-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer}
+.record-title{font-size:16px;font-weight:700;color:var(--gray-800)}
+.record-toggle{color:var(--gray-400);font-size:12px;transition:transform .3s}
+.record-toggle.open{transform:rotate(180deg)}
+.record-list{display:none}.record-list.show{display:block}
+.record-item{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.record-item:last-child{border-bottom:none}
+.record-type{width:44px;height:24px;border-radius:12px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.record-type.in{background:var(--green-light);color:var(--green)}.record-type.out{background:var(--red-light);color:var(--red)}
+.record-type.consume{background:var(--yellow-badge);color:#B8860B}
+.record-detail{flex:1;margin-left:10px}
+.record-qty-change{font-size:14px;font-weight:600}
+.record-qty-change.in{color:var(--green)}.record-qty-change.out{color:var(--red)}.record-qty-change.consume{color:#B8860B}
+.record-note{font-size:11px;color:var(--gray-400);margin-top:2px}
+.record-time{font-size:11px;color:var(--gray-400);flex-shrink:0}
+.record-after{font-size:12px;color:var(--gray-500);flex-shrink:0;margin-left:8px;font-weight:500}
+
+/* Form Page */
+.form-page{padding:16px;background:var(--cream);min-height:100vh}
+.form-group{margin-bottom:16px}
+.form-label{font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:6px;display:block}
+.form-label .required{color:var(--red);margin-left:2px}
+.form-input,.form-textarea,.form-select{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--white);border:1.5px solid var(--gray-200);font-size:14px;color:var(--gray-800);transition:border-color .2s}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--red)}
+.form-textarea{min-height:80px;resize:vertical}
+.form-hint{font-size:11px;color:var(--gray-400);margin-top:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.submit-btn{width:100%;height:50px;border-radius:var(--radius);background:linear-gradient(135deg,var(--red),#E85A4F);color:#fff;font-size:16px;font-weight:700;cursor:pointer;border:none;margin-top:8px;transition:all .2s}
+.submit-btn:active{opacity:.9}
+.cancel-btn{width:100%;height:44px;border-radius:var(--radius);background:var(--white);color:var(--gray-600);font-size:14px;cursor:pointer;border:1.5px solid var(--gray-200);margin-top:8px}
+
+/* Media Upload */
+.media-upload{border:2px dashed var(--gray-300);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.media-upload:active{border-color:var(--red);background:var(--red-light)}
+.media-upload-icon{font-size:32px;color:var(--gray-300);margin-bottom:8px}
+.media-upload-text{font-size:13px;color:var(--gray-400)}
+.media-preview{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.media-thumb{width:72px;height:72px;border-radius:var(--radius-sm);object-fit:cover;position:relative;overflow:hidden}
+.media-thumb img{width:100%;height:100%;object-fit:cover}
+.media-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
+/* Stats Page */
+.stats-page{padding:16px;background:var(--cream);min-height:100vh}
+.time-filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.time-filters::-webkit-scrollbar{display:none}
+.time-filter-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+.time-filter-btn.active{background:var(--red);color:#fff;border-color:var(--red)}
+.time-filter-btn.custom{padding:0;overflow:hidden}
+.time-filter-date{border:none;background:transparent;font-size:13px;color:inherit;padding:6px 10px;width:100%;outline:none;font-family:inherit}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.stat-card{background:var(--white);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-num{font-size:22px;font-weight:800}
+.stat-num.in{color:var(--green)}.stat-num.out{color:var(--red)}.stat-num.net{color:var(--blue)}.stat-num.consume{color:#B8860B}
+.stat-label{font-size:11px;color:var(--gray-400);margin-top:2px}
+.chart-container{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:700;color:var(--gray-700);margin-bottom:12px}
+.chart-canvas{width:100%;height:200px}
+
+/* Records / Stats Detail Filters */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-select{flex:1;min-width:120px;padding:8px 12px;border-radius:var(--radius-sm);background:var(--white);border:1.5px solid var(--gray-200);font-size:13px;color:var(--gray-700)}
+
+/* Settings Page */
+.settings-page{padding:16px;background:var(--cream);min-height:100vh}
+.setting-group{background:var(--white);border-radius:var(--radius);margin-bottom:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--gray-100);cursor:pointer}
+.setting-item:last-child{border-bottom:none}
+.setting-item:active{background:var(--gray-50)}
+.setting-left{display:flex;align-items:center;gap:12px}
+.setting-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff}
+.setting-name{font-size:14px;font-weight:500;color:var(--gray-700)}
+.setting-desc{font-size:11px;color:var(--gray-400);margin-top:1px}
+.setting-arrow{color:var(--gray-300);font-size:14px}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--white);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:20px 16px 30px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:17px;font-weight:700;text-align:center;margin-bottom:20px;color:var(--gray-800)}
+.modal-actions{display:flex;gap:10px;margin-top:20px}
+.modal-btn{flex:1;height:44px;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;border:none}
+.modal-btn-cancel{background:var(--gray-100);color:var(--gray-600)}.modal-btn-confirm{background:var(--red);color:#fff}
+.modal-input{width:100%;padding:12px 14px;border-radius:var(--radius);background:var(--gray-50);border:1.5px solid var(--gray-200);font-size:14px;margin-bottom:12px}
+
+/* Toast */
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:13px;z-index:2000;opacity:0;transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-icon{font-size:56px;margin-bottom:12px;opacity:.3}
+.empty-text{font-size:15px;color:var(--gray-400)}
+.empty-sub{font-size:12px;color:var(--gray-300);margin-top:4px}
+
+/* Tab Bar */
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);display:flex;border-top:1px solid var(--gray-200);z-index:99;padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;cursor:pointer;transition:all .2s;position:relative}
+.tab-icon{font-size:22px;color:var(--gray-400);transition:color .2s}
+.tab-label{font-size:10px;color:var(--gray-400);transition:color .2s}
+.tab-item.active .tab-icon{color:var(--red)}.tab-item.active .tab-label{color:var(--red);font-weight:600}
+.tab-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:3px;background:var(--red);border-radius:0 0 3px 3px}
+
+/* Category Management Modal */
+.cat-modal-list{margin-bottom:16px}
+.cat-modal-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.cat-modal-name{font-size:14px;color:var(--gray-700)}
+.cat-modal-actions{display:flex;gap:8px}
+.cat-modal-btn{padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+.cat-modal-btn.delete{color:var(--danger);border-color:var(--danger-light);background:var(--danger-light)}
+
+/* Stock Action Modal */
+.stock-action-tabs{display:flex;margin-bottom:16px;border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--gray-200)}
+.stock-action-tab{flex:1;padding:10px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.stock-action-tab.active.in{background:var(--green-light);color:var(--green);border:1.5px solid var(--green)}
+.stock-action-tab.active.out{background:var(--red-light);color:var(--red);border:1.5px solid var(--red)}
+.stock-action-tab:not(.active){background:var(--white);color:var(--gray-500)}
+
+/* Confirm Dialog */
+.confirm-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:1100;display:none;align-items:center;justify-content:center}
+.confirm-overlay.show{display:flex}
+.confirm-box{background:var(--white);border-radius:var(--radius-lg);width:280px;padding:24px 20px;text-align:center}
+.confirm-msg{font-size:15px;color:var(--gray-700);line-height:1.5;margin-bottom:20px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btn{flex:1;height:40px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;border:none}
+
+/* ===== NEW: Export Preview Modal ===== */
+.export-preview{max-height:50vh;overflow-y:auto;background:var(--gray-50);border-radius:var(--radius);padding:12px;font-size:12px;font-family:monospace;white-space:pre-wrap;word-break:break-all;color:var(--gray-700)}
+.export-format-btns{display:flex;gap:8px;margin-bottom:16px}
+.export-format-btn{flex:1;padding:10px;border-radius:var(--radius);text-align:center;font-size:13px;font-weight:600;cursor:pointer;border:2px solid var(--gray-200);background:var(--white);color:var(--gray-700);transition:all .2s}
+.export-format-btn.active{border-color:var(--red);color:var(--red);background:var(--red-light)}
+.export-image-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.export-image-item{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;cursor:pointer}
+.export-image-item img{width:100%;height:100%;object-fit:cover}
+
+/* ===== NEW: Search History ===== */
+.search-history{padding:12px 16px 0}
+.search-history-title{font-size:12px;color:var(--gray-400);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.search-history-tags{display:flex;gap:6px;flex-wrap:wrap}
+.search-history-tag{padding:4px 12px;border-radius:14px;font-size:12px;background:var(--white);color:var(--gray-600);border:1px solid var(--gray-200);cursor:pointer;transition:all .2s}
+.search-history-tag:active{background:var(--red);color:#fff;border-color:var(--red)}
+.search-clear-btn{font-size:11px;color:var(--gray-400);cursor:pointer}
+
+/* ===== NEW: Consume (Daily Usage) Page ===== */
+.consume-form{background:var(--white);border-radius:var(--radius-lg);padding:16px;margin:12px 16px;box-shadow:var(--shadow)}
+.consume-search-result{max-height:200px;overflow-y:auto;margin-top:8px}
+.consume-match-item{display:flex;align-items:center;padding:10px 8px;border-bottom:1px solid var(--gray-100);cursor:pointer;gap:10px}
+.consume-match-item:last-child{border-bottom:none}
+.consume-match-item:active{background:var(--gray-50)}
+.consume-match-img{width:40px;height:40px;border-radius:var(--radius-sm);object-fit:cover;background:var(--gray-100);flex-shrink:0}
+.consume-match-info{flex:1;min-width:0}
+.consume-match-name{font-size:14px;font-weight:600;color:var(--gray-800)}
+.consume-match-meta{font-size:11px;color:var(--gray-400)}
+.consume-match-qty{font-size:14px;font-weight:700;color:var(--red)}
+
+/* ===== NEW: Homepage Section Management ===== */
+.section-manage-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-100)}
+.section-manage-name{font-size:14px;color:var(--gray-700)}
+.section-manage-actions{display:flex;gap:6px}
+.section-manage-btn{padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-600)}
+
+/* ===== Region Manager (rename/add/remove areas) ===== */
+.region-manage-list{max-height:260px;overflow-y:auto;margin:4px 0}
+.region-manage-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.region-manage-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0}
+.region-manage-body{flex:1;min-width:0}
+.region-manage-name{font-size:14px;font-weight:600;color:var(--gray-800)}
+.region-manage-actions{display:flex;gap:6px;flex-shrink:0}
+.region-btn{padding:5px 12px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;border:1px solid var(--gray-200);background:var(--white);color:var(--gray-700)}
+.region-btn.delete{color:var(--red);border-color:#f3c0bd}
+.region-btn.add{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ===== Consume date bar ===== */
+.consume-date-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--white);
+  margin:0 16px;border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.consume-date-label{font-size:13px;color:var(--gray-600);font-weight:600}
+.consume-date-input{flex:1;padding:8px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-800)}
+.consume-date-today{padding:8px 14px;border:none;border-radius:var(--radius-sm);background:var(--red);color:#fff;font-size:13px;cursor:pointer}
+
+/* ===== Consume record table ===== */
+.consume-cat-summary{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.consume-cat-chip{display:flex;align-items:center;gap:5px;background:var(--yellow-light);color:#8a6d1a;
+  padding:4px 10px;border-radius:12px;font-size:12px}
+.consume-cat-chip strong{font-weight:700}
+.consume-table{border:1px solid var(--gray-100);border-radius:var(--radius);overflow:hidden}
+.consume-row{display:grid;grid-template-columns:1.4fr 1fr 0.6fr 0.7fr;align-items:center;gap:6px;
+  padding:9px 10px;border-bottom:1px solid var(--gray-100);font-size:12px}
+.consume-row:last-child{border-bottom:none}
+.consume-row.consume-head{background:var(--gray-50);font-weight:700;color:var(--gray-500);font-size:11px}
+.consume-name{font-size:13px;font-weight:600;color:var(--gray-800);display:flex;flex-direction:column}
+.consume-note{font-size:11px;font-weight:400;color:var(--gray-400);margin-top:2px}
+.consume-meta{font-size:12px;color:var(--gray-500)}
+.consume-qty{font-size:14px;font-weight:700;color:var(--red)}
+.consume-time{font-size:12px;color:var(--gray-400);text-align:right}
+
+/* ===== Name suggestion dropdown (add item) ===== */
+.name-suggest{position:relative}
+.suggest-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--gray-200);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow);z-index:30;max-height:200px;overflow-y:auto;margin-top:2px}
+.suggest-item{padding:10px 12px;font-size:14px;color:var(--gray-800);cursor:pointer;border-bottom:1px solid var(--gray-100)}
+.suggest-item:last-child{border-bottom:none}
+.suggest-item:active{background:var(--gray-50)}
+.suggest-item .suggest-qty{float:right;font-size:12px;color:var(--gray-400)}
+
+/* ===== Today's Activity Card (今日动态) ===== */
+.today-activity{background:var(--white);border-radius:var(--radius-lg);margin:12px 16px;padding:16px;box-shadow:var(--shadow-sm)}
+.today-activity-title{font-size:15px;font-weight:700;color:var(--gray-800);margin-bottom:12px}
+.today-stats-row{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--gray-600);flex-wrap:wrap;line-height:1.8}
+.today-stat-num{font-weight:700;font-size:16px}
+.today-stat-num.in{color:var(--green)}.today-stat-num.out{color:var(--red)}
+.today-stat-num.new{color:var(--blue)}.today-stat-num.alert{color:var(--danger)}
+.today-stat-sep{color:var(--gray-300);margin:0 4px}
+
+/* ===== Stock Alert Badge on Header ===== */
+.stock-alert-badge{position:absolute;top:6px;right:42px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center;z-index:2}
+.stock-alert-badge:empty{display:none}
+
+/* ===== Product Card Layout v6 (红框修正：清晰分区) ===== */
+.prod-card{background:var(--white);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);cursor:pointer;transition:all .15s;position:relative;border:1px solid #f0f0f0}
+.prod-card:active{transform:scale(.985);background:#fafafa}
+
+/* 左侧图标 */
+.prod-card-img{width:76px;height:76px;border-radius:14px;background:#f5f6f8;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border:1px solid #eee}
+.prod-card-img img{width:100%;height:100%;object-fit:cover}
+.prod-card-img .placeholder-icon{font-size:34px;opacity:.45}
+
+/* 中间内容区 — 每行独立、不重叠 */
+.prod-card-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:0;overflow:hidden}
+/* 第1行：产品名称（大字、清晰） */
+.prod-card-name{font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+/* 第2行：条码/ID */
+.prod-card-sku{font-size:12px;color:#999;font-family:monospace;margin-bottom:5px;letter-spacing:.3px}
+/* 第3行：分类标签 */
+.prod-card-cat-tag{display:inline-block;font-size:11.5px;padding:2.5px 10px;border-radius:20px;font-weight:600;margin-bottom:6px;align-self:flex-start}
+/* 第4行：位置（底部） */
+.prod-card-location{font-size:12.5px;color:#888;display:flex;align-items:center;gap:4px;margin-top:auto;padding-top:7px;border-top:1px dashed #eee;width:100%;box-sizing:border-box}
+
+/* 右侧区域 — 库存数+状态垂直排列 */
+.prod-card-right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:0;min-width:64px;padding-top:2px}
+.prod-card-qty-row{display:flex;align-items:baseline;gap:2px}
+.prod-card-qty-label{font-size:11px;color:#aaa;font-weight:500}
+.prod-card-qty{font-size:30px;font-weight:800;line-height:1.05;letter-spacing:-.8px}
+.prod-card-qty.normal{color:var(--blue)}.prod-card-qty.low{color:#E07050}
+.prod-card-qty-unit{font-size:12px;color:#bbb;font-weight:500}
+.prod-card-status{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;margin-top:5px}
+.prod-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.prod-status-dot.ok{background:var(--green)}.status-text.ok{color:var(--green)}
+.prod-status-dot.warn{background:#E07050}.status-text.warn{color:#E07050}
+
+/* ===== Scan UI ===== */
+.scan-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:2000;display:none;flex-direction:column}
+.scan-overlay.show{display:flex}
+.scan-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,.7);color:#fff;z-index:1}
+.scan-header-title{font-size:16px;font-weight:600}
+.scan-close-btn{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.scan-video-container{flex:1;position:relative;overflow:hidden}
+.scan-video{width:100%;height:100%;object-fit:cover}
+.scan-hint{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;text-align:center;background:rgba(0,0,0,.5);padding:8px 20px;border-radius:20px;pointer-events:none}
+.scan-result-bar{padding:12px 16px;background:var(--white);display:none;align-items:center;gap:10px}
+.scan-result-bar.show{display:flex}
+.scan-result-text{flex:1;font-size:14px;color:var(--gray-800)}
+.scan-btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;border:none}
+.scan-btn-primary{background:var(--red);color:#fff}
+.scan-btn-cancel{background:var(--gray-100);color:var(--gray-600)}
+.scan-footer{display:flex;gap:10px;padding:12px 16px;background:rgba(0,0,0,.75);z-index:1}
+.scan-footer .scan-btn{flex:1;padding:13px;border-radius:10px;font-size:14px;font-weight:600}
+
+/* ===== Settings: Alert Threshold ===== */
+.threshold-setting{display:flex;align-items:center;gap:10px;padding:14px 16px}
+.threshold-input{width:80px;padding:8px 12px;border-radius:var(--radius-sm);border:1.5px solid var(--gray-200);font-size:15px;text-align:center;font-weight:700;color:var(--red)}
+
+/* ===== Module Page Filter Tabs (全部/正常/预警) ===== */
+.stock-filter-tabs{display:flex;gap:8px;padding:8px 16px 0}
+.stock-tab{flex-shrink:0;padding:5px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-200);background:var(--white);color:var(--gray-600);transition:all .2s}
+.stock-tab.active{background:var(--red);color:#fff;border-color:var(--red)}
+.stock-tab.warn-active{background:var(--yellow);color:#8a6d1a;border-color:var(--yellow)}
+.scan-manual{display:none;gap:8px;padding:10px 16px;background:rgba(0,0,0,.82);z-index:1}
+.scan-manual-input{flex:1;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.96);font-size:14px;color:#222}
+.scan-manual-input::placeholder{color:#999}
+
+/* 扫描取景框 */
+.scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:72%;max-width:300px;height:170px;border:2px solid rgba(255,255,255,.95);border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.4);pointer-events:none;z-index:6}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:26px;height:26px;border:3px solid #2dd4bf}
+.scan-frame::before{top:-3px;left:-3px;border-right:none;border-bottom:none;border-top-left-radius:10px}
+.scan-frame::after{bottom:-3px;right:-3px;border-left:none;border-top:none;border-bottom-right-radius:10px}
+.scan-line{position:absolute;left:8px;right:8px;top:10%;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#2dd4bf,transparent);animation:scanMove 1.8s ease-in-out infinite}
+@keyframes scanMove{0%{top:10%}50%{top:88%}100%{top:10%}}
+#scanReader video{width:100%!important;height:100%!important;object-fit:cover!important;display:block}
+#scanReader canvas{display:none}
+
+/* ====== Auth Modal Styles ====== */
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-box{background:#fff;border-radius:16px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.18)}
+.auth-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--red);color:#fff}
+.auth-title{font-size:17px;font-weight:700}
+.auth-close-btn{background:none;color:#fff;font-size:22px;padding:4px 8px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--gray-200)}
+.auth-tab{flex:1;padding:12px;font-size:15px;font-weight:600;color:var(--gray-500);background:none;border-bottom:2px solid transparent;transition:all .2s}
+.auth-tab.active{color:var(--red);border-bottom-color:var(--red)}
+.auth-body{padding:18px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:13px;font-weight:600;color:var(--gray-700);margin-bottom:5px}
+.auth-field input{width:100%;padding:11px 13px;border:1.5px solid var(--gray-300);border-radius:10px;font-size:15px;background:var(--gray-50);transition:border-color .2s}
+.auth-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(212,69,58,.12)}
+.auth-btn-primary{width:100%;padding:12px;background:var(--red);color:#fff;border-radius:10px;font-size:16px;font-weight:700;margin-top:6px;transition:opacity .2s}
+.auth-btn-primary:active{opacity:.85}
+.auth-error{margin-top:10px;padding:10px 12px;background:var(--danger-light);color:var(--danger);border-radius:8px;font-size:13px;display:block}
+.auth-footer-text{text-align:center;padding:14px;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-100)}
+
+/* Cloud bar (logged-in top bar) */
+.cloud-bar{position:fixed;top:0;left:0;right:0;z-index:998;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.cloud-status{font-weight:600}
+.cloud-actions{display:flex;gap:6px}
+.cloud-btn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:600;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.35)}
+.cloud-btn-danger{background:rgba(239,68,68,.25);border-color:rgba(239,68,68,.4)}
+
+.scan-hint{z-index:7!important}
+.scan-footer,.scan-result-bar,.scan-manual{z-index:8;position:relative}
+</style>
+<!-- 扫码识别库改为懒加载（见 ensureZxing / ensureQr），避免 700KB 同步脚本拖慢首屏 -->
+<link rel="prefetch" href="./zxing.min.js" as="script">
+<!-- Supabase JS SDK（本地内置，避免 CDN 被墙导致页面卡死无法打开） -->
+<script defer src="./supabase.min.js"></script>
+<!-- 全局错误兜底：任何脚本报错都显示红条而不是白屏，方便用户截图反馈 -->
+<script>
+window.addEventListener('error', function(e){
+  try{
+    var msg = (e && e.message) ? e.message : '未知脚本错误';
+    var bar = document.getElementById('errBar');
+    if(!bar){
+      bar = document.createElement('div');
+      bar.id = 'errBar';
+      bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#dc2626;color:#fff;padding:10px 14px;font-size:13px;line-height:1.5;white-space:pre-wrap;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+      (document.body || document.documentElement).appendChild(bar);
+    }
+    bar.textContent = '⚠️ 页面脚本出错（请截图发给助理）：' + msg;
+  }catch(_){}
+});
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box" id="modalBox"></div></div>
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn modal-btn-cancel" onclick="App._resolveConfirm(false)">取消</button>
+      <button class="confirm-btn modal-btn-confirm" id="confirmOkBtn" onclick="App._resolveConfirm(true)">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 云端同步 / 登录弹窗 ====== -->
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-title" id="authTitle">登录 LESLEY 云端</div>
+      <button class="auth-close-btn" onclick="App.hideAuth()">✕</button>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="authTabLogin" onclick="App.switchAuthTab('login')">登录</button>
+      <button class="auth-tab" id="authTabRegister" onclick="App.switchAuthTab('register')">注册</button>
+    </div>
+    <div class="auth-body">
+      <div class="auth-form" id="authLoginForm">
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>密码</label>
+          <input type="password" id="authPassword" placeholder="至少6位" autocomplete="current-password">
+        </div>
+        <button class="auth-btn-primary" id="authLoginBtn" onclick="App.handleLogin()">登录</button>
+        <div class="auth-error" id="authError" style="display:none"></div>
+      </div>
+      <div class="auth-form" id="authRegisterForm" style="display:none">
+        <div class="auth-field">
+          <label>邮箱</label>
+          <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label>密码（至少6位）</label>
+          <input type="password" id="regPassword" placeholder="设置密码" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <label>确认密码</label>
+          <input type="password" id="regPassword2" placeholder="再输一次密码" autocomplete="new-password">
+        </div>
+        <button class="auth-btn-primary" id="authRegBtn" onclick="App.handleRegister()">注册</button>
+        <div class="auth-error" id="regError" style="display:none"></div>
+      </div>
+    </div>
+    <div class="auth-footer-text">数据加密存储在云端，多设备自动同步</div>
+  </div>
+</div>
+
+<!-- 已登录状态栏（顶部） -->
+<div class="cloud-bar" id="cloudBar" style="display:none">
+  <span class="cloud-status" id="cloudStatus">☁️ 已连接云端</span>
+  <div class="cloud-actions">
+    <button class="cloud-btn" onclick="App.syncNow()" title="立即同步">🔄 同步</button>
+    <button class="cloud-btn cloud-btn-danger" onclick="App.handleLogout()" title="退出登录">退出</button>
+  </div>
+</div>
+
+<!-- 扫码层 -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-header">
+    <div class="scan-header-title">📷 扫码录入</div>
+    <button class="scan-close-btn" onclick="App.stopScan()">✕</button>
+  </div>
+  <div class="scan-video-container">
+    <div id="scanReader" style="width:100%;height:100%"></div>
+    <div class="scan-frame"><div class="scan-line"></div></div>
+      <div class="scan-hint" id="scanHint">将条码/二维码对准取景框…</div>
+    </div>
+    <div class="scan-manual" id="scanManual">
+      <input class="scan-manual-input" id="scanManualInput" type="text" placeholder="相机/相册识别不了？手动输入条码后点「使用」" onkeydown="if(event.key==='Enter')App.useManualScan()">
+      <button type="button" class="scan-btn scan-btn-primary" onclick="App.useManualScan()">使用</button>
+    </div>
+    <div class="scan-footer">
+      <button type="button" class="scan-btn scan-btn-cancel" onclick="App.scanFromFile()">📁 从相册识别</button>
+      <input type="file" id="scanFileInput" accept="image/*" style="display:none" onchange="App.onScanFilePicked(event)">
+    </div>
+    <div class="scan-result-bar" id="scanResultBar">
+    <div class="scan-result-text" id="scanResultText"></div>
+    <button class="scan-btn scan-btn-primary" onclick="App.useScanResult()">使用</button>
+  </div>
+</div>
+
+<script>
+const App = (() => {
+  // ---- Constants ----
+  let MODULES = [
+    {id:'finished',name:'成品区',icon:'📦',cls:'m1'},
+    {id:'semi',name:'半成品区',icon:'🔧',cls:'m2'},
+    {id:'packing',name:'包材区',icon:'🎁',cls:'m3'},
+    {id:'boxes',name:'盒子区',icon:'📦',cls:'m4'},
+    {id:'labels',name:'标签区',icon:'🏷️',cls:'m5'},
+    {id:'parts',name:'配件区',icon:'⚙️',cls:'m6'},
+    {id:'other',name:'其他区',icon:'📋',cls:'m7'},
+    {id:'tools',name:'工具区',icon:'🛠️',cls:'m8'},
+    {id:'misc',name:'杂物区',icon:'🗄️',cls:'m9'}
+  ];
+  const MODULE_CLASSES = ['m1','m2','m3','m4','m5','m6','m7','m8','m9','m1','m2','m3','m4','m5','m6','m7','m8','m9'];
+  const MODULE_ICONS = ['📦','🔧','🎁','📦','🏷️','⚙️','📋','🛠️','🗄️','📊','📁','🗃️','🔩','🧰','📦','🍱','📦','💼'];
+  const DEFAULT_MODULES = JSON.parse(JSON.stringify(MODULES));
+
+  // ---- Modules (regions) persistence: editable + rename/add/remove ----
+  async function loadModules(){
+    try{ const saved=await dbOp('modules','readonly',s=>s.getAll()); if(saved&&saved.length) return saved; }catch(e){}
+    try{ const ls=JSON.parse(localStorage.getItem('lw_modules')||'null'); if(ls&&ls.length) return ls; }catch(e){}
+    return DEFAULT_MODULES.map(m=>({...m}));
+  }
+  async function saveModules(){
+    try{
+      await dbOp('modules','readwrite',s=>s.clear());
+      for(const m of MODULES) await dbOp('modules','readwrite',s=>s.put(m));
+    }catch(e){}
+    try{ localStorage.setItem('lw_modules', JSON.stringify(MODULES)); }catch(e){}
+  }
+  async function addModule(name, icon){
+    name=(name||'').trim(); if(!name) return;
+    const cls=MODULE_CLASSES[MODULES.length % MODULE_CLASSES.length];
+    const m={id:'mod_'+makeId(), name, icon:icon||'📦', cls};
+    MODULES.push(m); await saveModules();
+  }
+  async function renameModule(id, name){
+    name=(name||'').trim(); if(!name) return;
+    const m=MODULES.find(x=>x.id===id); if(m){ m.name=name; await saveModules(); }
+  }
+  async function removeModule(id){
+    MODULES=MODULES.filter(m=>m.id!==id);
+    // cascade: delete items, categories, records of this module
+    for(const it of state.items.filter(i=>i.moduleId===id)){ try{ await deleteItem(it.id); }catch(e){} }
+    const cats=await getCategories(id); for(const c of cats){ try{ await deleteCategory(c.id); }catch(e){} }
+    await saveModules();
+  }
+
+  const DB_NAME = 'LesleyWarehouseDB';
+  const DB_VERSION = 3;
+  let db = null;
+
+  // ---- localStorage fallback (when IndexedDB is unavailable, e.g. file:// preview / private mode) ----
+  const LW_KEYS = { items:'lw_items', records:'lw_records', categories:'lw_categories', homeSections:'lw_homeSections', modules:'lw_modules' };
+  const _loadLS = (s) => { try { return JSON.parse(localStorage.getItem(LW_KEYS[s]) || '[]'); } catch(e) { return []; } };
+  const _saveLS = (s, a) => { try { localStorage.setItem(LW_KEYS[s], JSON.stringify(a)); } catch(e) {} };
+
+  // ---- State ----
+  let state = {
+    currentPage: 'home',
+    currentModule: null,
+    currentItem: null,
+    currentCategory: null,
+    searchQuery: '',
+    items: [],
+    records: [],
+    editingItem: null,
+    statsTimeRange: 'month',
+    statsCustomDate: '',
+    statsCustomDate: '',
+    recordFilterMod: '',
+    recordFilterType: '',
+    recordFilterCat: '',
+    searchFilterMod: '',
+    searchFilterCat: '',
+    consumeModuleId: '',
+    consumeCategoryId: '',
+    consumeSearchQuery: '',
+    consumeViewDate: '',
+    addItemNameSuggest: '',
+    exportFormat: 'json',
+    homeSections: ['todayActivity','stockAlert','modules','expiryAlert'], // customizable homepage sections (今日动态+库存预警默认开启)
+    searchHistory: [],
+    lowStockThreshold: 10, // default low stock alert threshold
+    stockFilterStatus: '', // '' | 'normal' | 'warn' — for module page filter
+    scanMode: '', // 'quick-add' | 'consume' — which page initiated scan
+    scanResult: null, // last scanned barcode text
+  };
+
+  let _confirmResolve = null;
+
+  // ---- IndexedDB Setup (v2 adds homeSections & searchHistory stores) ----
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains('items')) {
+          const s = d.createObjectStore('items', {keyPath: 'id'});
+          s.createIndex('moduleId','moduleId',{unique:false});
+          s.createIndex('categoryId','categoryId',{unique:false});
+          s.createIndex('name','name',{unique:false});
+          s.createIndex('expiryDate','expiryDate',{unique:false});
+        }
+        if (!d.objectStoreNames.contains('records')) {
+          const s = d.createObjectStore('records', {keyPath: 'id'});
+          s.createIndex('itemId','itemId',{unique:false});
+          s.createIndex('moduleId','moduleId',{unique:false});
+          s.createIndex('timestamp','timestamp',{unique:false});
+          s.createIndex('type','type',{unique:false});
+        }
+        if (!d.objectStoreNames.contains('categories')) {
+          d.createObjectStore('categories', {keyPath: 'id'});
+        }
+        if (!d.objectStoreNames.contains('homeSections')) {
+          d.createObjectStore('homeSections', {keyPath: 'id'});
+        }
+        if (!d.objectStoreNames.contains('modules')) {
+          d.createObjectStore('modules', {keyPath: 'id'});
+        }
+      };
+      req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+      req.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  function dbOp(storeName, mode, fn) {
+    // ---- IndexedDB path ----
+    if (db) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, mode);
+        const store = tx.objectStore(storeName);
+        const result = fn(store);
+        if (result && result.request) {
+          result.request.onsuccess = () => resolve(result.request.result);
+          result.request.onerror = () => reject(result.request.error);
+        } else if (result instanceof IDBRequest) {
+          result.onsuccess = () => resolve(result.result);
+          result.onerror = () => reject(result.error);
+        } else {
+          tx.oncomplete = () => resolve(result);
+          tx.onerror = () => reject(tx.error);
+        }
+      });
+    }
+    // ---- localStorage fallback path ----
+    return new Promise((resolve, reject) => {
+      const working = _loadLS(storeName);
+      const mkReq = (value) => ({ result: value, onsuccess: null, onerror: null, error: null });
+      const fakeStore = {
+        getAll: () => mkReq(working.slice()),
+        get: (id) => mkReq(working.find(x => x.id === id)),
+        add: (val) => { working.push(val); return mkReq(val); },
+        put: (val) => { const i = working.findIndex(x => x.id === val.id); if (i >= 0) working[i] = val; else working.push(val); return mkReq(val); },
+        delete: (id) => { const i = working.findIndex(x => x.id === id); if (i >= 0) working.splice(i, 1); return mkReq(undefined); },
+        index: (name) => ({ getAll: (val) => mkReq(working.filter(x => x[name] === val)), openCursor: () => mkReq(null) })
+      };
+      let req;
+      try { req = fn(fakeStore); } catch (e) { reject(e); return; }
+      const finalReq = (req && req.request) ? req.request : req;
+      Promise.resolve().then(() => {
+        _saveLS(storeName, working);
+        if (finalReq && typeof finalReq.onsuccess === 'function') {
+          finalReq.onsuccess({ target: { result: finalReq.result } });
+        }
+        resolve(finalReq ? finalReq.result : undefined);
+      });
+    });
+  }
+
+  async function getAllItems() { return dbOp('items','readonly',s=>s.getAll()); }
+  async function getItem(id) { return dbOp('items','readonly',s=>s.get(id)); }
+
+  function makeId() { return Date.now().toString(36)+Math.random().toString(36).substr(2,5); }
+
+  async function addItem(item) {
+    item.id = makeId(); item.createdAt = new Date().toISOString(); item.updatedAt = item.createdAt;
+    const r = await dbOp('items','readwrite',s=>s.add(item));
+    schedulePush();
+    return r;
+  }
+  async function updateItem(item) { item.updatedAt = new Date().toISOString(); const r=await dbOp('items','readwrite',s=>s.put(item)); schedulePush(); return r; }
+
+  async function deleteItem(id) {
+    const recs = await getAllRecords();
+    for (const r of recs.filter(r => r.itemId === id)) {
+      await dbOp('records','readwrite', s => s.delete(r.id));
+    }
+    const r = await dbOp('items','readwrite', s => s.delete(id));
+    schedulePush();
+    return r;
+  }
+
+  async function addRecord(record) {
+    record.id = makeId(); record.timestamp = new Date().toISOString();
+    const r = await dbOp('records','readwrite',s=>s.add(record));
+    schedulePush();
+    return r;
+  }
+
+  async function getRecordsByItemId(itemId) {
+    const all = await getAllRecords();
+    return all.filter(r => r.itemId === itemId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  }
+  async function getAllRecords() { return dbOp('records','readonly',s=>s.getAll()); }
+
+  function indexGetAll(index,val){
+    if(index.getAll)return index.getAll(val);
+    const r=[];return new Promise((res,rej)=>{
+      const req=index.openCursor(IDBKeyRange.only(val));
+      req.onsuccess=e=>{const c=e.target.result;if(c){r.push(c.value);c.continue()}else res(r.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)))};
+      req.onerror=()=>rej(req.error);
+    });
+  }
+
+  // Categories
+  async function getCategories(moduleId) {
+    const all = await dbOp('categories','readonly',s=>s.getAll());
+    return all.filter(c=>c.moduleId===moduleId);
+  }
+  async function addCategory(moduleId,name) {
+    const c={id:makeId(),moduleId,name}; const r=await dbOp('categories','readwrite',s=>s.add(c)); schedulePush(); return r;
+  }
+  async function updateCategory(cat) { const r=await dbOp('categories','readwrite',s=>s.put(cat)); schedulePush(); return r; }
+  async function deleteCategory(id) { const r=await dbOp('categories','readwrite',s=>s.delete(id)); schedulePush(); return r; }
+
+  // Home Sections (customizable)
+  async function getHomeSections() {
+    try {
+      const all = await dbOp('homeSections','readonly',s=>s.getAll());
+      if(all.length === 0) return [{id:'default',sections:['todayActivity','stockAlert','modules','expiryAlert']}];
+      // 自动迁移：老用户配置补上今日动态+库存预警
+      const cfg = all[0];
+      const needed = ['todayActivity','stockAlert'];
+      let migrated = false;
+      for (const n of needed) { if (!cfg.sections.includes(n)) { cfg.sections.unshift(n); migrated = true; } }
+      if (migrated) { await saveHomeSections(cfg); }
+      return [cfg];
+    } catch(e) { return [{id:'default',sections:['todayActivity','stockAlert','modules','expiryAlert']}]; }
+  }
+  async function saveHomeSections(data) {
+    return dbOp('homeSections','readwrite',s=>s.put({id:'default',sections:data.sections}));
+  }
+
+  // ---- Search History (localStorage for simplicity) ----
+  function loadSearchHistory() {
+    try { return JSON.parse(localStorage.getItem('lw_search_history')||'[]'); } catch(e){return[];}
+  }
+  function saveSearchHistory(arr) {
+    localStorage.setItem('lw_search_history',JSON.stringify(arr.slice(0,30))); // keep last 30
+  }
+  function addSearchHistory(q) {
+    if(!q.trim())return;
+    const h=loadSearchHistory();
+    h.unshift(q.trim());
+    const filtered=[...new Set(h)]; // dedupe
+    saveSearchHistory(filtered);
+    state.searchHistory=filtered;
+  }
+
+  // ---- Data Export (multi-format + preview) ----
+  async function prepareExportData() {
+    const [items,records,catsRaw,modsRaw]=await Promise.all([
+      getAllItems(), getAllRecords(),
+      dbOp('categories','readonly',s=>s.getAll()),
+      loadModules()
+    ]);
+    return {version:3,exportTime:new Date().toISOString(),appName:'LESLEY公司仓储',items,records,categories:catsRaw,modules:modsRaw};
+  }
+
+  async function showExportPreview() {
+    const data = await prepareExportData();
+    showModal(`
+      <div class="modal-title">备份数据导出</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:12px;text-align:center">选择导出格式，预览数据后下载</div>
+      <div class="export-format-btns">
+        <div class="export-format-btn ${state.exportFormat==='json'?'active':''}" onclick="App.state.exportFormat='json';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📄 JSON</div>
+        <div class="export-format-btn ${state.exportFormat==='csv'?'active':''}" onclick="App.state.exportFormat='csv';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📊 CSV</div>
+        <div class="export-format-btn ${state.exportFormat==='images'?'active':''}" onclick="App.state.exportFormat='images';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">🖼️ 图片</div>
+        <div class="export-format-btn ${state.exportFormat==='xml'?'active':''}" onclick="App.state.exportFormat='xml';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📄 XML</div>
+        <div class="export-format-btn ${state.exportFormat==='xlsx'?'active':''}" onclick="App.state.exportFormat='xlsx';this.parentElement.querySelectorAll('.export-format-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">📊 Excel</div>
+      </div>
+      <div class="form-label">导出说明</div>
+      <div class="export-preview">${ state.exportFormat==='json' ? 'JSON：完整备份，含物品/记录/分类/模块及图片' : state.exportFormat==='csv' ? 'CSV：物品清单，Excel/WPS 可直接打开（不含图片）' : state.exportFormat==='images' ? '图片：逐张下载所有物品图片' : state.exportFormat==='xml' ? 'XML：结构化备份，含全部字段与图片，可被本应用重新导入' : 'Excel：含「物品 / 记录 / 分类 / 模块」四个工作表，Excel/WPS/Numbers 可打开' }</div>
+      <div style="font-size:12px;color:var(--gray-400);margin:8px 0">
+        📦 物品：${data.items.length}个 | 📋 记录：${data.records.length}条 | 🏷️ 分类：${data.categories.length}个
+      </div>
+      ${state.exportFormat==='images'?`
+        <div class="form-label">图片导出（共${data.items.filter(i=>i.images&&i.images.length).length}个有图物品）</div>
+        <div class="export-image-grid">${data.items.filter(i=>i.images&&i.images.length).slice(0,9).map(i=>`<div class="export-image-item"><img src="${i.images[0]}" alt="${escapeHtml(i.name)}"></div>`).join('')}</div>
+        <div style="font-size:11px;color:var(--gray-400)">点击下方导出将逐张下载所有物品图片</div>
+      `:''}
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.doExport()">下载导出文件</button>
+      </div>
+    `);
+  }
+
+  async function doExport() {
+    const data = await prepareExportData();
+    hideModal();
+
+    switch(state.exportFormat) {
+      case 'json': {
+        const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+        downloadBlob(blob,`LESLEY公司仓储备份_${formatDate(new Date(),'YYYYMMDD_HHmmss')}.json`);
+        toast('JSON备份已导出！');
+        break;
+      }
+      case 'csv': {
+        // Items CSV
+        let csv='\uFEFF物品名称,数量,存放位置,所属模块,分类,到货日期,到期时间,用途备注\n';
+        data.items.forEach(i=>{
+          const mod=MODULES.find(m=>m.id===i.moduleId)?.name||'';
+          csv+=`"${i.name}",${i.quantity},"${i.location||''}","${mod}","","${i.arrivalDate||''}","${i.expiryDate||''}","${(i.usageNote||'').replace(/"/g,'""')}"\n`;
+        });
+        downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`LESLEY公司仓储_物品列表_${formatDate(new Date(),'YYYYMMDD')}.csv`);
+        toast('CSV文件已导出！');
+        break;
+      }
+      case 'xml': {
+        const blob=new Blob([buildXml(data)],{type:'application/xml;charset=utf-8'});
+        downloadBlob(blob,`LESLEY公司仓储备份_${formatDate(new Date(),'YYYYMMDD_HHmmss')}.xml`);
+        toast('XML备份已导出！');
+        break;
+      }
+      case 'xlsx': {
+        const blob=buildXlsx(data);
+        downloadBlob(blob,`LESLEY公司仓储_${formatDate(new Date(),'YYYYMMDD')}.xlsx`);
+        toast('Excel文件已导出！');
+        break;
+      }
+      case 'images': {
+        // Download each image individually
+        const itemsWithImages=data.items.filter(i=>i.images&&i.images.length);
+        if(itemsWithImages.length===0){toast('没有图片可导出');return;}
+        toast(`开始导出 ${itemsWithImages.length} 个物品的图片...`);
+        let delay=0;
+        itemsWithImages.forEach((item,idx)=>{
+          item.images.forEach((src,imgIdx)=>{
+            setTimeout(()=>{
+              fetch(src).then(r=>r.blob()).then(blob=>{
+                const ext=src.includes('data:image/png')?'.png':src.includes('data:image/webp')?'.webp':'.jpg';
+                const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+                a.download=`${item.name.replace(/[/\\?%*:|"<>]/g,'_')}_${imgIdx+1}${ext}`;a.click();
+                URL.revokeObjectURL(a.href);
+              }).catch(()=>{});
+            },delay);
+            delay+=300;
+          });
+        });
+        toast(`共触发 ${itemsWithImages.reduce((s,i)=>s+i.images.length,0)} 张图片下载`);
+        break;
+      }
+    }
+  }
+
+  function downloadBlob(blob,filename){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Import
+
+  // ===== 多格式导出/导入辅助 =====
+  function colLetter(n){let s='';n++;while(n>0){s=String.fromCharCode(65+((n-1)%26))+s;n=Math.floor((n-1)/26);}return s;}
+  function colToNum(s){let n=0;for(let i=0;i<s.length;i++)n=n*26+(s.charCodeAt(i)-64);return n-1;}
+  function xmlEscape(s){if(s===null||s===undefined)return '';return String(s).replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));}
+  function resolveModuleId(name){if(!name)return 'finished';const m=MODULES.find(x=>x.name===name);if(m)return m.id;if(MODULES.find(x=>x.id===name))return name;return 'finished';}
+
+  function buildXml(data){
+    let x='<?xml version="1.0" encoding="UTF-8"?>\n<LESLEYWarehouseExport version="3" exportTime="'+xmlEscape(data.exportTime)+'">\n';
+    x+='  <items>\n';
+    (data.items||[]).forEach(i=>{
+      x+='    <item>\n';
+      x+='      <id>'+xmlEscape(i.id)+'</id>\n';
+      x+='      <name>'+xmlEscape(i.name)+'</name>\n';
+      x+='      <quantity>'+xmlEscape(i.quantity)+'</quantity>\n';
+      x+='      <moduleId>'+xmlEscape(i.moduleId)+'</moduleId>\n';
+      x+='      <moduleName>'+xmlEscape((MODULES.find(m=>m.id===i.moduleId)||{}).name||'')+'</moduleName>\n';
+      x+='      <categoryId>'+xmlEscape(i.categoryId)+'</categoryId>\n';
+      x+='      <location>'+xmlEscape(i.location)+'</location>\n';
+      x+='      <barcode>'+xmlEscape(i.barcode)+'</barcode>\n';
+      x+='      <arrivalDate>'+xmlEscape(i.arrivalDate)+'</arrivalDate>\n';
+      x+='      <expiryDate>'+xmlEscape(i.expiryDate)+'</expiryDate>\n';
+      x+='      <reminderDays>'+xmlEscape(i.reminderDays)+'</reminderDays>\n';
+      x+='      <usageNote>'+xmlEscape(i.usageNote)+'</usageNote>\n';
+      x+='      <supplierNote>'+xmlEscape(i.supplierNote)+'</supplierNote>\n';
+      x+='      <images>\n';
+      (i.images||[]).forEach(im=>{x+='        <image>'+xmlEscape(im)+'</image>\n';});
+      x+='      </images>\n';
+      x+='    </item>\n';
+    });
+    x+='  </items>\n';
+    x+='  <records>\n';
+    (data.records||[]).forEach(r=>{
+      x+='    <record>\n';
+      x+='      <id>'+xmlEscape(r.id)+'</id>\n';
+      x+='      <itemId>'+xmlEscape(r.itemId)+'</itemId>\n';
+      x+='      <moduleId>'+xmlEscape(r.moduleId)+'</moduleId>\n';
+      x+='      <type>'+xmlEscape(r.type)+'</type>\n';
+      x+='      <quantity>'+xmlEscape(r.quantity)+'</quantity>\n';
+      x+='      <remainingQty>'+xmlEscape(r.remainingQty)+'</remainingQty>\n';
+      x+='      <note>'+xmlEscape(r.note)+'</note>\n';
+      x+='      <timestamp>'+xmlEscape(r.timestamp)+'</timestamp>\n';
+      x+='    </record>\n';
+    });
+    x+='  </records>\n';
+    x+='  <categories>\n';
+    (data.categories||[]).forEach(c=>{
+      x+='    <category><id>'+xmlEscape(c.id)+'</id><moduleId>'+xmlEscape(c.moduleId)+'</moduleId><name>'+xmlEscape(c.name)+'</name></category>\n';
+    });
+    x+='  </categories>\n';
+    x+='  <modules>\n';
+    (data.modules||[]).forEach(m=>{
+      x+='    <module><id>'+xmlEscape(m.id)+'</id><name>'+xmlEscape(m.name)+'</name><icon>'+xmlEscape(m.icon)+'</icon></module>\n';
+    });
+    x+='  </modules>\n';
+    x+='</LESLEYWarehouseExport>\n';
+    return x;
+  }
+
+  const XLSX_COLS={
+    items:[['id','ID'],['name','物品名称'],['quantity','数量'],['moduleId','模块ID'],['moduleName','所属模块'],['categoryId','分类ID'],['location','存放位置'],['barcode','条码'],['arrivalDate','到货日期'],['expiryDate','到期时间'],['reminderDays','预警天数'],['usageNote','用途备注'],['supplierNote','供应商'],['imagesCount','图片数']],
+    records:[['timestamp','时间'],['itemId','物品ID'],['moduleId','模块ID'],['type','类型'],['quantity','数量'],['remainingQty','剩余'],['note','备注']],
+    categories:[['id','ID'],['moduleId','模块ID'],['name','名称']],
+    modules:[['id','ID'],['name','名称'],['icon','图标']]
+  };
+  function sheetXml(rows){
+    let c='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
+    rows.forEach((row,rIdx)=>{
+      c+='<row r="'+(rIdx+1)+'">';
+      row.forEach((cell,ci)=>{
+        if(cell===null||cell===undefined)cell='';
+        const ref=colLetter(ci)+(rIdx+1);
+        if(typeof cell==='number'||(cell!==''&&!isNaN(cell)&&rIdx>0)){
+          c+='<c r="'+ref+'"><v>'+cell+'</v></c>';
+        }else{
+          c+='<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+xmlEscape(cell)+'</t></is></c>';
+        }
+      });
+      c+='</row>';
+    });
+    c+='</sheetData></worksheet>';
+    return c;
+  }
+  function crc32(buf){
+    let c,t=[];for(let n=0;n<256;n++){c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}
+    let crc=0xFFFFFFFF;for(let i=0;i<buf.length;i++)crc=t[(crc^buf[i])&0xFF]^(crc>>>8);return (crc^0xFFFFFFFF)>>>0;
+  }
+  function buildXlsxZip(files){
+    const enc=new TextEncoder();const parts=[];const central=[];let offset=0;
+    files.forEach(f=>{
+      const data=enc.encode(f.content);const crc=crc32(data);const nb=enc.encode(f.name);
+      const lh=new Uint8Array(30+nb.length);const dv=new DataView(lh.buffer);
+      dv.setUint32(0,0x04034b50,true);dv.setUint16(4,20,true);dv.setUint16(6,0,true);dv.setUint16(8,0,true);
+      dv.setUint16(10,0,true);dv.setUint16(12,0,true);dv.setUint32(14,crc,true);
+      dv.setUint32(18,data.length,true);dv.setUint32(22,data.length,true);dv.setUint16(26,nb.length,true);dv.setUint16(28,0,true);
+      lh.set(nb,30);parts.push(lh,data);
+      const cd=new Uint8Array(46+nb.length);const cv=new DataView(cd.buffer);
+      cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);cv.setUint16(8,0,true);
+      cv.setUint16(10,0,true);cv.setUint16(12,0,true);cv.setUint32(14,crc,true);
+      cv.setUint32(18,data.length,true);cv.setUint32(22,data.length,true);cv.setUint16(26,nb.length,true);cv.setUint16(28,0,true);
+      cv.setUint32(42,offset,true);cd.set(nb,46);central.push(cd);
+      offset+=lh.length+data.length;
+    });
+    const cs=central.reduce((s,c)=>s+c.length,0);
+    const eo=new Uint8Array(22);const ev=new DataView(eo.buffer);
+    ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);
+    ev.setUint32(12,cs,true);ev.setUint32(16,offset,true);
+    parts.push.apply(parts,central);parts.push(eo);
+    return new Blob(parts,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  function buildXlsx(data){
+    const sheets=[
+      {name:'物品',rows:[XLSX_COLS.items.map(c=>c[1])].concat((data.items||[]).map(i=>XLSX_COLS.items.map(c=>{
+        if(c[0]==='moduleName')return (MODULES.find(m=>m.id===i.moduleId)||{}).name||'';
+        if(c[0]==='imagesCount')return (i.images?i.images.length:0);
+        return i[c[0]];
+      })))},
+      {name:'记录',rows:[XLSX_COLS.records.map(c=>c[1])].concat((data.records||[]).map(r=>XLSX_COLS.records.map(c=>r[c[0]])))},
+      {name:'分类',rows:[XLSX_COLS.categories.map(c=>c[1])].concat((data.categories||[]).map(c=>XLSX_COLS.categories.map(c2=>c[c2[0]])))},
+      {name:'模块',rows:[XLSX_COLS.modules.map(c=>c[1])].concat((data.modules||[]).map(m=>XLSX_COLS.modules.map(c=>m[c[0]])))}
+    ];
+    const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheets.map((s,idx)=>'<Override PartName="/xl/worksheets/sheet'+(idx+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>';
+    const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+    const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+sheets.map((s,idx)=>'<sheet name="'+xmlEscape(s.name)+'" sheetId="'+(idx+1)+'" r:id="rId'+(idx+1)+'"/>').join('')+'</sheets></workbook>';
+    const wbrels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,idx)=>'<Relationship Id="rId'+(idx+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(idx+1)+'.xml"/>').join('')+'</Relationships>';
+    const files=[{name:'[Content_Types].xml',content:ct},{name:'_rels/.rels',content:rels},{name:'xl/workbook.xml',content:wb},{name:'xl/_rels/workbook.xml.rels',content:wbrels}];
+    sheets.forEach((s,idx)=>{files.push({name:'xl/worksheets/sheet'+(idx+1)+'.xml',content:sheetXml(s.rows)});});
+    return buildXlsxZip(files);
+  }
+
+  function parseCsvText(text){
+    text=text.replace(/^\uFEFF/,'');
+    const rows=[];let row=[],field='',inQ=false;
+    for(let i=0;i<text.length;i++){
+      const ch=text[i];
+      if(inQ){
+        if(ch==='"'){ if(text[i+1]==='"'){field+='"';i++;} else inQ=false; }
+        else field+=ch;
+      }else{
+        if(ch==='"')inQ=true;
+        else if(ch===','){row.push(field);field='';}
+        else if(ch==='\n'){row.push(field);rows.push(row);row=[];field='';}
+        else if(ch==='\r'){}
+        else field+=ch;
+      }
+    }
+    if(field.length||row.length){row.push(field);rows.push(row);}
+    return rows;
+  }
+  function parseXmlText(text){
+    const doc=new DOMParser().parseFromString(text,'application/xml');
+    if(doc.querySelector('parsererror'))throw new Error('XML 解析失败');
+    const T=(el,tag)=>{const n=el.querySelector(tag);return n?n.textContent:'';};
+    const N=s=>{const n=parseInt(s);return isNaN(n)?0:n;};
+    const items=Array.from(doc.querySelectorAll('items > item')).map(it=>({
+      id:T(it,'id'),name:T(it,'name'),quantity:N(T(it,'quantity')),moduleId:T(it,'moduleId'),
+      categoryId:T(it,'categoryId'),location:T(it,'location'),barcode:T(it,'barcode'),
+      arrivalDate:T(it,'arrivalDate'),expiryDate:T(it,'expiryDate'),reminderDays:N(T(it,'reminderDays')),
+      usageNote:T(it,'usageNote'),supplierNote:T(it,'supplierNote'),
+      images:Array.from(it.querySelectorAll('images > image')).map(n=>n.textContent)
+    }));
+    const records=Array.from(doc.querySelectorAll('records > record')).map(r=>({
+      id:T(r,'id'),itemId:T(r,'itemId'),moduleId:T(r,'moduleId'),type:T(r,'type'),
+      quantity:N(T(r,'quantity')),remainingQty:N(T(r,'remainingQty')),note:T(r,'note'),timestamp:T(r,'timestamp')
+    }));
+    const categories=Array.from(doc.querySelectorAll('categories > category')).map(c=>({id:T(c,'id'),moduleId:T(c,'moduleId'),name:T(c,'name')}));
+    const modules=Array.from(doc.querySelectorAll('modules > module')).map(m=>({id:T(m,'id'),name:T(m,'name'),icon:T(m,'icon')}));
+    return {items,records,categories,modules};
+  }
+  function sheetXmlToRows(xml){
+    const rows=[];
+    const rowMatches=xml.match(/<row[^>]*>[\s\S]*?<\/row>/g)||[];
+    rowMatches.forEach(rm=>{
+      const tmp=[];let maxCol=0;
+      (rm.match(/<c[^>]*>[\s\S]*?<\/c>/g)||[]).forEach(cell=>{
+        const ref=(cell.match(/r="([A-Z]+)\d+"/)||[])[1];
+        const colIdx=colToNum(ref);
+        let val='';
+        if(/t="inlineStr"/.test(cell)){const t=cell.match(/<t[^>]*>([\s\S]*?)<\/t>/);if(t)val=t[1];}
+        else{const v=cell.match(/<v>([\s\S]*?)<\/v>/);if(v)val=v[1];}
+        tmp.push({colIdx,val});
+        if(colIdx>maxCol)maxCol=colIdx;
+      });
+      const arr=new Array(maxCol+1).fill('');
+      tmp.forEach(c=>arr[c.colIdx]=c.val);
+      rows.push(arr);
+    });
+    return rows;
+  }
+  async function inflateRaw(bytes){
+    const ds=new DecompressionStream('deflate-raw');
+    const w=ds.writable.getWriter();w.write(bytes);w.close();
+    const r=ds.readable.getReader();const chunks=[];let done=false;
+    while(!done){const x=await r.read();if(x.done){done=true;break;}chunks.push(x.value);}
+    let total=chunks.reduce((s,c)=>s+c.length,0);const merged=new Uint8Array(total);let o=0;
+    chunks.forEach(c=>{merged.set(c,o);o+=c.length;});
+    return new TextDecoder().decode(merged);
+  }
+  async function parseZipBuf(buf){
+    const dv=new DataView(buf);let eocd=-1;
+    for(let i=buf.byteLength-22;i>=0;i--){if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}}
+    if(eocd<0)throw new Error('不是有效的压缩包');
+    const cdOffset=dv.getUint32(eocd+16,true);const cdCount=dv.getUint16(eocd+10,true);
+    const files={};let p=cdOffset;
+    for(let i=0;i<cdCount;i++){
+      if(dv.getUint32(p,true)!==0x02014b50)break;
+      const method=dv.getUint16(p+10,true);const compSize=dv.getUint32(p+20,true);
+      const nameLen=dv.getUint16(p+28,true);const extraLen=dv.getUint16(p+30,true);
+      let name='';for(let j=0;j<nameLen;j++)name+=String.fromCharCode(buf[p+46+j]);
+      const localOff=dv.getUint32(p+42,true);
+      files[name]={method,compSize,localOff};p+=46+nameLen+extraLen;
+    }
+    const out={};
+    for(const name in files){
+      const f=files[name];const lh=new DataView(buf,f.localOff);
+      const lNameLen=lh.getUint16(26,true);const lExtraLen=lh.getUint16(28,true);
+      const dataStart=f.localOff+30+lNameLen+lExtraLen;
+      const bytes=new Uint8Array(buf,dataStart,f.compSize);
+      if(f.method===0){out[name]=new TextDecoder().decode(bytes);}
+      else if(f.method===8){try{out[name]=await inflateRaw(bytes);}catch(e){out[name]='';}}
+    }
+    return out;
+  }
+  async function parseXlsxBuf(buf){
+    const files=await parseZipBuf(buf);
+    const wb=files['xl/workbook.xml']||'';
+    const wbrels=files['xl/_rels/workbook.xml.rels']||'';
+    const sheetDefs=[];
+    (wb.match(/<sheet[^>]*>/g)||[]).forEach(s=>{
+      const name=(s.match(/name="([^"]*)"/)||[])[1];
+      const rid=(s.match(/r:id="([^"]*)"/)||[])[1];
+      if(name&&rid)sheetDefs.push({name,rid});
+    });
+    const relMap={};
+    (wbrels.match(/<Relationship[^>]*>/g)||[]).forEach(r=>{
+      const id=(r.match(/Id="([^"]*)"/)||[])[1];
+      const tgt=(r.match(/Target="([^"]*)"/)||[])[1];
+      if(id&&tgt)relMap[id]=tgt;
+    });
+    function rowsOf(name){
+      const def=sheetDefs.find(d=>d.name===name);if(!def)return [];
+      let tgt=relMap[def.rid];if(!tgt)return [];
+      if(tgt.startsWith('/'))tgt=tgt.slice(1);else if(!tgt.startsWith('xl/'))tgt='xl/'+tgt;
+      return sheetXmlToRows(files[tgt]||'');
+    }
+    function toObjs(rows){
+      if(rows.length<2)return [];
+      const header=rows[0];const out=[];
+      for(let i=1;i<rows.length;i++){const o={};header.forEach((h,ci)=>o[h]=rows[i][ci]);out.push(o);}
+      return out;
+    }
+    const items=toObjs(rowsOf('物品')).map(o=>({
+      id:o['ID']||makeId(),name:o['物品名称']||'',quantity:parseInt(o['数量']||o['quantity'])||0,
+      moduleId:o['模块ID']||resolveModuleId(o['所属模块']),categoryId:o['分类ID']||'',location:o['存放位置']||'',barcode:o['条码']||'',
+      arrivalDate:o['到货日期']||'',expiryDate:o['到期时间']||'',reminderDays:parseInt(o['预警天数']||o['reminderDays'])||7,
+      usageNote:o['用途备注']||'',supplierNote:o['供应商']||'',images:[]
+    }));
+    const records=toObjs(rowsOf('记录')).map(o=>({
+      id:o['ID']||makeId(),itemId:o['物品ID']||'',moduleId:o['模块ID']||'',type:o['类型']||'in',
+      quantity:parseInt(o['数量']||o['quantity'])||0,remainingQty:parseInt(o['剩余']||o['remainingQty'])||0,note:o['备注']||'',timestamp:o['时间']||new Date().toISOString()
+    }));
+    const categories=toObjs(rowsOf('分类')).map(o=>({id:o['ID']||makeId(),moduleId:o['模块ID']||'',name:o['名称']||''}));
+    const modules=toObjs(rowsOf('模块')).map(o=>({id:o['ID']||makeId(),name:o['名称']||'',icon:o['图标']||'📦'}));
+    return {items,records,categories,modules};
+  }
+  function csvToData(text){
+    const rows=parseCsvText(text);
+    if(rows.length<2)return {items:[],records:[],categories:[],modules:[]};
+    const header=rows[0];
+    const items=rows.slice(1).filter(r=>r[0]).map(r=>{const o={};header.forEach((h,ci)=>o[h]=r[ci]||'');return o;}).filter(o=>o['物品名称']);
+    return {items:items.map(o=>({
+      id:o['ID']||makeId(),name:o['物品名称']||'',quantity:parseInt(o['数量']||o['quantity'])||0,
+      moduleId:o['模块ID']||resolveModuleId(o['所属模块']),categoryId:o['分类ID']||'',location:o['存放位置']||'',barcode:o['条码']||'',
+      arrivalDate:o['到货日期']||'',expiryDate:o['到期时间']||'',reminderDays:parseInt(o['预警天数']||o['reminderDays'])||7,
+      usageNote:o['用途备注']||'',supplierNote:o['供应商']||'',images:[]
+    })),records:[],categories:[],modules:[]};
+  }
+
+  async function handleImportFile(file){
+    if(!file)return;
+    const name=(file.name||'').toLowerCase();
+    let parsed=null,kind='';
+    try{
+      if(name.endsWith('.json')){parsed=JSON.parse(await file.text());kind='json';}
+      else if(name.endsWith('.csv')){parsed=csvToData(await file.text());kind='csv';}
+      else if(name.endsWith('.xml')){parsed=parseXmlText(await file.text());kind='xml';}
+      else if(name.endsWith('.xlsx')){parsed=await parseXlsxBuf(await file.arrayBuffer());kind='xlsx';}
+      else{
+        const head=(await file.slice(0,4).text());
+        if(head==='PK\u0003\u0004'){parsed=await parseXlsxBuf(await file.arrayBuffer());kind='xlsx';}
+        else{const t=await file.text();if(t.trim().startsWith('<')){parsed=parseXmlText(t);kind='xml';}else if(t.trim().startsWith('{')){parsed=JSON.parse(t);kind='json';}else{parsed=csvToData(t);kind='csv';}}
+      }
+    }catch(e){toast('解析失败：'+e.message);return;}
+    if(!parsed||!parsed.items||!parsed.items.length){toast('文件中未找到可导入的物品数据');return;}
+    state._pendingImport=parsed;
+    showImportConfirm(parsed,kind);
+  }
+  function showImportConfirm(parsed,kind){
+    const n=parsed.items.length, r=(parsed.records||[]).length, c=(parsed.categories||[]).length, m=(parsed.modules||[]).length;
+    showModal(`
+      <div class="modal-title">确认恢复数据</div>
+      <div style="font-size:13px;color:var(--gray-600);margin:10px 0;line-height:1.7">
+        来源格式：<b>${kind.toUpperCase()}</b><br>
+        将导入：📦 物品 <b>${n}</b> 个 ｜ 📋 记录 <b>${r}</b> 条 ｜ 🏷️ 分类 <b>${c}</b> 个 ｜ 📁 模块 <b>${m}</b> 个<br>
+        <span style="color:var(--danger)">⚠️ 此操作会覆盖本机现有全部数据，且不可恢复。</span>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.confirmImport()">确定恢复</button>
+      </div>
+    `);
+  }
+  async function confirmImport(){
+    const parsed=state._pendingImport;hideModal();
+    if(!parsed)return;
+    const tx=db.transaction(['items','records','categories','modules','homeSections'],'readwrite');
+    tx.objectStore('items').clear();tx.objectStore('records').clear();
+    tx.objectStore('categories').clear();tx.objectStore('modules').clear();tx.objectStore('homeSections').clear();
+    parsed.items.forEach(i=>tx.objectStore('items').put(i));
+    (parsed.records||[]).forEach(r=>tx.objectStore('records').put(r));
+    (parsed.categories||[]).forEach(c=>tx.objectStore('categories').put(c));
+    (parsed.modules||[]).forEach(m=>tx.objectStore('modules').put(m));
+    await new Promise((res,rej)=>{tx.oncomplete=()=>{toast(`恢复成功！${parsed.items.length}个物品`);res();};tx.onerror=()=>rej(tx.error);});
+    if(_sbReady){ pushAll().catch(function(e){ console.warn('import push failed', e); }); }
+    state._pendingImport=null;
+    try{MODULES=await loadModules();}catch(e){}
+    try{if(App.render)App.render();else if(App.navigate)App.navigate(state.page||'home');}catch(e){}
+  }
+  async function showImportModal(){
+    const url=location.href;
+    showModal(`
+      <div class="modal-title">恢复 / 导入数据</div>
+      <div style="font-size:13px;color:var(--gray-600);margin:6px 0 12px">支持格式：JSON · CSV · XML · Excel(.xlsx)</div>
+      <div style="background:var(--gray-50);border:1px dashed var(--gray-300);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12.5px;line-height:1.7">
+        <b>📲 从微信导入：</b><br>
+        1. 点击下方「复制本应用链接」，发到微信「文件传输助手」或任意聊天；<br>
+        2. 在微信里点开该链接（用微信内置浏览器打开本应用）；<br>
+        3. 进入 设置 → 恢复数据 → 选择文件，即可从<b>微信聊天文件 / 微信收藏</b>里挑选备份文件。<br>
+        <span style="color:var(--gray-400)">（iOS 微信内置浏览器仅支持选图片；文件请用安卓微信，或先把备份发到「文件传输助手」再在手机浏览器打开本链接）</span>
+      </div>
+      <button class="modal-btn modal-btn-confirm" style="margin-bottom:10px" onclick="App.copyLinkForWechat()">📋 复制本应用链接（发到微信）</button>
+      <button class="modal-btn" style="background:var(--blue);color:#fff;margin-bottom:6px" onclick="document.getElementById('importFile').click();App.hideModal()">📁 从本机选择文件</button>
+      <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+    `);
+  }
+  function copyLinkForWechat(){
+    const url=location.href;
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>toast('链接已复制，去微信粘贴发送给自己')).catch(()=>{prompt('复制此链接发到微信：',url);});}
+    else{prompt('复制此链接发到微信：',url);}
+  }
+
+
+
+  async function clearAllData(){
+    const tx=db.transaction(['items','records','categories','homeSections'],'readwrite');
+    tx.objectStore('items').clear();tx.objectStore('records').clear();
+    tx.objectStore('categories').clear();
+    return new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});
+  }
+
+  // ---- Utility ----
+  function formatDate(d,fmt='YYYY-MM-DD'){
+    if(!d)return '';
+    if(typeof d==='string')d=new Date(d);
+    const m={YYYY:d.getFullYear(),MM:String(d.getMonth()+1).padStart(2,'0'),DD:String(d.getDate()).padStart(2,'0'),HH:String(d.getHours()).padStart(2,'0'),mm:String(d.getMinutes()).padStart(2,'0'),ss:String(d.getSeconds()).padStart(2,'0')};
+    return fmt.replace(/YYYY|MM|DD|HH|mm|ss/g,k=>m[k]);
+  }
+  function daysUntil(ds){if(!ds)return null;return Math.ceil(new Date(ds)-new Date())/86400000;}
+  function getExpiryStatus(item){
+    if(!item.expiryDate)return null;
+    const days=daysUntil(item.expiryDate),warnDays=item.reminderDays||7;
+    if(days<=0)return{status:'expired',days,label:'已过期 '+Math.abs(days)+'天',cls:'expired'};
+    if(days<=warnDays)return{status:'warning',days,label:'即将到期 '+days+'天',cls:'warning'};
+    return null;
+  }
+  function escapeHtml(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+  // Toast
+  let toastTimer=null;
+  function toast(msg,dur=2000){
+    const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+    clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur);
+  }
+
+  // Confirm
+  function confirm(msg,okText='确认'){
+    return new Promise(res=>{
+      _confirmResolve=res;
+      document.getElementById('confirmMsg').textContent=msg;
+      document.getElementById('confirmOkBtn').textContent=okText;
+      document.getElementById('confirmOverlay').classList.add('show');
+    });
+  }
+  function _resolveConfirm(v){
+    document.getElementById('confirmOverlay').classList.remove('show');
+    if(_confirmResolve){_confirmResolve(v);_confirmResolve=null;}
+  }
+
+  // Modal
+  function showModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('modalOverlay').classList.add('show');}
+  function hideModal(){document.getElementById('modalOverlay').classList.remove('show');}
+
+  // Navigate
+  function navigate(page,params={}){state.currentPage=page;Object.assign(state,params);render();window.scrollTo(0,0);}
+
+  // ================================================================
+  // RENDER: HOME PAGE (v2 - customizable sections, no duplicate quick bar)
+  // ================================================================
+  async function renderHome(){
+    const items=state.items;
+    const expiredItems=[],warningItems=[];
+    items.forEach(item=>{const s=getExpiryStatus(item);if(s){if(s.status==='expired')expiredItems.push({...item,...s});else warningItems.push({...item,s});}});
+    const alerts=[...expiredItems,...warningItems].sort((a,b)=>{
+      if((a.status==='expired')!==(b.status==='expired'))return a.status==='expired'?-1:1;
+      return(a.days||a.s?.days)-(b.days||b.s?.days);
+    });
+
+    // ---- Low stock alerts ----
+    const threshold = state.lowStockThreshold || 10;
+    const lowStockItems = items.filter(i => i.quantity <= threshold).sort((a,b)=>a.quantity-b.quantity);
+    const lowStockCount = lowStockItems.length;
+
+    // ---- Today's activity stats ----
+    const now=new Date(), todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()), todayEnd=new Date(todayStart.getTime()+86400000);
+    const todayRecs = state.records.filter(r=>{const t=new Date(r.timestamp);return t>=todayStart&&t<todayEnd;});
+    const todayIn = todayRecs.filter(r=>r.type==='in').reduce((s,r)=>s+r.quantity,0);
+    const todayOut = todayRecs.filter(r=>r.type==='out').reduce((s,r)=>s+r.quantity,0);
+    const todayConsume = todayRecs.filter(r=>r.type==='consume').reduce((s,r)=>s+r.quantity,0);
+    // Count new items created today
+    const todayNewItems = items.filter(i=>{const d=i.createdAt?new Date(i.createdAt):null;return d&&d>=todayStart&&d<todayEnd;}).length;
+
+    // Load custom sections config
+    const sectionConfig = await getHomeSections();
+    const enabledSections = sectionConfig[0]?.sections || ['modules','expiryAlert'];
+
+    return `
+    <div class="page active" id="page-home">
+      <div class="app-header" style="position:relative">
+        ${lowStockCount > 0 ? `<div class="stock-alert-badge">${lowStockCount}</div>` : ''}
+        <div class="header-top">
+          <div class="header-title">🏠 LESLEY公司仓储</div>
+          <div class="header-actions">
+            <div class="header-btn" onclick="App.showRegionManager()">✏️</div>
+            <div class="header-btn" onclick="App.navigate('settings')">⚙️</div>
+          </div>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="text" placeholder="搜索物品名称、位置..." value="${escapeHtml(state.searchQuery)}"
+            oninput="App.state.searchQuery=this.value"
+            onkeydown="if(event.key==='Enter'){App.addSearchHistory(this.value);App.navigate('search')}">
+        </div>
+      </div>
+
+      ${enabledSections.includes('todayActivity') ? `
+      <!-- 今日动态 -->
+      <div class="today-activity">
+        <div class="today-activity-title">📊 今日动态</div>
+        <div class="today-stats-row">
+          入库 <span class="today-stat-num in">${todayIn}</span> 件
+          <span class="today-stat-sep">|</span>
+          出库 <span class="today-stat-num out">${todayOut}</span> 件
+          <span class="today-stat-sep">|</span>
+          消耗 <span class="today-stat-num out" style="color:#B8860B">${todayConsume}</span> 件
+          <span class="today-stat-sep">|</span>
+          新增 <span class="today-stat-num new">${todayNewItems}</span> 个商品
+          ${lowStockCount > 0 ? `<span class="today-stat-sep">|</span> 预警 <span class="today-stat-num alert">${lowStockCount}</span> 项` : ''}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('stockAlert') && lowStockCount > 0 ? `
+      <!-- 库存预警横幅 -->
+      <div class="alert-banner show" style="margin:12px 16px 0">
+        <div class="alert-header warning"
+          onclick="this.parentElement.querySelector('.alert-list').style.display=this.parentElement.querySelector('.alert-list').style.display==='block'?'none':'block'">
+          <div class="alert-title warning">
+            ⚠️ 库存预警（${lowStockCount}项低于${threshold}）<span class="alert-count">${lowStockCount}</span>
+          </div><span style="font-size:12px">▼</span>
+        </div>
+        <div class="alert-list" style="display:${lowStockCount<=5?'block':'none'}">
+          ${lowStockItems.slice(0,10).map(item=>{
+            const mod=MODULES.find(m=>m.id===item.moduleId);
+            return `<div class="alert-item" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+              <div class="alert-dot yellow"></div>
+              <div class="alert-info">
+                <div class="alert-name">${escapeHtml(item.name)}</div>
+                <div class="alert-meta">${mod?.name||''} · 库存仅剩 ${item.quantity} 件</div>
+              </div>
+              <div class="alert-days yellow" style="color:#E07050;font-weight:700">${item.quantity}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('expiryAlert') && alerts.length > 0 ? `
+      <div class="alert-banner show">
+        <div class="alert-header ${expiredItems.length>0?'expired':'warning'}"
+          onclick="this.parentElement.querySelector('.alert-list').style.display=this.parentElement.querySelector('.alert-list').style.display==='block'?'none':'block'">
+          <div class="alert-title ${expiredItems.length>0?'expired':'warning'}">
+            ${expiredItems.length>0?'🚨 到期提醒':'⚠️ 即将到期'}<span class="alert-count">${alerts.length}</span>
+          </div><span style="font-size:12px">▼</span>
+        </div>
+        <div class="alert-list" style="display:${alerts.length<=5?'block':'none'}">
+          ${alerts.slice(0,10).map(a=>`
+            <div class="alert-item" onclick="App.navigate('detail',{currentItem:'${a.id}'})">
+              <div class="alert-dot ${a.status==='expired'?'red':'yellow'}"></div>
+              <div class="alert-info">
+                <div class="alert-name">${escapeHtml(a.name)}</div>
+                <div class="alert-meta">${MODULES.find(m=>m.id===a.moduleId)?.name||''} · ${formatDate(a.expiryDate)}</div>
+              </div>
+              <div class="alert-days ${a.status==='expired'?'red':'yellow'}">${a.status==='expired'?a.label:a.s?.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${enabledSections.includes('modules') ? `
+      <div class="module-grid">
+        ${MODULES.map(m=>{
+          const count=items.filter(i=>i.moduleId===m.id).length;
+          return `<div class="module-card" onclick="App.navigate('module',{currentModule:'${m.id}'})">
+            <div class="module-name">${m.name}</div>
+            <div class="module-icon ${m.cls}">${m.icon}</div>
+            <div class="module-count">${count} 件</div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+
+      <!-- Quick action buttons (only unique ones, not duplicating tab bar) -->
+      <div class="home-fab-row">
+        <button class="mini-fab primary" onclick="App.navigate('consume')">⚡ 每日消耗登记</button>
+        <button class="mini-fab success" onclick="App.navigate('quick-add')">➕ 快速添加</button>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item active" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+    // 进入首页时，若有低库存则弹窗提醒一次（避免每次渲染重复弹）
+    if(lowStockCount>0 && !state._stockPopupShown){
+      state._stockPopupShown=true;
+      setTimeout(()=>showStockAlertPopup(lowStockItems, threshold), 400);
+    }
+  }
+
+  // ================================================================
+  // HOME SECTION MANAGER (add/delete/rename areas)
+  // ================================================================
+  async function showRegionManager(){
+    const cfg = await getHomeSections();
+    const current = cfg[0]?.sections || ['modules','expiryAlert'];
+    const availableSections = [
+      {id:'todayActivity',name:'📊 今日动态'},
+      {id:'modules',name:'📦 区域宫格（首页模块）'},
+      {id:'stockAlert',name:'⚠️ 库存预警横幅'},
+      {id:'expiryAlert',name:'🚨 到期提醒横幅'},
+      {id:'quickConsume',name:'⚡ 每日消耗快捷入口'}
+    ];
+    const itemCounts = {};
+    for(const it of state.items){ itemCounts[it.moduleId]=(itemCounts[it.moduleId]||0)+1; }
+
+    showModal(`
+      <div class="modal-title">区域管理</div>
+      <div style="font-size:12px;color:var(--gray-400);margin-bottom:10px">修改区域名称、增删区域板块</div>
+
+      <div style="font-weight:600;font-size:13px;margin:6px 0">区域板块（${MODULES.length}）</div>
+      <div class="region-manage-list">
+        ${MODULES.map(m=>`
+          <div class="region-manage-item">
+            <div class="region-manage-icon ${m.cls}">${m.icon}</div>
+            <div class="region-manage-body">
+              <div class="region-manage-name">${escapeHtml(m.name)} <span style="color:var(--gray-400);font-size:11px">(${itemCounts[m.id]||0}件)</span></div>
+            </div>
+            <div class="region-manage-actions">
+              <button class="region-btn" onclick="App.renameRegion('${m.id}')">改名</button>
+              <button class="region-btn delete" onclick="App.removeRegion('${m.id}')">删除</button>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div style="display:flex;gap:8px;margin:12px 0">
+        <input class="modal-input" id="newRegionName" placeholder="新区域名称" style="flex:1">
+        <button class="region-btn add" onclick="App.addRegion()">+ 添加区域</button>
+      </div>
+
+      <div style="height:1px;background:var(--gray-100);margin:12px 0"></div>
+      <div style="font-weight:600;font-size:13px;margin:6px 0">首页板块显示</div>
+      ${availableSections.map(s=>`
+        <div class="section-manage-item">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" value="${s.id}" ${current.includes(s.id)?'checked':''}
+              onchange="App.toggleHomeSection('${s.id}',this.checked)"
+              style="width:18px;height:18px;accent-color:var(--red)">
+            <span class="section-manage-name">${s.name}</span>
+          </label>
+        </div>
+      `).join('')}
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">完成</button>
+      </div>
+    `);
+    setTimeout(()=>{const el=document.getElementById('newRegionName'); if(el) el.focus();},100);
+  }
+
+  async function renameRegion(id){
+    const m=MODULES.find(x=>x.id===id); if(!m)return;
+    const newName=prompt('修改区域名称：',m.name);
+    if(!newName||!newName.trim())return;
+    await renameModule(id,newName.trim());
+    toast('区域已改名'); showRegionManager();
+  }
+  async function removeRegion(id){
+    const m=MODULES.find(x=>x.id===id); if(!m)return;
+    const cnt=state.items.filter(i=>i.moduleId===id).length;
+    const ok=await confirm(`确定删除区域「${m.name}」？\n该区域下 ${cnt} 件物品及相关分类、记录也会被删除。`,'删除');
+    if(!ok)return;
+    await removeModule(id);
+    toast('区域已删除'); showRegionManager();
+  }
+  async function addRegion(){
+    const input=document.getElementById('newRegionName');
+    const name=(input?.value||'').trim();
+    if(!name){toast('请输入区域名称'); return;}
+    await addModule(name);
+    toast('区域已添加'); showRegionManager();
+  }
+
+  async function toggleHomeSection(sectionId,enabled){
+    const cfg = await getHomeSections();
+    let sections = [...(cfg[0]?.sections||[])];
+    if(enabled && !sections.includes(sectionId)) sections.push(sectionId);
+    else if(!enabled) sections = sections.filter(s=>s!==sectionId);
+    await saveHomeSections({sections});
+    showRegionManager();
+  }
+
+  // ================================================================
+  // RENDER: MODULE PAGE
+  // ================================================================
+  async function renderModule(){
+    const mod=MODULES.find(m=>m.id===state.currentModule);
+    if(!mod)return'<div class="page active"><div class="empty-state">模块不存在</div></div>';
+    const cats=await getCategories(state.currentModule);
+    const threshold=state.lowStockThreshold||10;
+    let items=state.items.filter(i=>i.moduleId===state.currentModule);
+    if(state.currentCategory) items=items.filter(i=>i.categoryId===state.currentCategory);
+
+    return `
+    <div class="page active" id="page-module">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">${mod.icon} ${mod.name}</div>
+          <div class="header-btn" onclick="App.showCatManager('${state.currentModule}')">🏷️</div>
+        </div>
+      </div>
+      <div class="category-bar">
+        <div class="cat-tab ${!state.currentCategory?'active':''}" onclick="App.state.currentCategory=null;App.render()">全部</div>
+        ${cats.map(c=>`<div class="cat-tab ${state.currentCategory===c.id?'active':''}" onclick="App.state.currentCategory='${c.id}';App.render()">${escapeHtml(c.name)}</div>`).join('')}
+        <div class="cat-add" onclick="App.showAddCategory('${state.currentModule}')">+</div>
+      </div>
+      <div class="stock-filter-tabs">
+        <div class="stock-tab ${!state.stockFilterStatus?'active':''}" onclick="App.state.stockFilterStatus='';App.render()">全部</div>
+        <div class="stock-tab ${state.stockFilterStatus==='normal'?'active':''}" onclick="App.state.stockFilterStatus='normal';App.render()">正常</div>
+        <div class="stock-tab ${state.stockFilterStatus==='warn'?'warn-active':''}" onclick="App.state.stockFilterStatus='warn';App.render()">⚠️ 预警</div>
+      </div>
+      <div class="item-list">
+        ${items.length===0?`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">暂无物品</div><div class="empty-sub">点击右下角按钮添加物品</div></div>`
+        :items.map(item=>{
+          const exp=getExpiryStatus(item);
+          const cat=cats.find(c=>c.id===item.categoryId);
+          const catName=cat?cat.name:'未分类';
+          const catCls=cat?cat.cls:'';
+          const low=(item.quantity<=state.lowStockThreshold);
+          // 库存筛选
+          if(state.stockFilterStatus==='normal'&&low) return '';
+          if(state.stockFilterStatus==='warn'&&!low) return '';
+          return `<div class="prod-card" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+            <div class="prod-card-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}" alt="">`:`<div class="placeholder-icon">📦</div>`}</div>
+            <div class="prod-card-body">
+              <div class="prod-card-name">${escapeHtml(item.name)}</div>
+              <div class="prod-card-sku">${item.barcode?escapeHtml(item.barcode):(item.id?'ID '+item.id.slice(0,8):'')}</div>
+              <div class="prod-card-cat-tag ${catCls}">${escapeHtml(catName)}</div>
+              <div class="prod-card-location">📍 ${item.location?escapeHtml(item.location):'未设置位置'}</div>
+            </div>
+            <div class="prod-card-right">
+              <div class="prod-card-qty-row"><span class="prod-card-qty-label">库存</span><span class="prod-card-qty ${low?'low':'normal'}">${item.quantity}</span><span class="prod-card-qty-unit">件</span></div>
+              <div class="prod-card-status"><div class="prod-status-dot ${low?'warn':'ok'}"></div><span class="status-text ${low?'warn':'ok'}">${low?'预警':'充足'}</span></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <button class="fab-btn" onclick="App.navigate('add-item',{editingModule:'${state.currentModule}'})">+</button>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">📦</div><div class="tab-label">模块</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: ADD ITEM FORM (full version)
+  // ================================================================
+  function renderAddItemForm(){
+    const item=state.editingItem||{}, isEdit=!!item.id;
+    return `
+    <div class="page active" id="page-form">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('module',{currentModule:'${state.editingModule||item?.moduleId||'finished'}'})" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">${isEdit?'编辑物品':'添加物品'}</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <form class="form-page" onsubmit="return App.saveItem(event)" id="itemForm">
+        <input type="hidden" id="formItemId" value="${item.id||''}">
+        <div class="form-group name-suggest"><label class="form-label">物品名称 <span class="required">*</span></label>
+          <input class="form-input" type="text" id="itemName" value="${escapeHtml(item.name||'')}" placeholder="请输入物品名称（必填）" required
+            oninput="App.showNameSuggestions(this.value)" autocomplete="off">
+          <div id="nameSuggestBox"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">数量</label>
+          <input class="form-input" type="number" id="itemQty" value="${item.quantity||''}" placeholder="默认1" min="0"></div>
+          <div class="form-group"><label class="form-label">存放位置</label>
+          <input class="form-input" type="text" id="itemLocation" value="${escapeHtml(item.location||'')}" placeholder="如：A货架第2层"></div>
+        </div>
+        <div class="form-group"><label class="form-label">用途备注</label>
+          <textarea class="form-textarea" id="itemUsage" placeholder="物品用途说明...">${escapeHtml(item.usageNote||'')}</textarea></div>
+        <div class="form-group"><label class="form-label">供应商备注</label>
+          <textarea class="form-textarea" id="itemSupplier" placeholder="供应商信息、联系方式等...">${escapeHtml(item.supplierNote||'')}</textarea></div>
+        <div class="form-group"><label class="form-label">所属分类</label>
+          <select class="form-select" id="itemCategory"><option value="">不分类</option></select></div>
+        <div class="form-group"><label class="form-label">商品条码（选填，扫码自动填入）</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="itemBarcode" value="${escapeHtml(item.barcode||'')}" placeholder="如 SN123456（用于扫码录入/消耗）" style="flex:1">
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('add-item')" style="flex-shrink:0">📷 扫码</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">到货日期</label>
+            <input class="form-input" type="date" id="itemArrival" value="${item.arrivalDate||''}"></div>
+          <div class="form-group"><label class="form-label">到期时间</label>
+            <input class="form-input" type="date" id="itemExpiry" value="${item.expiryDate||''}"></div>
+        </div>
+        <div class="form-group"><label class="form-label">提前提醒天数</label>
+          <input class="form-input" type="number" id="itemReminder" value="${item.reminderDays||7}" min="1" max="365">
+          <div class="form-hint">默认提前7天提醒</div></div>
+        <div class="form-group"><label class="form-label">图片/视频</label>
+          <div class="media-upload" onclick="document.getElementById('mediaInput').click()">
+            <div class="media-upload-icon">📷</div><div class="media-upload-text">点击上传图片或视频（可多选）</div>
+          </div>
+          <input type="file" id="mediaInput" accept="image/*,video*" multiple style="display:none" onchange="App.handleMediaUpload(event)">
+          <div class="media-preview" id="mediaPreview"></div>
+          ${(item.images||[]).map((src,i)=>`<div class="media-thumb" style="display:inline-block"><img src="${src}" alt=""><div class="media-remove" onclick="App.removeItemImage(${i})">✕</div></div>`).join('')}
+        </div>
+        <button type="submit" class="submit-btn">${isEdit?'保存修改':'添加物品'}</button>
+        <button type="button" class="cancel-btn" onclick="App.cancelAddItem()">取消</button>
+      </form>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: QUICK ADD FORM (minimal - only name required)
+  // ================================================================
+  function renderQuickAddForm(){
+    return `
+    <div class="page active" id="page-quick-add">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">➕ 快速添加</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <form class="form-page" onsubmit="return App.saveQuickItem(event)" id="quickAddForm">
+        <div class="form-group"><label class="form-label">物品名称 <span class="required">*</span></label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="quickName" placeholder="输入名称 / 点扫码自动填入" required autofocus style="flex:1">
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('quick-add')" style="flex-shrink:0">📷 扫码</button>
+          </div>
+          <input type="hidden" id="quickBarcode" value="">
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">数量</label>
+            <input class="form-input" type="number" id="quickQty" value="1" min="0" placeholder="默认1"></div>
+          <div class="form-group"><label class="form-label">选择区域</label>
+            <select class="form-select" id="quickModule">${MODULES.map(m=>`<option value="${m.id}">${m.icon} ${m.name}</option>`).join('')}</select></div>
+        </div>
+        <div class="form-group"><label class="form-label">选择分类</label>
+          <select class="form-select" id="quickCat"><option value="">暂无分类（将自动创建）</option></select></div>
+        <div class="form-group"><label class="form-label">存放位置（选填）</label>
+          <input class="form-input" type="text" id="quickLocation" placeholder="可选填"></div>
+        <div class="form-group"><label class="form-label">图片/视频（选填）</label>
+          <div class="media-upload" onclick="document.getElementById('quickMediaInput').click()">
+            <div class="media-upload-icon">📷</div><div class="media-upload-text">点击上传（可不传）</div>
+          </div>
+          <input type="file" id="quickMediaInput" accept="image/*,video*" multiple style="display:none" onchange="App.handleQuickMediaUpload(event)">
+          <div class="media-preview" id="quickMediaPreview"></div>
+        </div>
+        <button type="submit" class="submit-btn">💾 快速保存</button>
+        <button type="button" class="cancel-btn" onclick="App.navigate('home')">取消</button>
+      </form>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: DAILY CONSUME (消耗登记)
+  // ================================================================
+  async function renderConsumePage(){
+    // Get matched items based on search
+    let matchedItems=[];
+    const q=(state.consumeSearchQuery||'').toLowerCase().trim();
+    if(q){
+      matchedItems=state.items.filter(i=>(i.name||'').toLowerCase().includes(q));
+      // Filter by module if selected
+      if(state.consumeModuleId) matchedItems=matchedItems.filter(i=>i.moduleId===state.consumeModuleId);
+      // Filter by category if selected
+      if(state.consumeCategoryId) matchedItems=matchedItems.filter(i=>i.categoryId===state.consumeCategoryId);
+    }
+
+    // Load categories for selected module
+    let cats=[];
+    if(state.consumeModuleId) cats=await getCategories(state.consumeModuleId);
+
+    return `
+    <div class="page active" id="page-consume">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">⚡ 每日消耗登记</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+
+      <div class="consume-date-bar">
+        <span class="consume-date-label">📅 查看日期</span>
+        <input type="date" class="consume-date-input" value="${state.consumeViewDate||formatDate(new Date(),'YYYY-MM-DD')}"
+          onchange="App.state.consumeViewDate=this.value;App.render()">
+        <button class="consume-date-today" onclick="App.state.consumeViewDate='${formatDate(new Date(),'YYYY-MM-DD')}';App.render()">今天</button>
+      </div>
+
+      <div class="consume-form">
+        <div class="form-group"><label class="form-label">搜索或扫码选择产品</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" type="text" id="consumeSearch" value="${escapeHtml(state.consumeSearchQuery)}"
+              placeholder="输入关键词 / 扫码匹配产品..." oninput="App.state.consumeSearchQuery=this.value;App.render()"
+              style="flex:1" autofocus>
+            <button type="button" class="scan-btn scan-btn-primary" onclick="App.startScan('consume')" style="flex-shrink:0;height:40px">📷 扫码</button>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px">
+          <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">筛选区域</label>
+            <select class="form-select" style="padding:8px" onchange="App.state.consumeModuleId=this.value;this.value?App.state.consumeCategoryId='':'';App.render()">
+              <option value="">全部区域</option>
+              ${MODULES.map(m=>`<option value="${m.id}" ${state.consumeModuleId===m.id?'selected':''}>${m.icon} ${m.name}</option>`).join('')}
+            </select></div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">筛选分类</label>
+            <select class="form-select" style="padding:8px" onchange="App.state.consumeCategoryId=this.value;App.render()" ${!state.consumeModuleId?'disabled':''}>
+              <option value="">全部分类</option>
+              ${cats.map(c=>`<option value="${c.id}" ${state.consumeCategoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}
+            </select></div>
+        </div>
+
+        ${q && matchedItems.length > 0 ? `
+          <div class="form-label" style="font-size:12px">匹配到 ${matchedItems.length} 个产品（点击选择）</div>
+          <div class="consume-search-result">
+            ${matchedItems.slice(0,10).map(item=>{
+              const mod=MODULES.find(m=>m.id===item.moduleId);
+              return `<div class="consume-match-item" onclick="App.selectConsumeItem('${item.id}')">
+                <div class="consume-match-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}">`:`<div class="placeholder-icon" style="font-size:20px">📦</div>`}</div>
+                <div class="consume-match-info">
+                  <div class="consume-match-name">${escapeHtml(item.name)}</div>
+                  <div class="consume-match-meta">${mod?.name||''} · 库存 <strong style="color:var(--red)">${item.quantity}</strong></div>
+                </div>
+                <div class="consume-match-qty">${item.quantity}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        ` : q ? `
+          <div class="empty-state" style="padding:30px"><div class="empty-text">未找到匹配产品</div><div class="empty-sub">试试其他关键词</div></div>
+        ` : !q ? `
+          <div class="empty-state" style="padding:30px"><div class="empty-icon">⚡</div><div class="empty-text">输入关键词搜索要消耗的产品</div><div class="empty-sub">或先选择上方区域和分类缩小范围</div></div>
+        ` : ''}
+
+        ${state.consumeSelectedItemId ? `
+          <div style="margin-top:12px;padding:12px;background:var(--green-light);border-radius:var(--radius);border:1.5px solid var(--green)">
+            <div style="font-size:13px;font-weight:600;color:var(--green);margin-bottom:8px">✅ 已选择：${escapeHtml(state.items.find(i=>i.id===state.consumeSelectedItemId)?.name||'')}</div>
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">消耗数量</label>
+                <input class="form-input" type="number" id="consumeQty" value="1" min="1"></div>
+              <div class="form-group" style="margin-bottom:0"><label class="form-label" style="font-size:11px">用途备注</label>
+                <input class="form-input" type="text" id="consumeNote" placeholder="用于什么..."></div>
+            </div>
+            <button class="submit-btn" style="margin-top:10px;background:linear-gradient(135deg,var(--green),#8BC77A)" onclick="App.doConsume()">✅ 确认登记</button>
+            <button class="cancel-btn" style="margin-top:6px" onclick="App.state.consumeSelectedItemId='';App.render()">取消选择</button>
+          </div>
+        ` : ''}
+      </div>
+
+      <!-- Consumption record table (by selected date) -->
+      <div style="padding:0 16px 16px">
+        ${await renderConsumeRecords(state.consumeViewDate)}
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  async function renderConsumeRecords(viewDate){
+    const dateStr = viewDate || formatDate(new Date(),'YYYY-MM-DD');
+    const start = new Date(dateStr+'T00:00:00');
+    const end = new Date(start.getTime()+86400000);
+    const recs = state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end&&r.type==='consume';})
+                              .sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+
+    const isToday = dateStr === formatDate(new Date(),'YYYY-MM-DD');
+    const totalQty = recs.reduce((s,r)=>s+r.quantity,0);
+
+    // Resolve category names from the categories store
+    const allCats = await dbOp('categories','readonly',s=>s.getAll()).catch(()=>[]);
+    const catNameOf = (item) => {
+      if(!item || !item.categoryId) return '未分类';
+      const c = allCats.find(x=>x.id===item.categoryId);
+      return c ? c.name : '未分类';
+    };
+
+    // Group by category for summary header
+    const byCat={};
+    for(const r of recs){
+      const item=state.items.find(i=>i.id===r.itemId);
+      const catKey=item?.categoryId||'_nocat';
+      if(!byCat[catKey])byCat[catKey]={name:catNameOf(item),total:0,count:0};
+      byCat[catKey].total+=r.quantity; byCat[catKey].count++;
+    }
+
+    if(recs.length===0){
+      return `<div class="chart-container" style="margin-top:12px">
+        <div class="chart-title">📋 ${isToday?'今日':'当天'}消耗记录明细</div>
+        <div style="text-align:center;padding:18px;color:var(--gray-400);font-size:13px">${dateStr} 暂无消耗记录</div>
+      </div>`;
+    }
+
+    return `
+      <div class="chart-container" style="margin-top:12px">
+        <div class="chart-title">📋 ${isToday?'今日':'当天'}消耗记录明细（${dateStr} · 共 ${totalQty} 件）</div>
+        <!-- Category summary -->
+        <div class="consume-cat-summary">
+          ${Object.entries(byCat).map(([k,d])=>`
+            <div class="consume-cat-chip"><span>${escapeHtml(d.name||'未分类')}</span><strong>${d.total}件</strong></div>
+          `).join('')}
+        </div>
+        <!-- Detail table -->
+        <div class="consume-table">
+          <div class="consume-row consume-head"><div>物品</div><div>区域/分类</div><div>数量</div><div>时间</div></div>
+          ${recs.map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            const mod=MODULES.find(m=>m.id===r.moduleId);
+            return `<div class="consume-row" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''}>
+              <div class="consume-name">${escapeHtml(item?.name||'未知')}${r.note?`<span class="consume-note">📝${escapeHtml(r.note)}</span>`:''}</div>
+              <div class="consume-meta">${mod?.icon||''}${escapeHtml(mod?.name||'')}</div>
+              <div class="consume-qty">-${r.quantity}</div>
+              <div class="consume-time">${formatDate(r.timestamp,'HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function selectConsumeItem(itemId){state.consumeSelectedItemId=itemId;render();}
+
+  async function doConsume(){
+    const itemId=state.consumeSelectedItemId;
+    if(!itemId){toast('请先选择一个产品');return;}
+    const qty=parseInt(document.getElementById('consumeQty')?.value)||0;
+    if(qty<=0){toast('请输入有效数量');return;}
+    const note=document.getElementById('consumeNote')?.value.trim()||'';
+
+    const item=state.items.find(i=>i.id===itemId);
+    if(!item)return;
+
+    if(qty>item.quantity){
+      const ok=await confirm(`消耗数量（${qty}）超过当前库存（${item.quantity}），确定继续？`,'强制扣取');
+      if(!ok)return;
+    }
+
+    const newQty=Math.max(0,item.quantity-qty);
+    await updateItem({...item,quantity:newQty});
+    await addRecord({itemId, moduleId:item.moduleId, type:'consume', quantity:qty, note:note||undefined, remainingQty:newQty});
+
+    toast(`消耗成功！扣除 ${qty} 件`);
+    state.consumeSelectedItemId='';
+    state.consumeSearchQuery='';
+    render();
+  }
+
+  // ================================================================
+  // RENDER: DETAIL
+  // ================================================================
+  async function renderDetail(){
+    const item=state.items.find(i=>i.id===state.currentItem);
+    if(!item)return'<div class="page active"><div class="empty-state">物品不存在</div></div>';
+    const exp=getExpiryStatus(item);
+    const records=await getRecordsByItemId(item.id);
+    const cats=await getCategories(item.moduleId);
+    const catName=cats.find(c=>c.id===item.categoryId)?.name||'未分类';
+
+    return `
+    <div class="page active" id="page-detail">
+      <div class="detail-header">
+        <div class="detail-images">
+          ${(item.images&&item.images.length>0)?
+            item.images.map((src,i)=>`<img src="${src}" style="${i>0?'display:none':''}" id="detailImg${i}">`).join('')
+            +`<div class="image-dots">${item.images.map((_,i)=>`<div class="image-dot${i===0?' active':''}" id="dot${i}"></div>`).join('')}</div>`
+            :`<div class="image-placeholder"><img src="logo.jpg" style="width:80px;height:80px;opacity:.4"></div>`}
+          <div class="detail-back" onclick="App.navigate('module',{currentModule:'${item.moduleId}'})">←</div>
+        </div>
+      </div>
+      <div class="detail-info">
+        <div class="detail-name">${escapeHtml(item.name)}</div>
+        <div class="detail-qty-row"><div class="detail-qty">${item.quantity}</div><div class="detail-qty-label">当前库存</div></div>
+        <div class="detail-fields">
+          <div class="detail-field"><div class="field-label">📍 存放位置</div><div class="field-value">${item.location?escapeHtml(item.location):'—'}</div></div>
+          <div class="detail-field"><div class="field-label">🏷️ 所属分类</div><div class="field-value">${escapeHtml(catName)}</div></div>
+          <div class="detail-field"><div class="field-label">📅 到货日期</div><div class="field-value">${item.arrivalDate?formatDate(item.arrivalDate):'—'}</div></div>
+          <div class="detail-field"><div class="field-label">⏰ 到期时间</div>
+            <div class="field-value ${exp?`expiry-${exp.cls}`:''}">${item.expiryDate?formatDate(item.expiryDate)+' ('+(exp?exp.label:'未设置提醒')+')':'—'}</div></div>
+        </div>
+        ${item.usageNote?`<div class="detail-field" style="grid-column:1/-1"><div class="field-label">📝 用途备注</div><div class="field-value">${escapeHtml(item.usageNote)}</div></div>`:''}
+        ${item.supplierNote?`<div class="detail-field" style="grid-column:1/-1"><div class="field-label">🏭 供应商备注</div><div class="field-value">${escapeHtml(item.supplierNote)}</div></div>`:''}
+      </div>
+      <div class="detail-actions">
+        <button class="action-btn success" onclick="App.showStockAction('${item.id}','in')">+ 入库</button>
+        <button class="action-btn danger" onclick="App.showStockAction('${item.id}','out')">- 出库</button>
+        <button class="action-btn warning" onclick="App.selectConsumeItem('${item.id}');App.navigate('consume')">⚡ 消耗</button>
+        <button class="action-btn default" onclick="App.navigate('add-item',{editingItem:App.state.items.find(i=>i.id=='${item.id}')})">✏️ 编辑</button>
+        <button class="action-btn danger" onclick="App.handleDeleteItem('${item.id}')">🗑️ 删除</button>
+      </div>
+      <div class="record-section">
+        <div class="record-header" onclick="document.getElementById('recordList').classList.toggle('show');this.querySelector('.record-toggle').classList.toggle('open')">
+          <div class="record-title">📋 操作记录 (${records.length})</div>
+          <div class="record-toggle">▼</div>
+        </div>
+        <div class="record-list" id="recordList">
+          ${records.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-400);font-size:13px">暂无记录</div>'
+          :records.map(r=>`<div class="record-item">
+            <div class="record-type ${r.type}">${r.type==='in'?'+入库':r.type==='out'?'-出库':'-消耗'}</div>
+            <div class="record-detail">
+              <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+              ${r.note?`<div class="record-note">${escapeHtml(r.note)}</div>`:''}
+            </div>
+            <div class="record-after">剩余 ${r.remainingQty}</div>
+            <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: SEARCH (with history + area/category filters)
+  // ================================================================
+  function renderSearch(){
+    const q=(state.searchQuery||'').toLowerCase().trim();
+    let results=[];
+    if(q){
+      results=state.items.filter(i=>{
+        const matchQ=(i.name||'').toLowerCase().includes(q)||(i.location||'').toLowerCase().includes(q)||(i.usageNote||'').toLowerCase().includes(q)||(i.supplierNote||'').toLowerCase().includes(q);
+        if(!matchQ)return false;
+        if(state.searchFilterMod&&i.moduleId!==state.searchFilterMod)return false;
+        if(state.searchFilterCat&&i.categoryId!==state.searchFilterCat)return false;
+        return true;
+      });
+    }
+    const history=loadSearchHistory();
+
+    return `
+    <div class="page active" id="page-search">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">🔍 搜索</div>
+          <div style="width:36px"></div>
+        </div>
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input class="search-input" type="text" placeholder="输入关键词搜索..." value="${escapeHtml(state.searchQuery)}"
+            oninput="App.state.searchQuery=this.value;App.render()" autofocus
+            onkeydown="if(event.key==='Enter'){App.addSearchHistory(this.value);App.render()}">
+        </div>
+      </div>
+
+      <!-- Area/Category filters -->
+      <div class="filter-bar" style="padding:12px 16px 0">
+        <select class="filter-select" onchange="App.state.searchFilterMod=this.value;App.render()">
+          <option value="">全部区域</option>
+          ${MODULES.map(m=>`<option value="${m.id}" ${state.searchFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+        </select>
+        <select class="filter-select" onchange="App.state.searchFilterCat=this.value;App.render()">
+          <option value="">全部分类</option>
+        </select>
+      </div>
+
+      <!-- Search History -->
+      ${!q && history.length > 0 ? `
+        <div class="search-history">
+          <div class="search-history-title">
+            <span>🕐 搜索历史</span>
+            <span class="search-clear-btn" onclick="localStorage.removeItem('lw_search_history');App.state.searchHistory=[];App.render()">清空</span>
+          </div>
+          <div class="search-history-tags">
+            ${history.map(h=>`<div class="search-history-tag" onclick="App.state.searchQuery='${escapeHtml(h)}';App.addSearchHistory('${escapeHtml(h)}');App.render()">${escapeHtml(h)}</div>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="item-list">
+        ${!q&&!history.length?`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">输入关键词或点击历史搜索</div><div class="empty-sub">支持按区域和分类筛选</div></div>`
+        :!q?``
+        :results.length===0?`<div class="empty-state"><div class="empty-icon">😕</div><div class="empty-text">未找到匹配结果</div><div class="empty-sub">尝试切换区域/分类筛选</div></div>`
+        :`<div style="font-size:13px;color:var(--gray-400);padding:8px 0;">找到 ${results.length} 个结果</div>`
+          +results.map(item=>{
+            const exp=getExpiryStatus(item);
+            return `<div class="item-card" onclick="App.navigate('detail',{currentItem:'${item.id}'})">
+              <div class="item-img">${(item.images&&item.images.length>0)?`<img src="${item.images[0]}">`:`<div class="placeholder-icon">📦</div>`}</div>
+              <div class="item-body">
+                <div class="item-name-row"><div class="item-name">${escapeHtml(item.name)}</div><div class="item-qty">${item.quantity}</div></div>
+                <div class="item-location">📍 ${MODULES.find(m=>m.id===item.moduleId)?.name||''}${item.location?' · '+escapeHtml(item.location):''}</div>
+                <div class="item-tags">${exp?`<span class="tag-${exp.cls}">${exp.label}</span>`:''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: STATS (with module/category/time detail filters)
+  // ================================================================
+  function renderStats(){
+    const range=state.statsTimeRange, now=new Date();
+    let start,end,label;
+    switch(range){
+      case'today':start=new Date(now.getFullYear(),now.getMonth(),now.getDate());end=new Date(start.getTime()+86400000);label='今天';break;
+      case'yesterday':start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);end=new Date(start.getTime()+86400000);label='昨天';break;
+      case'week':{const d=now.getDay()||7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);label='本周';break;}
+      case'month':start=new Date(now.getFullYear(),now.getMonth(),1);end=new Date(now.getFullYear(),now.getMonth()+1,1);label='本月';break;
+      case'custom':{
+        const ds=state.statsCustomDate||formatDate(now,'YYYY-MM-DD');
+        start=new Date(ds+'T00:00:00');end=new Date(start.getTime()+86400000);
+        label=ds+'（单日）';break;
+      }
+      default:start=new Date(2020,0,1);end=new Date(2030,0,1);label='全部';
+    }
+
+    const filteredRecs=state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end;});
+
+    // Apply detail filters
+    let detailRecs=[...filteredRecs];
+    if(state.recordFilterMod) detailRecs=detailRecs.filter(r=>r.moduleId===state.recordFilterMod);
+    if(state.recordFilterType) detailRecs=detailRecs.filter(r=>r.type===state.recordFilterType);
+
+    const totalIn=filteredRecs.filter(r=>r.type==='in').reduce((s,r)=>s+r.quantity,0);
+    const totalOut=filteredRecs.filter(r=>r.type==='out').reduce((s,r)=>s+r.quantity,0);
+    const totalConsume=filteredRecs.filter(r=>r.type==='consume').reduce((s,r)=>s+r.quantity,0);
+    const net=totalIn-totalOut-totalConsume;
+
+    return `
+    <div class="page active" id="page-stats">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">📊 统计汇总</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="stats-page">
+        <div class="time-filters">
+          ${['today','yesterday','week','month'].map(r=>`
+            <div class="time-filter-btn ${state.statsTimeRange===r?'active':''}" onclick="App.state.statsTimeRange='${r}';App.render()">
+              ${{'today':'今天','yesterday':'昨天','week':'本周','month':'本月'}[r]}
+            </div>`).join('')}
+          <div class="time-filter-btn custom ${state.statsTimeRange==='custom'?'active':''}">
+            <input type="date" class="time-filter-date" value="${state.statsCustomDate||''}" placeholder="自定义"
+              onchange="App.state.statsTimeRange='custom';App.state.statsCustomDate=this.value;App.render()" onclick="event.stopPropagation()">
+          </div>
+        </div>
+
+        <div class="stat-cards">
+          <div class="stat-card"><div class="stat-num in">${totalIn}</div><div class="stat-label">总入库</div></div>
+          <div class="stat-card"><div class="stat-num out">${totalOut}</div><div class="stat-label">总出库</div></div>
+          <div class="stat-card"><div class="stat-num consume">${totalConsume}</div><div class="stat-label">总消耗</div></div>
+          <div class="stat-card"><div class="stat-num net">${net>=0?'+':''}${net}</div><div class="stat-label">净变化</div></div>
+        </div>
+
+        <div class="chart-container"><div class="chart-title">各模块出入库分布（${label}）</div><canvas id="statsChart" class="chart-canvas"></canvas></div>
+
+        <!-- Detail filters -->
+        <div class="filter-bar">
+          <select class="filter-select" onchange="App.state.recordFilterMod=this.value;App.render()">
+            <option value="">全部区域</option>
+            ${MODULES.map(m=>`<option value="${m.id}" ${state.recordFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+          </select>
+          <select class="filter-select" onchange="App.state.recordFilterType=this.value;App.render()">
+            <option value="">全部类型</option>
+            <option value="in" ${state.recordFilterType==='in'?'selected':''}>入库</option>
+            <option value="out" ${state.recordFilterType==='out'?'selected':''}>出库</option>
+            <option value="consume" ${state.recordFilterType==='consume'?'selected':''}>消耗</option>
+          </select>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-title">明细列表（${label}${state.recordFilterMod?' · '+MODULES.find(m=>m.id===state.recordFilterMod)?.name:''}${state.recordFilterType?' · '+{in:'入库',out:'出库',consume:'消耗'}[state.recordFilterType]:''}）</div>
+          ${detailRecs.length===0?'<div style="padding:20px;text-align:center;color:var(--gray-400)">暂无数据</div>'
+          :detailRecs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,80).map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            return `<div class="record-item" style="padding:8px 0" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''}>
+              <div class="record-type ${r.type}" style="width:auto;padding:2px 8px;font-size:11px">${r.type==='in'?'+入库':r.type==='out'?'-出库':'-消耗'}</div>
+              <div class="record-detail">
+                <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+                <div class="record-note">${item?escapeHtml(item.name):'未知'} · ${MODULES.find(m=>m.id===r.moduleId)?.name||''}${r.note?' · '+escapeHtml(r.note):''}</div>
+              </div>
+              <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+
+        <!-- Backup button at bottom of stats page only -->
+        <div style="text-align:center;padding:16px 0">
+          <button class="mini-fab primary" style="margin:0 auto" onclick="App.showExportPreview()">💾 备份/导出数据</button>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item active"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: RECORDS (global, with filters)
+  // ================================================================
+  function renderRecords(){
+    const sorted=[...state.records].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+    let filtered=sorted;
+    if(state.recordFilterMod) filtered=filtered.filter(r=>r.moduleId===state.recordFilterMod);
+    if(state.recordFilterType) filtered=filtered.filter(r=>r.type===state.recordFilterType);
+
+    return `
+    <div class="page active" id="page-records">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">📋 全部记录</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="records-page">
+        <div class="filter-bar">
+          <select class="filter-select" onchange="App.state.recordFilterMod=this.value;App.render()">
+            <option value="">全部区域</option>
+            ${MODULES.map(m=>`<option value="${m.id}" ${state.recordFilterMod===m.id?'selected':''}>${m.name}</option>`).join('')}
+          </select>
+          <select class="filter-select" onchange="App.state.recordFilterType=this.value;App.render()">
+            <option value="">全部类型</option>
+            <option value="in" ${state.recordFilterType==='in'?'selected':''}>入库</option>
+            <option value="out" ${state.recordFilterType==='out'?'selected':''}>出库</option>
+            <option value="consume" ${state.recordFilterType==='consume'?'selected':''}>消耗</option>
+          </select>
+        </div>
+        <div class="item-list">
+          ${sorted.length===0?`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">暂无记录</div></div>`
+          :filtered.map(r=>{
+            const item=state.items.find(i=>i.id===r.itemId);
+            return `<div class="record-item" ${item?`onclick="App.navigate('detail',{currentItem:'${r.itemId}'})"`:''} style="cursor:${item?'pointer':'default'}">
+              <div class="record-type ${r.type}">${r.type==='in'?'+ 入库':r.type==='out'?'- 出库':'- 消耗'}</div>
+              <div class="record-detail">
+                <div class="record-qty-change ${r.type}">${r.type==='in'?'+':'−'}${r.quantity}</div>
+                <div class="record-note">${item?escapeHtml(item.name):'未知'} · ${MODULES.find(m=>m.id===r.moduleId)?.name||''}${r.note?' · '+escapeHtml(r.note):''}</div>
+              </div>
+              <div class="record-after">剩余 ${r.remainingQty}</div>
+              <div class="record-time">${formatDate(r.timestamp,'MM-DD HH:mm')}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item active"><div class="tab-icon">📋</div><div class="tab-label">记录</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item" onclick="App.navigate('settings')"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // RENDER: SETTINGS
+  // ================================================================
+  function renderSettings(){
+    return `
+    <div class="page active" id="page-settings">
+      <div class="app-header">
+        <div class="header-top">
+          <div class="header-btn" onclick="App.navigate('home')" style="background:rgba(255,255,255,.2)">←</div>
+          <div class="header-title">⚙️ 设置</div>
+          <div style="width:36px"></div>
+        </div>
+      </div>
+      <div class="settings-page">
+        <div class="setting-group">
+          <div class="setting-item" onclick="App.showExportPreview()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--blue)">💾</div>
+              <div><div class="setting-name">备份数据</div><div class="setting-desc">多格式导出（JSON/CSV/Excel/XML/图片）+ 预览</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+          <div class="setting-item" onclick="App.showImportModal()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--green)">📥</div>
+              <div><div class="setting-name">恢复数据</div><div class="setting-desc">本机 / 微信导入（JSON·CSV·XML·Excel）</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+          <div class="setting-item" onclick="App.showAuth('login')">
+            <div class="setting-left"><div class="setting-icon" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">☁️</div>
+              <div><div class="setting-name" id="settingCloudName">云端同步</div><div class="setting-desc" id="settingCloudDesc">登录后多设备自动同步数据</div></div></div>
+            <div class="setting-arrow" id="settingCloudArrow">›</div>
+          </div>
+          <input type="file" id="importFile" accept=".json,.csv,.xml,.xlsx,application/json,text/csv,application/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="if(this.files[0])App.handleImportFile(this.files[0]);this.value=''">
+        </div>
+        <div class="setting-group">
+          <div class="setting-item" onclick="App.clearAllDataConfirm()">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--danger)">🗑️</div>
+              <div><div class="setting-name">清空所有数据</div><div class="setting-desc">删除全部物品、记录和分类（不可恢复）</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-item" style="cursor:default">
+            <div class="setting-left" style="flex:1">
+              <div class="setting-icon" style="background:var(--red)">⚠️</div>
+              <div style="flex:1"><div class="setting-name">库存预警阈值</div><div class="setting-desc">库存 ≤ 此数值时预警提醒</div></div>
+            </div>
+            <div class="threshold-setting" style="padding:0">
+              <input class="threshold-input" type="number" id="thresholdInput" value="${state.lowStockThreshold||10}" min="0" style="width:64px">
+              <span style="font-size:13px;color:var(--gray-500)">件</span>
+              <button class="region-btn add" onclick="App.saveLowStockThreshold(parseInt(document.getElementById('thresholdInput').value))">保存</button>
+            </div>
+          </div>
+        </div>
+        <div class="setting-group">
+          <div class="setting-item">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--purple)">ℹ️</div>
+              <div><div class="setting-name">关于</div><div class="setting-desc">LESLEY公司仓储 v2.0</div></div></div>
+          </div>
+          <div class="setting-item">
+            <div class="setting-left"><div class="setting-icon" style="background:var(--gray-400)">📱</div>
+              <div><div class="setting-name">添加到主屏幕</div><div class="setting-desc">保存到桌面，全屏体验</div></div></div>
+            <div class="setting-arrow">›</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab-item" onclick="App.navigate('home')"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+        <div class="tab-item" onclick="App.navigate('search')"><div class="tab-icon">🔍</div><div class="tab-label">搜索</div></div>
+        <div class="tab-item" onclick="App.navigate('stats')"><div class="tab-icon">📊</div><div class="tab-label">统计</div></div>
+        <div class="tab-item active"><div class="tab-icon">⚙️</div><div class="tab-label">设置</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // MAIN RENDER
+  // ================================================================
+  async function render(){
+    try{state.items=await getAllItems();}catch(e){console.error(e);}
+    try{state.records=await getAllRecords();}catch(e){console.error(e);}
+    state.searchHistory=loadSearchHistory();
+    const app=document.getElementById('app');
+    try{
+      switch(state.currentPage){
+        case'home':app.innerHTML=await renderHome();break;
+        case'module':app.innerHTML=await renderModule();break;
+        case'add-item':app.innerHTML=renderAddItemForm();break;
+        case'quick-add':app.innerHTML=renderQuickAddForm();break;
+        case'detail':app.innerHTML=await renderDetail();break;
+        case'search':app.innerHTML=renderSearch();break;
+        case'stats':app.innerHTML=renderStats();drawChart();break;
+        case'records':app.innerHTML=renderRecords();break;
+        case'settings':app.innerHTML=renderSettings();break;
+        case'consume':app.innerHTML=await renderConsumePage();break;
+        default:app.innerHTML=await renderHome();
+      }
+    }catch(err){
+      console.error('render error:',err);
+      app.innerHTML=`<div class="page active" style="padding:24px;text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:16px;color:var(--gray-700);margin-bottom:6px">页面显示异常</div>
+        <div style="font-size:13px;color:var(--gray-400);margin-bottom:18px">${escapeHtml(String(err&&err.message||err))}</div>
+        <button class="action-btn success" onclick="location.reload()">🔄 刷新重试</button>
+        <button class="action-btn default" style="margin-top:10px" onclick="App.resetView()">返回首页</button>
+      </div>`;
+    }
+  }
+
+  function resetView(){ state.currentPage='home'; state.currentItem=null; render(); }
+
+  // ================================================================
+  // CHART DRAWING
+  // ================================================================
+  function drawChart(){
+    setTimeout(()=>{
+      const canvas=document.getElementById('statsChart');if(!canvas)return;
+      const ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1;
+      canvas.width=canvas.offsetWidth*dpr;canvas.height=canvas.offsetHeight*dpr;ctx.scale(dpr,dpr);
+      const W=canvas.offsetWidth,H=canvas.offsetHeight;ctx.clearRect(0,0,W,H);
+      const range=state.statsTimeRange,now=new Date();let start,end;
+      switch(range){
+        case'today':start=new Date(now.getFullYear(),now.getMonth(),now.getDate());end=new Date(start.getTime()+86400000);break;
+        case'yesterday':start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);end=new Date(start.getTime()+86400000);break;
+        case'week':{const d=now.getDay()||7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);break;}
+        case'lastWeek':{const d=(now.getDay()||7)+7;start=new Date(now.getFullYear(),now.getMonth(),now.getDate()-d+1);end=new Date(start.getTime()+7*86400000);break;}
+        case'month':start=new Date(now.getFullYear(),now.getMonth(),1);end=new Date(now.getFullYear(),now.getMonth()+1,1);break;
+        case'lastMonth':start=new Date(now.getFullYear(),now.getMonth()-1,1);end=new Date(now.getFullYear(),now.getMonth(),1);break;
+        case'year':start=new Date(now.getFullYear(),0,1);end=new Date(now.getFullYear()+1,0,1);break;
+        default:start=new Date(2020,0,1);end=new Date(2030,0,1);
+      }
+      const filtered=state.records.filter(r=>{const t=new Date(r.timestamp);return t>=start&&t<end;});
+      const data={};MODULES.forEach(m=>{data[m.id]={name:m.name,in:0,out:0,consume:0};});
+      filtered.forEach(r=>{if(data[r.moduleId]){if(r.type==='in')data[r.moduleId].in+=r.quantity;else if(r.type==='out')data[r.moduleId].out+=r.quantity;else if(r.type==='consume')data[r.moduleId].consume+=r.quantity;}});
+      const values=Object.values(data),maxVal=Math.max(...values.flatMap(v=>[v.in,v.out,v.consume]),1);
+      const barW=Math.min(24,(W-60)/values.length/3-2),groupW=barW*3+4,startX=(W-groupW*values.length)/2,chartH=H-40,baseY=chartH-10;
+      ctx.strokeStyle='#E5E7EB';ctx.lineWidth=.5;
+      for(let i=0;i<=4;i++){const y=baseY-(chartH-20)*i/4;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(W-10,y);ctx.stroke();ctx.fillStyle='#9CA3AF';ctx.font='10px sans-serif';ctx.textAlign='right';ctx.fillText(Math.round(maxVal*i/4),26,y+3);}
+      const colorsIn=['#6BAF5A','#4A90C8','#F0C848','#9B7BC0','#E07050','#50B8D0','#7B68A0','#608060','#D4453A'];
+      const colorsOut=['#D4453A','#E07050','#F0C848','#7B68A0','#4A90C8','#9B7BC0','#50B8D0','#D4453A','#6BAF5A'];
+      values.forEach((v,i)=>{
+        const cx=startX+i*groupW+groupW/2;
+        const hIn=Math.max(2,(v.in/maxVal)*(chartH-30)),hOut=Math.max(2,(v.out/maxVal)*(chartH-30)),hCon=Math.max(2,(v.consume/maxVal)*(chartH-30));
+        ctx.fillStyle=colorsIn[i%colorsIn.length];roundRect(ctx,cx-barW-3,baseY-hIn,barW,hIn,2);
+        ctx.fillStyle=colorsOut[i%colorsOut.length];roundRect(ctx,cx-barW*0.1,baseY-hOut,barW,hOut,2);
+        ctx.fillStyle='#F0C848';roundRect(ctx,cx+barW*0.8,baseY-hCon,barW,hCon,2);
+        ctx.fillStyle='#4B5563';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText(v.name.length>3?v.name.substr(0,3):v.name,cx,H-3);
+      });
+      ctx.fillStyle='#6BAF5A';ctx.fillRect(W-110,4,8,8);ctx.fillStyle='#4B5563';ctx.font='9px sans-serif';ctx.textAlign='left';ctx.fillText('入库',W-98,12);
+      ctx.fillStyle='#D4453A';ctx.fillRect(W-70,4,8,8);ctx.fillText('出库',W-58,12);
+      ctx.fillStyle='#F0C848';ctx.fillRect(W-34,4,8,8);ctx.fillText('消耗',W-22,12);
+    },50);
+  }
+  function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();}
+
+  // ================================================================
+  // ACTIONS
+  // ================================================================
+
+  // Save full item
+  // Cancel add/edit form — returns to module page or home
+  function cancelAddItem(){
+    const box=document.getElementById('nameSuggestBox'); if(box) box.innerHTML='';
+    const target=state.editingModule||(state.editingItem?.moduleId)||'finished';
+    if(state.editingItem) navigate('detail',{currentItem:state.editingItem.id});
+    else navigate('module',{currentModule:target});
+  }
+
+  // Name autosuggest: show existing products matching the typed keyword
+  function showNameSuggestions(val){
+    const box=document.getElementById('nameSuggestBox');
+    if(!box)return;
+    const q=(val||'').trim().toLowerCase();
+    if(!q){box.innerHTML='';return;}
+    const matches=state.items.filter(i=>(i.name||'').toLowerCase().includes(q)).slice(0,8);
+    if(matches.length===0){box.innerHTML='';return;}
+    box.innerHTML=`<div class="suggest-dropdown">${matches.map(m=>{
+      const mod=MODULES.find(x=>x.id===m.moduleId);
+      return `<div class="suggest-item" onclick="App.fillNameSuggestion('${escapeHtml(m.name).replace(/'/g,"\\'")}')">${escapeHtml(m.name)}<span class="suggest-qty">${mod?.name||''} · ${m.quantity}</span></div>`;
+    }).join('')}</div>`;
+  }
+  function fillNameSuggestion(name){
+    const input=document.getElementById('itemName');
+    if(input) input.value=name;
+    const box=document.getElementById('nameSuggestBox'); if(box) box.innerHTML='';
+    if(input) input.focus();
+  }
+
+  async function saveItem(e){
+    e.preventDefault();
+    const id=document.getElementById('formItemId').value;
+    const name=document.getElementById('itemName').value.trim();
+    const qtyRaw=document.getElementById('itemQty').value;
+    const quantity = qtyRaw==='' ? 1 : (parseInt(qtyRaw)||0);
+    const location=document.getElementById('itemLocation').value.trim();
+    const usage=document.getElementById('itemUsage').value.trim();
+    const supplier=document.getElementById('itemSupplier').value.trim();
+    const categoryId=document.getElementById('itemCategory').value||'';
+    const barcode=document.getElementById('itemBarcode').value.trim();
+    const arrival=document.getElementById('itemArrival').value;
+    const expiry=document.getElementById('itemExpiry').value;
+    const reminder=parseInt(document.getElementById('itemReminder').value)||7;
+    if(!name){toast('请输入物品名称');return;}
+    if(quantity<0){toast('数量不能为负数');return;}
+    const mediaPreviews=document.querySelectorAll('#mediaPreview .media-thumb img');
+    const images=Array.from(mediaPreviews).map(img=>img.src);
+    if(id&&state.editingItem){const existingImages=state.editingItem.images||[];images.unshift(...existingImages);}
+    const item={id:id||undefined,name,quantity,location,usageNote:usage,supplierNote:supplier,categoryId,moduleId:state.editingModule||(state.editingItem?.moduleId)||'finished',arrivalDate:arrival||null,expiryDate:expiry||null,reminderDays:reminder,barcode:barcode||undefined,images:images.length>0?images:[]};
+    try{
+      if(id){
+        await updateItem(item);toast('修改成功！');
+        const oldQty=state.editingItem?.quantity||0;
+        if(quantity!==oldQty){const diff=quantity-oldQty;await addRecord({itemId:item.id,moduleId:item.moduleId,type:diff>0?'in':'out',quantity:Math.abs(diff),note:'编辑时调整数量',remainingQty:quantity});}
+      } else {
+        await addItem(item);await addRecord({itemId:item.id,moduleId:item.moduleId,type:'in',quantity:quantity,note:'初始入库',remainingQty:quantity});toast('添加成功！');
+      }
+      navigate('module',{currentModule:item.moduleId});
+    }catch(err){console.error(err);toast('保存失败：'+err.message);}
+    return false;
+  }
+
+  // Save quick item (minimal fields)
+  async function saveQuickItem(e){
+    e.preventDefault();
+    const name=document.getElementById('quickName').value.trim();
+    if(!name){toast('请输入物品名称');return;}
+    const qty=parseInt(document.getElementById('quickQty').value)||1;
+    const modId=document.getElementById('quickModule').value;
+    const catId=document.getElementById('quickCat').value;
+    const location=document.getElementById('quickLocation').value.trim();
+    const barcode=document.getElementById('quickBarcode').value.trim();
+    const mediaPreviews=document.querySelectorAll('#quickMediaPreview .media-thumb img');
+    const images=Array.from(mediaPreviews).map(img=>img.src);
+
+    // If no category selected, auto-create one named "默认分类"
+    let finalCatId=catId;
+    if(!finalCatId){
+      const cats=await getCategories(modId);
+      if(cats.length===0){
+        finalCatId=makeId();
+        await addCategory(modId,'默认分类');
+      } else {
+        finalCatId=cats[0].id;
+      }
+    }
+
+    const item={name,quantity:qty,location,categoryId:finalCatId,moduleId:modId,barcode:barcode||undefined,images:images.length>0?images:[]};
+    try{
+      await addItem(item);
+      await addRecord({itemId:item.id,moduleId:modId,type:'in',quantity:qty,note:'快速添加入库',remainingQty:qty});
+      toast('✅ 快速添加成功！');
+      navigate('module',{currentModule:modId});
+    }catch(err){toast('保存失败：'+err.message);}
+    return false;
+  }
+
+  function handleMediaUpload(e){
+    Array.from(e.target.files).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        const div=document.createElement('div');div.className='media-thumb';div.style.display='inline-block';
+        div.innerHTML=`<img src="${ev.target.result}" alt=""><div class="media-remove" onclick="this.parentElement.remove()">✕</div>`;
+        document.getElementById('mediaPreview').appendChild(div);
+      };reader.readAsDataURL(file);
+    });e.target.value='';
+  }
+  function handleQuickMediaUpload(e){
+    Array.from(e.target.files).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>{
+        const div=document.createElement('div');div.className='media-thumb';div.style.display='inline-block';
+        div.innerHTML=`<img src="${ev.target.result}" alt=""><div class="media-remove" onclick="this.parentElement.remove()">✕</div>`;
+        document.getElementById('quickMediaPreview').appendChild(div);
+      };reader.readAsDataURL(file);
+    });e.target.value='';
+  }
+
+  // Stock action (in/out)
+  async function showStockAction(itemId,type){
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    showModal(`
+      <div class="modal-title">${type==='in'?'入库':'出库'} - ${escapeHtml(item.name)}</div>
+      <div class="stock-action-tabs">
+        <div class="stock-action-tab ${type==='in'?'active in':''}" onclick="this.parentElement.querySelector('.out').classList.remove('active','out');this.classList.add('active','in')">+ 入库</div>
+        <div class="stock-action-tab ${type==='out'?'active out':''}" onclick="this.parentElement.querySelector('.in').classList.remove('active','in');this.classList.add('active','out')">- 出库</div>
+      </div>
+      <div class="form-group"><label class="form-label">数量</label><input class="modal-input" type="number" id="stockQty" value="1" min="1"></div>
+      <div class="form-group"><label class="form-label">备注</label><input class="modal-input" type="text" id="stockNote" placeholder="选填"></div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:12px">当前库存：<strong style="color:var(--red);font-size:16px">${item.quantity}</strong></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.doStockAction('${itemId}')">确认</button>
+      </div>`);
+  }
+
+  async function doStockAction(itemId){
+    const qty=parseInt(document.getElementById('stockQty').value)||0;if(qty<=0){toast('请输入有效数量');return;}
+    const note=document.getElementById('stockNote').value.trim();
+    const isActiveIn=document.querySelector('.stock-action-tab.active.in')!==null;
+    const type=isActiveIn?'in':'out';
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    if(type==='out'&&qty>item.quantity){const ok=await confirm(`出库数量（${qty}）超过当前库存（${item.quantity}），确定继续？`,'强制出库');if(!ok)return;}
+    const newQty=type==='in'?item.quantity+qty:item.quantity-qty;
+    await updateItem({...item,quantity:newQty});
+    await addRecord({itemId:item.id,moduleId:item.moduleId,type,quantity:qty,note:note||undefined,remainingQty:newQty});
+    hideModal();toast(type==='in'?'入库成功！':'出库成功！');navigate('detail',{currentItem:itemId});
+  }
+
+  async function handleDeleteItem(itemId){
+    const item=state.items.find(i=>i.id===itemId);if(!item)return;
+    const ok=await confirm(`确定删除「${item.name}」？\n此操作不可恢复，相关记录也会被删除。`,'删除');
+    if(!ok)return;await deleteItem(itemId);toast('已删除');navigate('module',{currentModule:item.moduleId});
+  }
+
+  // Category management
+  async function showCatManager(moduleId){
+    const cats=await getCategories(moduleId);
+    showModal(`<div class="modal-title">管理分类</div><div class="cat-modal-list">
+      ${cats.length===0?'<div style="text-align:center;color:var(--gray-400);padding:20px">暂无分类</div>'
+      :cats.map(c=>`<div class="cat-modal-item"><div class="cat-modal-name">${escapeHtml(c.name)}</div>
+        <div class="cat-modal-actions"><button class="cat-modal-btn" onclick="App.renameCategory('${c.id}','${escapeHtml(c.name)}')">重命名</button>
+        <button class="cat-modal-btn delete" onclick="App.deleteCategoryConfirm('${c.id}','${escapeHtml(c.name)}')">删除</button></div></div>`).join('')}
+      </div><div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">关闭</button>
+      <button class="modal-btn modal-btn-confirm" onclick="App.hideModal();App.showAddCategory('${moduleId}')">+ 添加分类</button></div>`);
+  }
+  function showAddCategory(moduleId){
+    showModal(`<div class="modal-title">添加分类</div><input class="modal-input" id="newCatName" placeholder="请输入分类名称" autofocus>
+      <div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button>
+      <button class="modal-btn modal-btn-confirm" onclick="App.doAddCategory('${moduleId}')">添加</button></div>`);
+    setTimeout(()=>document.getElementById('newCatName').focus(),100);
+  }
+  async function doAddCategory(moduleId){
+    const name=document.getElementById('newCatName').value.trim();if(!name){toast('请输入分类名称');return;}
+    await addCategory(moduleId,name);hideModal();toast('分类已添加');render();
+  }
+  async function renameCategory(catId,oldName){
+    const newName=prompt('新名称：',oldName);if(!newName||!newName.trim())return;
+    const cats=await dbOp('categories','readonly',s=>s.getAll());const cat=cats.find(c=>c.id===catId);
+    if(cat){cat.name=newName.trim();await updateCategory(cat);toast('重命名成功');hideModal();render();}
+  }
+  async function deleteCategoryConfirm(catId,name){
+    const ok=await confirm(`确定删除「${name}」？该分类下物品不会删除但会失去分类归属。`);if(!ok)return;
+    await deleteCategory(catId);toast('分类已删除');hideModal();render();
+  }
+
+  async function clearAllDataConfirm(){
+    const ok=await confirm('⚠️ 确定清空所有数据？\n· 全部物品\n· 全部记录\n· 全部分类\n\n不可恢复！建议先备份。','确认清空');
+    if(!ok)return;await clearAllData();toast('已清空所有数据');navigate('home');
+  }
+
+  // Load categories into select
+  async function loadCategoriesIntoSelect(){
+    const sel=document.getElementById('itemCategory');if(!sel)return;
+    const quickSel=document.getElementById('quickCat');
+    const modId=state.editingModule||state.editingItem?.moduleId||'finished';
+    const quickModId=document.getElementById('quickModule')?.value||modId;
+    const cats=await getCategories(modId);
+    sel.innerHTML='<option value="">请选择分类</option>'+cats.map(c=>`<option value="${c.id}" ${state.editingItem?.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
+    if(quickSel){
+      const quickCats=await getCategories(quickModId);
+      quickSel.innerHTML='<option value="">暂无分类（将自动创建）</option>'+quickCats.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    }
+  }
+
+  
+  // ================================================================
+  // SUPABASE CLOUD SYNC — Step B: Auth (注册/登录/退出/持久化)
+  // ================================================================
+  var _supabaseUrl = 'https://bykjhibldnrtzsxqukgd.supabase.co';
+  var _supabaseAnonKey = 'sb_publishable_QI9qlchy_Td0tlvNJTMGtA_sDJ5ZTWP';
+  var sbClient = null;       // Supabase client instance
+  var sbUser = null;         // Current user object {id, email, ...}
+  var _sbReady = false;
+
+  function getSB(){
+    if(!sbClient && typeof window.supabase !== 'undefined' && window.supabase.createClient){
+      sbClient = window.supabase.createClient(_supabaseUrl, _supabaseAnonKey);
+    }
+    return sbClient;
+  }
+
+  // --- Restore session from localStorage hash ---
+  async function restoreSession(){
+    try{
+      const sb=getSB(); if(!sb) return false;
+      const {data:{session},error}=await sb.auth.getSession();
+      if(error){ console.warn('restoreSession error:',error.message); return false; }
+      if(session && session.user){
+        sbUser=session.user;
+        localStorage.setItem('lw_sb_uid', session.user.id);
+        localStorage.setItem('lw_sb_email', session.user.email);
+        _sbReady=true;
+        return true;
+      }
+      return false;
+    }catch(e){
+      console.warn('restoreSession exception:', e);
+      return false;
+    }
+  }
+
+  // --- Show auth modal ---
+  function showAuth(mode){
+    document.getElementById('authOverlay').style.display='flex';
+    switchAuthTab(mode||'login');
+  }
+
+  function hideAuth(){
+    document.getElementById('authOverlay').style.display='none';
+    hideError('authError'); hideError('regError');
+  }
+
+  function switchAuthTab(tab){
+    const isLogin=(tab==='login');
+    document.getElementById('authTabLogin').classList.toggle('active',isLogin);
+    document.getElementById('authTabRegister').classList.toggle('active',!isLogin);
+    document.getElementById('authLoginForm').style.display=isLogin?'block':'none';
+    document.getElementById('authRegisterForm').style.display=isLogin?'none':'block';
+    document.getElementById('authTitle').textContent=isLogin?'登录 LESLEY 云端':'注册新账号';
+  }
+
+  function showError(id,msg){
+    const el=document.getElementById(id); if(el){el.textContent=msg;el.style.display='block';}
+  }
+  function hideError(id){ const el=document.getElementById(id); if(el){el.style.display='none';} }
+
+  // --- Register ---
+  async function handleRegister(){
+    const email=(document.getElementById('regEmail')||{}).value.trim();
+    const pw=(document.getElementById('regPassword')||{}).value;
+    const pw2=(document.getElementById('regPassword2')||{}).value;
+    hideError('regError');
+    if(!email || !email.includes('@')){showError('regError','请输入有效邮箱地址');return;}
+    if(pw.length<6){showError('regError','密码至少6位');return;}
+    if(pw!==pw2){showError('regError','两次密码不一致');return;}
+    const btn=document.getElementById('authRegBtn'); btn.disabled=true;btn.textContent='注册中…';
+    try{
+      const sb=getSB();
+      const {data,error}=await sb.auth.signUp({email,password:pw});
+      if(error) throw new Error(error.message);
+      toast('✅ 注册成功！请查收邮箱验证邮件');
+      switchAuthTab('login');
+      (document.getElementById('authEmail')||{}).value=email;
+    }catch(e){
+      showError('regError', e.message || '注册失败，请稍后重试');
+    }finally{btn.disabled=false;btn.textContent='注册';}
+  }
+
+  // --- Login ---
+  async function handleLogin(){
+    const email=(document.getElementById('authEmail')||{}).value.trim();
+    const pw=(document.getElementById('authPassword')||{}).value;
+    hideError('authError');
+    if(!email){showError('authError','请输入邮箱');return;}
+    if(!pw){showError('authError','请输入密码');return;}
+    const btn=document.getElementById('authLoginBtn'); btn.disabled=true;btn.textContent='登录中…';
+    try{
+      const sb=getSB();
+      const {data:{user,session},error}=await sb.auth.signInWithPassword({email,password:pw});
+      if(error) throw new Error(error.message);
+      sbUser=user;
+      localStorage.setItem('lw_sb_uid', user.id);
+      localStorage.setItem('lw_sb_email', user.email);
+      _sbReady=true;
+      hideAuth();
+      showCloudBar();
+      toast('☁️ 登录成功，已连接云端');
+      // Trigger initial sync after login
+      syncNow();
+    }catch(e){
+      showError('authError', e.message || '登录失败，请检查账号密码');
+    }finally{btn.disabled=false;btn.textContent='登录';}
+  }
+
+  // --- Logout ---
+  async function handleLogout(){
+    const ok=await confirmAsync('确定要退出云端同步吗？\n退出后数据仅保存在本机。');
+    if(!ok) return;
+    try{
+      const sb=getSB(); if(sb){ await sb.auth.signOut(); }
+    }catch(e){}
+    sbUser=null; _sbReady=false;
+    localStorage.removeItem('lw_sb_uid');
+    localStorage.removeItem('lw_sb_email');
+    hideCloudBar();
+    toast('已退出云端同步');
+  }
+
+  // --- Show/hide cloud status bar ---
+  function showCloudBar(){
+    const bar=document.getElementById('cloudBar');
+    if(bar){bar.style.display='flex';}
+    // Push app content down
+    const appEl=document.getElementById('app');
+    if(appEl) appEl.style.paddingTop='44px';
+    // Update settings label
+    const nameEl=document.getElementById('settingCloudName');
+    const descEl=document.getElementById('settingCloudDesc');
+    const arrowEl=document.getElementById('settingCloudArrow');
+    if(nameEl) nameEl.textContent='云端同步（已登录）';
+    if(descEl) descEl.textContent=sbUser?sbUser.email:'已连接';
+    if(arrowEl) arrowEl.textContent='✓';arrowEl&&arrowEl.style.setProperty('color','var(--green)');
+  }
+  function hideCloudBar(){
+    const bar=document.getElementById('cloudBar');
+    if(bar){bar.style.display='none';}
+    const appEl=document.getElementById('app');
+    if(appEl) appEl.style.paddingTop='';
+    // Reset settings label
+    const nameEl=document.getElementById('settingCloudName');
+    const descEl=document.getElementById('settingCloudDesc');
+    const arrowEl=document.getElementById('settingCloudArrow');
+    if(nameEl) nameEl.textContent='云端同步';
+    if(descEl) descEl.textContent='登录后多设备自动同步数据';
+    if(arrowEl) arrowEl.textContent='›';arrowEl&&arrowEl.style.removeProperty('color');
+  }
+
+  // --- Sync now (placeholder — Step C will implement real push/pull) ---
+  async function syncNow(){
+    if(!_sbReady || !sbUser){ toast('请先登录云端'); showAuth('login'); return; }
+    try{
+      await fullSync();
+      toast('🔄 云端同步完成');
+    }catch(e){
+      toast('同步失败：'+ (e.message||'网络错误'));
+    }
+  }
+
+  // ============================================================
+  // Step C: 云端数据自动同步（换手机恢复 / 实时备份）
+  // ============================================================
+  let _pushTimer = null;
+  function schedulePush(){
+    if(!_sbReady || !sbUser) return;
+    if(_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(function(){ pushAll().catch(function(e){ console.warn('pushAll failed', e); }); }, 800);
+  }
+
+  function mapItemToDB(o){
+    return { id:o.id, user_id:sbUser.id, module_id:o.moduleId, category_id:o.categoryId||null,
+      name:o.name, quantity:o.quantity, location:o.location||'', usage_note:o.usageNote||'',
+      supplier_note:o.supplierNote||'', barcode:o.barcode||null,
+      arrival_date:o.arrivalDate||null, expiry_date:o.expiryDate||null,
+      reminder_days:o.reminderDays||7, images:o.images||[], videos:[],
+      updated_at:o.updatedAt||new Date().toISOString() };
+  }
+  function mapCatToDB(o){ return { id:o.id, user_id:sbUser.id, module_id:o.moduleId, name:o.name }; }
+  function mapRecToDB(o){
+    return { id:o.id, user_id:sbUser.id, item_id:o.itemId||null, module_id:o.moduleId,
+      type:o.type, quantity:o.quantity, note:o.note||'', remaining_qty:o.remainingQty||0 };
+  }
+  function mapItemFromDB(r){ return { id:r.id, moduleId:r.module_id, categoryId:r.category_id||'', name:r.name,
+      quantity:r.quantity, location:r.location||'', usageNote:r.usage_note||'', supplierNote:r.supplier_note||'',
+      barcode:r.barcode||'', arrivalDate:r.arrival_date||null, expiryDate:r.expiry_date||null,
+      reminderDays:r.reminder_days||7, images:r.images||[], updatedAt:r.updated_at, createdAt:r.created_at }; }
+  function mapCatFromDB(r){ return { id:r.id, moduleId:r.module_id, name:r.name }; }
+  function mapRecFromDB(r){ return { id:r.id, itemId:r.item_id||null, moduleId:r.module_id, type:r.type,
+      quantity:r.quantity, note:r.note||'', remainingQty:r.remaining_qty||0, timestamp:r.created_at }; }
+
+  async function pushTable(table, getAllFn, mapFn){
+    const sb=getSB(); if(!sb||!sbUser) return;
+    const local = (await getAllFn()) || [];
+    const localIds = local.map(function(o){return o.id;});
+    if(local.length){
+      const rows = local.map(mapFn).filter(Boolean);
+      const {error} = await sb.from(table).upsert(rows, {onConflict:'id'});
+      if(error) throw error;
+    }
+    // 同步删除：云端存在但本地已删的，从云端删除
+    const {data:cloud, error:ce} = await sb.from(table).select('id').eq('user_id', sbUser.id);
+    if(ce) throw ce;
+    const toDelete = (cloud||[]).map(function(c){return c.id;}).filter(function(id){return localIds.indexOf(id)<0;});
+    if(toDelete.length){
+      const {error:de} = await sb.from(table).delete().in('id', toDelete);
+      if(de) throw de;
+    }
+  }
+  async function pushAll(){
+    await pushTable('categories', function(){return dbOp('categories','readonly',function(s){return s.getAll();});}, mapCatToDB);
+    await pushTable('items', function(){return getAllItems();}, mapItemToDB);
+    await pushTable('records', function(){return getAllRecords();}, mapRecToDB);
+  }
+
+  async function pullTableMerge(table, storeName, mapFn, cloudTimeField, localTimeField){
+    const sb=getSB(); if(!sb||!sbUser) return;
+    const {data,error} = await sb.from(table).select('*').eq('user_id', sbUser.id);
+    if(error) throw error;
+    if(!data || !data.length) return;
+    const localAll = await dbOp(storeName,'readonly',function(s){return s.getAll();});
+    const localMap = {}; localAll.forEach(function(o){ localMap[o.id]=o; });
+    for(const row of data){
+      const obj = mapFn(row);
+      const local = localMap[obj.id];
+      if(!local){ await dbOp(storeName,'readwrite',function(s){return s.put(obj);}); continue; }
+      if(!cloudTimeField) continue; // 分类无时间戳：保留本地，稍后推送上云
+      const tCloud = new Date(row[cloudTimeField]||0).getTime();
+      const tLocal = new Date(local[localTimeField]||0).getTime();
+      if(tCloud > tLocal) await dbOp(storeName,'readwrite',function(s){return s.put(obj);});
+    }
+  }
+  async function pullAll(){
+    await pullTableMerge('categories','categories', mapCatFromDB, null, null);
+    await pullTableMerge('items','items', mapItemFromDB, 'updated_at', 'updatedAt');
+    await pullTableMerge('records','records', mapRecFromDB, 'created_at', 'timestamp');
+  }
+
+  // 完整同步：先拉云端（换手机恢复），再推本地（保证本地改动上云）
+  async function fullSync(){
+    if(!_sbReady || !sbUser) return;
+    const st=document.getElementById('cloudStatus');
+    if(st) st.textContent='⏳ 同步中…';
+    try{
+      await pullAll();
+      await pushAll();
+      try{ state.items = await getAllItems(); }catch(e){}
+      try{ state.records = await getAllRecords(); }catch(e){}
+      if(typeof render==='function') render();
+      if(st) st.textContent='☁️ 已连接云端 · 已同步';
+    }catch(e){
+      if(st) st.textContent='⚠️ 同步失败';
+      console.warn('fullSync error', e);
+    }
+  }
+
+  // Expose to App namespace via the IIFE return (NOT App.xxx= here — App is in TDZ)
+
+// ---- Init ----
+  async function init(){
+    // Step B: 恢复云端登录态
+    try {
+      const loggedIn = await restoreSession();
+      if(loggedIn) showCloudBar();
+    } catch(e) { console.warn('session restore skipped:', e); }
+    try { await initDB(); }
+    catch(e){ db = null; console.warn('IndexedDB unavailable, falling back to localStorage:', e); }
+    try{MODULES=await loadModules();}catch(e){console.error('loadModules failed',e);}
+    try{state.items=await getAllItems();}catch(e){state.items=[];}
+    try{state.records=await getAllRecords();}catch(e){state.records=[];}
+    state.searchHistory=loadSearchHistory();
+    // 加载库存预警阈值（持久化）
+    try{ const t=parseInt(localStorage.getItem('lw_threshold')); if(!isNaN(t)&&t>0) state.lowStockThreshold=t; }catch(e){}
+    state._stockPopupShown=false;
+    if(_sbReady && sbUser){ fullSync().catch(function(e){ console.warn('initial sync skipped', e); }); }
+    if('serviceWorker'in navigator){
+      navigator.serviceWorker.register('sw.js').then(reg=>{
+        // 发现新版本：提示用户刷新（联网已 network-first，刷新即最新）
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          if(!nw)return;
+          nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              showUpdateBar();
+            }
+          });
+        });
+        if(reg.waiting&&navigator.serviceWorker.controller) showUpdateBar();
+      }).catch(()=>{});
+    }
+    render();
+
+    function showUpdateBar(){
+      let bar=document.getElementById('swUpdateBar');
+      if(bar)return;
+      bar=document.createElement('div');
+      bar.id='swUpdateBar';
+      bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:9999;background:var(--red);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;font-size:14px;box-shadow:0 -2px 10px rgba(0,0,0,.2)';
+      bar.innerHTML='<span>🔄 已发布新版本</span><button onclick="location.reload()" style="background:#fff;color:var(--red);border:none;padding:6px 14px;border-radius:8px;font-weight:700;cursor:pointer">立即刷新</button>';
+      document.body.appendChild(bar);
+    }
+    const observer=new MutationObserver(()=>{
+      if(document.getElementById('itemCategory')||document.getElementById('quickCat'))loadCategoriesIntoSelect();
+    });
+    observer.observe(document.getElementById('app'),{childList:true,subtree:true});
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+
+  // 首屏渲染完成后，空闲时段静默预热扫码引擎：点扫码时秒开，且不拖慢启动
+  function _warmupScanEngine(){
+    try{
+      if(typeof window.BarcodeDetector!=='undefined') return; // 原生可用，无需预热
+      ensureZxing().catch(function(){});
+    }catch(e){}
+  }
+  if('requestIdleCallback' in window){ requestIdleCallback(_warmupScanEngine,{timeout:4000}); }
+  else { setTimeout(_warmupScanEngine,2500); }
+
+  // ================================================================
+  // STOCK ALERT POPUP (首页进入时弹窗提醒)
+  // ================================================================
+  function showStockAlertPopup(lowStockItems, threshold){
+    const list=lowStockItems.slice(0,12).map(item=>{
+      const mod=MODULES.find(m=>m.id===item.moduleId);
+      return `<div class="alert-item" style="cursor:default">
+        <div class="alert-dot yellow"></div>
+        <div class="alert-info">
+          <div class="alert-name">${escapeHtml(item.name)}</div>
+          <div class="alert-meta">${mod?.name||''} · 库存仅剩 ${item.quantity} 件</div>
+        </div>
+        <div class="alert-days yellow" style="color:#E07050;font-weight:700">${item.quantity}</div>
+      </div>`;
+    }).join('');
+    showModal(`
+      <div class="modal-title">⚠️ 库存预警提醒</div>
+      <div style="font-size:13px;color:var(--gray-500);margin-bottom:8px">以下 ${lowStockItems.length} 项物品库存 ≤ ${threshold} 件，请及时补货：</div>
+      <div style="max-height:50vh;overflow:auto;border-radius:var(--radius-sm)">${list}</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-confirm" onclick="App.hideModal()">我知道了</button>
+      </div>`);
+  }
+
+  // ================================================================
+  // SCAN (扫码录入 / 扫码消耗)
+  // ================================================================
+  let _zxReader=null;       // ZXing BrowserMultiFormatReader 实例
+  let _zxControls=null;     // 实时解码 controls（用于停止）
+  let _bdDetector=null;     // BarcodeDetector 实例（原生，最强）
+  let _bdVideo=null;        // BarcodeDetector 路径的 video
+  let _bdStream=null;       // 摄像头 MediaStream
+  let _bdRAF=null;          // rAF id
+  let _bdRunning=false;     // BarcodeDetector 是否运行
+  let _qrScanner=null;      // html5-qrcode 兜底（二维码相册）
+
+  function ensureZxing(){
+    if(typeof ZXing!=='undefined') return Promise.resolve();
+    return new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='./zxing.min.js';
+      s.onload=function(){ (typeof ZXing!=='undefined')?res():rej(new Error('ZXing库加载失败')); };
+      s.onerror=function(){ rej(new Error('ZXing库加载失败')); };
+      document.head.appendChild(s);
+    });
+  }
+  function ensureQr(){
+    if(typeof Html5Qrcode!=='undefined') return Promise.resolve();
+    return new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='./html5-qrcode.min.js';
+      s.onload=function(){ (typeof Html5Qrcode!=='undefined')?res():rej(new Error('识别库加载失败')); };
+      s.onerror=function(){ rej(new Error('识别库加载失败')); };
+      document.head.appendChild(s);
+    });
+  }
+  function findItemByCode(code){
+    if(!code) return [];
+    const c=code.trim();
+    return state.items.filter(i=>
+      (i.barcode && i.barcode===c) ||
+      (i.name && (i.name===c || i.name.includes(c)))
+    );
+  }
+
+  function stopAllEngines(){
+    if(_zxControls){ try{ _zxControls.stop(); }catch(e){} _zxControls=null; }
+    _zxReader=null;
+    if(_bdRAF){ cancelAnimationFrame(_bdRAF); _bdRAF=null; }
+    _bdRunning=false;
+    if(_bdStream){ try{ _bdStream.getTracks().forEach(function(t){t.stop();}); }catch(e){} _bdStream=null; }
+    if(_bdVideo && _bdVideo.parentNode){ try{ _bdVideo.parentNode.removeChild(_bdVideo); }catch(e){} _bdVideo=null; }
+    _bdDetector=null;
+    if(_qrScanner){ try{ _qrScanner.stop().catch(function(){}); }catch(e){} _qrScanner=null; }
+    var sr=document.getElementById('scanReader'); if(sr){ try{ sr.innerHTML=''; }catch(e){} }
+  }
+
+  function onScanSuccess(code){
+    if(!code) return;
+    stopAllEngines();
+    var hint=document.getElementById('scanHint'); if(hint) hint.textContent='✅ 识别成功：'+code;
+    var rt=document.getElementById('scanResultText'); if(rt) rt.textContent=code;
+    var bar=document.getElementById('scanResultBar'); if(bar) bar.classList.add('show');
+    state._lastScan=code;
+  }
+
+  function startScan(mode){
+    state.scanMode=mode;
+    var bar=document.getElementById('scanResultBar'); if(bar) bar.classList.remove('show');
+    var rt=document.getElementById('scanResultText'); if(rt) rt.textContent='';
+    var hint=document.getElementById('scanHint'); if(hint) hint.textContent='正在启动摄像头…';
+    var ov=document.getElementById('scanOverlay'); if(ov) ov.classList.add('show');
+    var man=document.getElementById('scanManual'); if(man) man.style.display='flex';
+    var fin=document.getElementById('scanFileInput'); if(fin) fin.value='';
+
+    // 启动超时兜底：8 秒仍卡在“启动中”则提示改用相册/手动，避免无限转圈
+    var startTimer=setTimeout(function(){
+      if(hint && hint.textContent==='正在启动摄像头…'){
+        if(hint) hint.textContent='摄像头启动较慢，请稍候，或改用「📁 相册识别」/手动输入条码';
+      }
+    },8000);
+
+    var hasCam=!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+    if(!hasCam){ clearTimeout(startTimer); if(hint) hint.textContent='当前环境无法调用摄像头，请用「📁 从相册识别」或手动输入条码'; return; }
+
+    // 优先原生 BarcodeDetector（最强，含 1D+二维码）；否则 ZXing 纯JS引擎（已验证可解商品条码）
+    var useBD=(typeof window.BarcodeDetector!=='undefined');
+    // 原生 BarcodeDetector 可用时无需下载 ZXing；否则只下 ZXing（不预载 375KB 的 html5-qrcode）
+    var libs=useBD?[]:[ensureZxing()];
+    Promise.all(libs).then(function(){
+      if(useBD){ startBarcodeDetector(startTimer,hint); }
+      else { startZXingRealtime(startTimer,hint); }
+    }).catch(function(err){
+      clearTimeout(startTimer);
+      if(hint) hint.textContent=(err&&err.message)?err.message:'识别库加载失败，请刷新页面';
+    });
+  }
+
+  function startBarcodeDetector(startTimer,hint){
+    var formats=['qr_code','ean_13','ean_8','code_128','code_39','code_93','upc_a','upc_e','itf','aztec','data_matrix','pdf_417','codabar'];
+    var bd;
+    try{ bd=new BarcodeDetector({formats:formats}); }catch(e){ startZXingRealtime(startTimer,hint); return; }
+    _bdDetector=bd; _bdRunning=true;
+    var video=document.createElement('video');
+    video.setAttribute('playsinline','true'); video.muted=true;
+    video.style.width='100%'; video.style.height='100%'; video.style.objectFit='cover';
+    var target=document.getElementById('scanReader'); target.innerHTML=''; target.appendChild(video);
+    _bdVideo=video;
+    function attach(constraints){
+      return navigator.mediaDevices.getUserMedia(constraints).then(function(stream){
+        _bdStream=stream; video.srcObject=stream; return video.play();
+      });
+    }
+    attach({video:{facingMode:'environment'}}).catch(function(){ return attach({video:true}); })
+      .then(function(){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='将条码/二维码对准取景框';
+        loopDetect();
+      })
+      .catch(function(err){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='摄像头启动失败：'+(err&&err.message?err.message:err)+'。可改用「📁 相册识别」或手动输入';
+      });
+    function loopDetect(){
+      if(!_bdRunning) return;
+      _bdRAF=requestAnimationFrame(loopDetect);
+      if(video.readyState<2) return;
+      bd.detect(video).then(function(res){
+        if(res&&res.length){ onScanSuccess(res[0].rawValue); }
+      }).catch(function(){});
+    }
+  }
+
+  function startZXingRealtime(startTimer,hint){
+    var target=document.getElementById('scanReader'); target.innerHTML='';
+    var video=document.createElement('video');
+    video.setAttribute('playsinline','true'); video.muted=true;
+    video.style.width='100%'; video.style.height='100%'; video.style.objectFit='cover';
+    target.appendChild(video);
+    try{ if(!_zxReader) _zxReader=new ZXing.BrowserMultiFormatReader(); }
+    catch(e){ if(hint) hint.textContent='识别引擎初始化失败，请刷新页面'; return; }
+    function begin(constraints){
+      return _zxReader.decodeFromConstraints(constraints, video, function(result, err, controls){
+        _zxControls=controls;
+        if(result){ onScanSuccess(result.getText()); }
+      });
+    }
+    begin({video:{facingMode:'environment'}}).then(function(){
+      clearTimeout(startTimer);
+      if(hint) hint.textContent='将商品条码对准取景框（EAN / CODE128 等）';
+    }).catch(function(){
+      begin({video:true}).then(function(){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='将商品条码对准取景框（EAN / CODE128 等）';
+      }).catch(function(err){
+        clearTimeout(startTimer);
+        if(hint) hint.textContent='摄像头启动失败：'+(err&&err.message?err.message:err)+'。可改用「📁 相册识别」或手动输入';
+      });
+    });
+  }
+
+  // 相册/文件识别：多引擎依次尝试，命中即用
+  function scanFromFile(){ var inp=document.getElementById('scanFileInput'); if(inp) inp.click(); }
+  function onScanFilePicked(e){
+    var file=e.target.files && e.target.files[0];
+    e.target.value='';
+    if(!file) return;
+    var hint=document.getElementById('scanHint');
+    if(hint) hint.textContent='正在识别图片…';
+    var engines=[];
+    if(typeof window.BarcodeDetector!=='undefined'){
+      engines.push(function(){
+        var bd=new BarcodeDetector({formats:['qr_code','ean_13','ean_8','code_128','code_39','code_93','upc_a','upc_e','itf','aztec','data_matrix','pdf_417','codabar']});
+        return bd.detect(file).then(function(res){ if(res&&res.length) return res[0].rawValue; throw new Error('no'); });
+      });
+    }
+    engines.push(function(){
+      return ensureZxing().then(function(){ return new Promise(function(res,rej){
+        var r=new ZXing.BrowserMultiFormatReader();
+        r.decodeFromImageUrl(URL.createObjectURL(file)).then(function(x){ res(x.getText()); }).catch(function(err){ rej(err); });
+      }); });
+    });
+    engines.push(function(){
+      return ensureQr().then(function(){ return new Promise(function(res,rej){
+        if(typeof Html5Qrcode==='undefined'){ rej(new Error('no')); return; }
+        var qr=new Html5Qrcode('scanReader',{verbose:false});
+        qr.scanFile(file,false).then(function(t){ res(t); }).catch(function(err){ rej(err); });
+      }); });
+    });
+    runEngines(engines, hint);
+  }
+  function runEngines(engines, hint){
+    var i=0;
+    function next(){
+      if(i>=engines.length){ if(hint) hint.textContent='图片未识别到条码，请换清晰照片，或手动输入条码'; return; }
+      var eng=engines[i++];
+      eng().then(function(code){
+        if(hint) hint.textContent='✅ 识别成功：'+code;
+        document.getElementById('scanResultText').textContent=code;
+        document.getElementById('scanResultBar').classList.add('show');
+        state._lastScan=code;
+      }).catch(function(){ next(); });
+    }
+    next();
+  }
+
+  function useManualScan(){
+    var inp=document.getElementById('scanManualInput');
+    var code=inp? inp.value.trim():'';
+    if(!code){ toast('请输入条码'); return; }
+    state._lastScan=code;
+    var man=document.getElementById('scanManual'); if(man) man.style.display='none';
+    useScanResult();
+  }
+
+  function useScanResult(){
+    const code=state._lastScan;
+    if(!code){ toast('未识别到内容'); return; }
+    const mode=state.scanMode;
+    stopScan();
+    if(mode==='quick-add' || mode==='add-item'){
+      if(mode==='quick-add'){
+        const elName=document.getElementById('quickName');
+        const elCode=document.getElementById('quickBarcode');
+        if(!elName || !elCode){ toast('请先打开「快速录入」页面再扫码'); return; }
+        const match=findItemByCode(code)[0];
+        // 匹配到已有产品就回填产品名；否则名称留空让用户填，条码只进条码框
+        elName.value = match ? match.name : '';
+        elCode.value = code;
+        if(match){
+          const elMod=document.getElementById('quickModule');
+          if(elMod && match.moduleId) elMod.value=match.moduleId;
+          toast('已匹配「'+match.name+'」，可修改数量后保存');
+        } else {
+          toast('条码已填入，请补全产品名称');
+        }
+      } else {
+        const el=document.getElementById('itemBarcode');
+        if(!el){ toast('请先打开产品编辑页面再扫码'); return; }
+        el.value=code;
+        toast('条码已填入，请补全产品名称');
+      }
+    } else if(mode==='consume'){
+      const matches=findItemByCode(code);
+      if(matches.length===0){
+        toast('未找到匹配产品：'+code);
+        return;
+      }
+      if(matches.length===1){
+        state.consumeSearchQuery=matches[0].name;
+        state.consumeSelectedItemId=matches[0].id;
+        render();
+      } else {
+        const opts=matches.map(m=>{
+          const mod=MODULES.find(x=>x.id===m.moduleId);
+          return `<div class="consume-match-item" onclick="App.state.consumeSelectedItemId='${m.id}';App.state.consumeSearchQuery='${escapeHtml(m.name)}';App.hideModal();App.render()">
+            <div class="consume-match-img">${(m.images&&m.images.length>0)?`<img src="${m.images[0]}">`:`<div class="placeholder-icon" style="font-size:20px">📦</div>`}</div>
+            <div class="consume-match-info"><div class="consume-match-name">${escapeHtml(m.name)}</div><div class="consume-match-meta">${mod?.name||''} · 库存 ${m.quantity}</div></div>
+            <div class="consume-match-qty">${m.quantity}</div>
+          </div>`;
+        }).join('');
+        showModal(`<div class="modal-title">选择匹配产品（${matches.length}）</div><div class="consume-search-result">${opts}</div><div class="modal-actions"><button class="modal-btn modal-btn-cancel" onclick="App.hideModal()">取消</button></div>`);
+      }
+    }
+  }
+
+  function stopScan(){
+    stopAllEngines();
+    const ov=document.getElementById('scanOverlay'); if(ov) ov.classList.remove('show');
+    const man=document.getElementById('scanManual'); if(man){ man.style.display='none'; const inp=document.getElementById('scanManualInput'); if(inp) inp.value=''; }
+  }
+
+  function saveLowStockThreshold(val){
+    const t=parseInt(val);
+    if(isNaN(t)||t<0){ toast('请输入有效的阈值'); return; }
+    state.lowStockThreshold=t;
+    try{ localStorage.setItem('lw_threshold', String(t)); }catch(e){}
+    toast('✅ 阈值已保存：库存 ≤ '+t+' 件预警');
+    render();
+  }
+
+  // Public API
+  return {
+    state,navigate,render,toast,confirm,
+    exportData:showExportPreview,showImportModal,handleImportFile,confirmImport,copyLinkForWechat,saveItem,handleMediaUpload,
+    showStockAction,doStockAction,handleDeleteItem,
+    showCatManager,showAddCategory,doAddCategory,renameCategory,deleteCategoryConfirm,
+    clearAllDataConfirm,hideModal,showModal,_resolveConfirm,
+    loadCategoriesIntoSelect,addSearchHistory,saveSearchHistory,
+    showRegionManager,toggleHomeSection,renameRegion,removeRegion,addRegion,
+    selectConsumeItem,doConsume,doExport,saveQuickItem,handleQuickMediaUpload,
+    showExportPreview,cancelAddItem,showNameSuggestions,fillNameSuggestion,
+    startScan,stopScan,useScanResult,scanFromFile,onScanFilePicked,useManualScan,
+    saveLowStockThreshold,showStockAlertPopup,resetView,
+    showAuth,hideAuth,switchAuthTab,handleLogin,handleRegister,handleLogout,syncNow
+  };
+})();
+</script>
+</body>
+</html>

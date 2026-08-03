@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小廖的空间 🚌</title>
+<style>
+:root{
+  --g:#7BC96F; --gd:#5BAF53; --g2:#A8E6A3; --gl:#EAF7E6; --bg:#F4FAEF;
+  --ink:#2F4531; --sub:#6B8A6E; --yellow:#FFD93D; --orange:#FFB347;
+  --red:#FF6B6B; --blue:#74B9FF; --purple:#B39DDB; --pink:#F8A5C2;
+  --card:#ffffff; --line:#DDEED6;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:"Yuanti SC","幼圆","YouYuan","Comic Sans MS","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:none}
+input,textarea,select{font-family:inherit;color:var(--ink)}
+#app{display:flex;min-height:100vh}
+/* ============ 左侧导航 ============ */
+#side{width:216px;min-width:216px;background:linear-gradient(180deg,#CDEFC4 0%,#EAF7E6 40%,#F7FCF4 100%);border-right:3px dashed var(--g2);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:50;overflow-y:auto}
+#side::-webkit-scrollbar{width:5px}#side::-webkit-scrollbar-thumb{background:var(--g2);border-radius:3px}
+.logo{padding:16px 12px 10px;text-align:center}
+.logo .busface{font-size:40px;display:inline-block;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-6px) rotate(2deg)}}
+.logo h1{font-size:20px;color:var(--gd);letter-spacing:2px;margin-top:2px}
+.logo .sub{font-size:11px;color:var(--sub);background:#fff;border-radius:99px;padding:2px 10px;display:inline-block;margin-top:5px;border:1.5px solid var(--g2)}
+.navitem{display:flex;align-items:center;gap:9px;margin:3px 10px;padding:8px 12px;border-radius:14px;font-size:14.5px;color:var(--ink);position:relative;transition:.15s;cursor:pointer;background:transparent;border:2px solid transparent}
+.navitem:hover{background:#fff;border-color:var(--g2)}
+.navitem.on{background:var(--g);color:#fff;box-shadow:0 3px 8px rgba(91,175,83,.35)}
+.navitem .ic{font-size:18px;width:24px;text-align:center}
+.navitem .bdg{position:absolute;right:10px;background:var(--red);color:#fff;font-size:11px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 5px;font-weight:bold}
+.roadline{height:14px;margin:8px 14px;border-bottom:4px dashed #bcd9b2;position:relative}
+.roadline::after{content:"🚌";position:absolute;right:-4px;top:-8px;font-size:14px}
+/* ============ 主区 ============ */
+#main{flex:1;margin-left:216px;padding:0 22px 40px;min-width:0}
+#top{position:sticky;top:0;background:linear-gradient(180deg,var(--bg) 75%,transparent);z-index:40;padding:14px 0 8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#top h2{font-size:22px;color:var(--gd);flex:1;min-width:120px}
+.pill{background:#fff;border:2px solid var(--g2);border-radius:99px;padding:5px 14px;font-size:14px;font-weight:bold;display:flex;align-items:center;gap:5px;box-shadow:0 2px 5px rgba(0,0,0,.05)}
+.pill.coin{border-color:var(--yellow)}
+/* 卡片 & 通用 */
+.card{background:var(--card);border-radius:18px;padding:16px 18px;margin-bottom:14px;box-shadow:0 3px 10px rgba(97,151,90,.10);border:1.5px solid var(--line)}
+.card h3{font-size:16.5px;margin-bottom:10px;color:var(--gd);display:flex;align-items:center;gap:6px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.g4{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.btn{background:var(--g);color:#fff;border-radius:12px;padding:8px 16px;font-size:14.5px;font-weight:bold;box-shadow:0 3px 0 var(--gd);transition:.1s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--gd)}
+.btn.y{background:var(--yellow);color:#7a5a00;box-shadow:0 3px 0 #d9b520}
+.btn.r{background:var(--red);box-shadow:0 3px 0 #d94f4f}
+.btn.b{background:var(--blue);box-shadow:0 3px 0 #4f94d9}
+.btn.p{background:var(--purple);box-shadow:0 3px 0 #8f75c9}
+.btn.o{background:var(--orange);color:#6b4300;box-shadow:0 3px 0 #d98f27}
+.btn.ghost{background:#fff;color:var(--gd);border:2px solid var(--g2);box-shadow:none}
+.btn.sm{padding:4px 10px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=number],textarea,select{border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14.5px;background:#FBFEF9;outline:none;width:100%}
+input:focus,textarea:focus{border-color:var(--g)}
+textarea{resize:vertical;min-height:70px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tag{background:var(--gl);border-radius:99px;padding:3px 10px;font-size:12.5px;color:var(--sub)}
+.hint{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.6}
+.big{font-size:26px;font-weight:bold}
+.center{text-align:center}
+/* 心情表情选择 */
+.emos{display:flex;gap:8px;flex-wrap:wrap}
+.emos button{font-size:30px;background:var(--gl);border-radius:14px;padding:8px 10px;border:3px solid transparent;transition:.12s}
+.emos button:hover{transform:scale(1.12)}
+.emos button.sel{border-color:var(--g);background:#fff;transform:scale(1.12)}
+/* 日历格 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px}
+.cal .d{aspect-ratio:1;border-radius:10px;background:var(--gl);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--sub)}
+.cal .d .e{font-size:17px}
+.cal .d.has{background:#fff;border:2px solid var(--g2)}
+.cal .hd{aspect-ratio:auto;padding:3px;background:transparent;font-weight:bold}
+/* 作业 */
+.hwitem{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:14px;background:var(--gl);margin-bottom:8px;border:1.5px solid var(--line)}
+.hwitem.done{opacity:.6}
+.hwitem.done .txt{text-decoration:line-through wavy var(--g)}
+.hwitem .pri{font-size:18px}
+.hwcheck{width:26px;height:26px;min-width:26px;border-radius:8px;border:2.5px solid var(--g);background:#fff;font-size:16px;line-height:1;color:var(--gd)}
+.hwitem.done .hwcheck{background:var(--g);color:#fff}
+/* 弹窗 */
+#mask{position:fixed;inset:0;background:rgba(47,69,49,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+#mask.show{display:flex}
+#modal{background:#fff;border-radius:20px;padding:20px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;border:3px solid var(--g2)}
+#modal h3{color:var(--gd);margin-bottom:12px;font-size:18px}
+/* toast */
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--ink);color:#fff;padding:10px 22px;border-radius:99px;font-size:15px;z-index:200;transition:.3s;box-shadow:0 5px 16px rgba(0,0,0,.25)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+/* 首页快速入口 */
+.quick{display:flex;flex-direction:column;align-items:center;gap:6px;background:#fff;border:2px solid var(--line);border-radius:16px;padding:16px 8px;cursor:pointer;transition:.15s;position:relative}
+.quick:hover{transform:translateY(-3px);border-color:var(--g);box-shadow:0 6px 14px rgba(97,151,90,.18)}
+.quick .qi{font-size:32px}
+.quick .bdg{position:absolute;top:-7px;right:-7px;background:var(--red);color:#fff;font-size:11px;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;font-weight:bold}
+/* 公交车横幅 */
+.busbanner{background:linear-gradient(135deg,#CDEFC4,#A8E6A3);border-radius:20px;padding:18px 22px;position:relative;overflow:hidden;margin-bottom:14px;border:2px solid var(--g2)}
+.busbanner h2{color:#3d6b38;font-size:21px}
+.busbanner p{color:#527d4d;font-size:13.5px;margin-top:4px}
+.busbanner .road{position:absolute;bottom:0;left:0;right:0;height:26px;background:#8fbf85;border-top:3px dashed #fff}
+.busbanner .movebus{position:absolute;bottom:8px;font-size:30px;animation:drive 9s linear infinite}
+@keyframes drive{0%{left:-50px}100%{left:105%}}
+/* 转盘 */
+#wheelwrap{position:relative;width:320px;height:320px;margin:0 auto}
+#wheelwrap .ptr{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:32px;z-index:5}
+/* 盲盒 */
+.boxcard{text-align:center;padding:18px 10px;border-radius:16px;background:linear-gradient(160deg,#fff,var(--gl));border:2px solid var(--line);position:relative}
+.boxcard .bx{font-size:52px;display:inline-block}
+.boxcard.locked .bx{filter:grayscale(.8)}
+.boxcard .lock{position:absolute;top:8px;right:10px;font-size:18px}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(6deg)}}
+.shaking{animation:shake .5s ease 2}
+/* 宠物 */
+#petstage{background:linear-gradient(180deg,#D8F1FF 0%,#EAF7E6 70%,#CDEFC4 100%);border-radius:20px;min-height:250px;position:relative;overflow:hidden;border:2px solid var(--line)}
+#petbody{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-size:74px;transition:.3s;cursor:pointer}
+#petbody .wear{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:32px}
+#pethouse{position:absolute;bottom:18px;right:16px;font-size:54px}
+#petsay{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;padding:7px 14px;font-size:14px;border:2px solid var(--g2);display:none;max-width:80%}
+.hungerbar{height:14px;background:#eee;border-radius:7px;overflow:hidden;flex:1}
+.hungerbar i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--g));border-radius:7px}
+/* 公交路线 */
+#roadgame{background:linear-gradient(180deg,#BFE3FF 0%,#D8F1FF 55%,#9CCF90 55%,#8FBF85 100%);border-radius:20px;height:240px;position:relative;overflow:hidden;border:2px solid var(--line)}
+#roadgame .lane{position:absolute;bottom:34px;left:0;right:0;height:56px;background:#5c6b63;border-top:4px solid #4a574f}
+#roadgame .lane::after{content:"";position:absolute;top:50%;left:0;right:0;border-top:4px dashed #fff;opacity:.7}
+#gbus{position:absolute;bottom:52px;left:-70px;font-size:46px;z-index:3;transition:left .8s linear;transform:scaleX(-1)}
+.stopflag{position:absolute;bottom:92px;font-size:22px;text-align:center;z-index:2}
+.stopflag small{display:block;font-size:10px;background:#fff;border-radius:6px;padding:1px 4px;margin-top:2px}
+/* 统计条 */
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:13.5px}
+.bar .bl{width:86px;text-align:right;color:var(--sub)}
+.bar .bt{flex:1;background:var(--gl);border-radius:8px;height:20px;overflow:hidden}
+.bar .bt i{display:block;height:100%;background:linear-gradient(90deg,var(--g2),var(--g));border-radius:8px;min-width:2px}
+.bar b{min-width:50px;font-size:12.5px}
+/* 画板 */
+#drawwrap canvas{border:2px solid var(--line);border-radius:12px;background:#fff;touch-action:none;max-width:100%}
+.dtool{width:30px;height:30px;border-radius:50%;border:3px solid transparent}
+.dtool.sel{border-color:var(--ink)}
+/* 游戏题面板 */
+.qbig{font-size:34px;font-weight:bold;text-align:center;padding:18px;background:var(--gl);border-radius:16px;margin:10px 0;letter-spacing:2px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opts button{font-size:22px;padding:14px;border-radius:14px;background:#fff;border:2.5px solid var(--line);font-weight:bold;transition:.12s}
+.opts button:hover{border-color:var(--g)}
+.opts button.ok{background:var(--g);color:#fff;border-color:var(--gd)}
+.opts button.no{background:var(--red);color:#fff;border-color:#d94f4f}
+.timerpill{background:#fff;border:2px solid var(--orange);color:#b06f00;border-radius:99px;padding:4px 13px;font-weight:bold;font-size:14px}
+/* 古诗 */
+.poem{white-space:pre-line;text-align:center;font-size:17px;line-height:2;background:var(--gl);border-radius:14px;padding:14px}
+.tabbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tabbtns .btn.ghost.on{background:var(--g);color:#fff;border-color:var(--gd)}
+img.thumb{max-width:120px;max-height:120px;border-radius:10px;border:2px solid var(--line);object-fit:cover}
+.rewardcard img{width:100%;height:130px;object-fit:cover;border-radius:12px;background:var(--gl)}
+.diaryimg{max-width:160px;max-height:160px;border-radius:12px;border:2px solid var(--line)}
+audio{width:100%;height:34px;margin-top:6px}
+@media (max-width:760px){
+  #side{width:64px;min-width:64px}
+  #side .logo h1,#side .logo .sub,.navitem span.tx{display:none}
+  .navitem{justify-content:center;padding:9px 5px}
+  #main{margin-left:64px;padding:0 10px 30px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side">
+    <div class="logo">
+      <span class="busface">🚌</span>
+      <h1>小廖的空间</h1>
+      <div class="sub">滴滴——出发学习咯！</div>
+    </div>
+    <div id="navbox"></div>
+    <div class="roadline"></div>
+  </aside>
+  <main id="main">
+    <div id="top">
+      <h2 id="ptitle">🏠 我的主页</h2>
+      <div class="pill" title="积分" onclick="go('wealth')" style="cursor:pointer">⭐ <span id="pPts">0</span> 积分</div>
+      <div class="pill coin" title="金币" onclick="go('wealth')" style="cursor:pointer">🪙 <span id="pCoin">0</span> 金币</div>
+    </div>
+    <div id="page"></div>
+  </main>
+</div>
+<div id="mask"><div id="modal"></div></div>
+<div id="toast"></div>
+<script>

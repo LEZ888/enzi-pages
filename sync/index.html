@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>恩子 · 记录同步中心</title>
+<style>
+  :root{ --bg:#f6f3ee; --card:#fff; --ink:#2b2b2b; --sub:#8a8175; --line:#e7e0d6;
+         --blue:#3b82f6; --green:#22a06b; --gray:#9aa0a6; --red:#e5573f; --amber:#e0a106; }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+  /* 锁屏 */
+  #lock{position:fixed;inset:0;background:linear-gradient(160deg,#2b2b2b,#4a4036);
+        display:flex;align-items:center;justify-content:center;z-index:99;padding:24px}
+  #lock .box{background:#fff;border-radius:18px;padding:28px 22px;width:100%;max-width:320px;text-align:center;
+             box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  #lock h1{font-size:19px;margin:0 0 6px}
+  #lock p{color:var(--sub);font-size:13px;margin:0 0 18px}
+  #lock input{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;
+              font-size:16px;margin-bottom:12px;outline:none}
+  #lock input:focus{border-color:var(--blue)}
+  #lock button{width:100%;padding:13px;border:0;border-radius:12px;background:var(--ink);color:#fff;
+               font-size:16px;font-weight:600;cursor:pointer}
+  #lock .err{color:var(--red);font-size:13px;min-height:18px;margin-top:8px}
+  /* 主体 */
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 60px}
+  header{padding:10px 4px 6px}
+  header h1{font-size:20px;margin:0}
+  header .meta{color:var(--sub);font-size:12px;margin-top:2px}
+  .tabs{display:flex;gap:8px;margin:14px 0}
+  .tabs button{flex:1;padding:11px;border:1.5px solid var(--line);background:#fff;border-radius:12px;
+               font-size:15px;color:var(--ink);cursor:pointer;font-weight:600}
+  .tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .search{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+          font-size:15px;margin-bottom:14px;outline:none;background:#fff}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 15px;margin-bottom:12px;
+        box-shadow:0 2px 10px rgba(0,0,0,.03)}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .card .t{font-weight:600;font-size:15.5px;flex:1}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;font-weight:600}
+  .b-working{background:#e8f0fe;color:var(--blue)} .b-completed{background:#e6f6ee;color:var(--green)}
+  .b-terminated{background:#f0f0f0;color:var(--gray)} .b-archived{background:#f3ecf8;color:#8b5cf6}
+  .ws-tag{color:var(--sub);font-size:12px;margin-top:3px}
+  .upd{color:var(--sub);font-size:12px;margin-top:2px}
+  .dlist{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}
+  .ditem{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;
+         border-bottom:1px solid #f3efe8;font-size:14px}
+  .ditem:last-child{border-bottom:0}
+  .ditem a{color:var(--blue);text-decoration:none;word-break:break-all}
+  .ditem .sz{color:var(--sub);font-size:12px;white-space:nowrap}
+  .local{color:var(--sub);font-size:12px}
+  .wfile{display:flex;justify-content:space-between;font-size:13.5px;padding:6px 0;border-bottom:1px solid #f3efe8}
+  .wfile:last-child{border-bottom:0}
+  .wfile .nm{word-break:break-all} .wfile .mt{color:var(--sub);font-size:12px;white-space:nowrap;margin-left:8px}
+  .wfile a{color:var(--blue);text-decoration:none}
+  .empty{color:var(--sub);text-align:center;padding:30px;font-size:14px}
+  .sec-title{font-size:13px;color:var(--sub);margin:18px 4px 8px;font-weight:600}
+  footer{text-align:center;color:var(--sub);font-size:11px;margin-top:24px}
+</style>
+</head>
+<body>
+<div id="lock">
+  <div class="box">
+    <h1>🔒 记录同步中心</h1>
+    <p>请输入访问口令</p>
+    <input id="pw" type="password" placeholder="口令" autocomplete="off">
+    <button onclick="unlock()">解锁</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <header>
+    <h1>恩子 · 记录同步中心</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+  <div class="tabs">
+    <button id="tab-tasks" class="on" onclick="switchTab('tasks')">📋 任务</button>
+    <button id="tab-spaces" onclick="switchTab('spaces')">📁 空间</button>
+  </div>
+  <input class="search" id="search" placeholder="搜索任务标题…" oninput="render()">
+  <div id="tasksView"></div>
+  <div id="spacesView" style="display:none"></div>
+  <footer>本页由电脑端 WorkBuddy 导出 · 手机可同步查看</footer>
+</div>
+
+<script>
+const DATA = {"generated": "2026-08-03 20:21", "tasks": [{"id": "b030de60-3b08-4fbc-b0b4-8caf974af876", "title": "如何连接我的电脑", "status": "working", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\Claw", "ws": "Claw（当前工作区）", "created": 1785047499061, "updated": 1785759662573, "deliverables": []}, {"id": "c69f7923-85f0-4b79-b0b6-6e355e8fab1b", "title": "优化古诗累积与我的宠物板块功能", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-31-04-54-16", "ws": "2026-07-31-04-54-16", "created": 1785444868040, "updated": 1785759182600, "deliverables": [{"name": "廖廖的空间.html", "size": 524732, "hosted": true, "session": "c69f7923-85f0-4b79-b0b6-6e355e8fab1b", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-31-04-54-16/廖廖的空间.html"}, {"name": "廖廖的空间.html", "size": 136768, "hosted": true, "session": "c69f7923-85f0-4b79-b0b6-6e355e8fab1b", "abspath": "C:/Users/Administrator/Desktop/我的工作台/廖廖的空间.html"}, {"name": "selftest_all.js", "size": 13968, "hosted": false, "session": "c69f7923-85f0-4b79-b0b6-6e355e8fab1b", "abspath": ""}]}, {"id": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "title": "恩子的工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785170311700, "updated": 1785758974222, "deliverables": [{"name": "我的工作台.html", "size": 2986592, "hosted": true, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": "C:/Users/Administrator/Desktop/我的工作台/我的工作台.html"}, {"name": "ai_proxy.py", "size": 4286, "hosted": false, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": ""}, {"name": "启动AI代理.bat", "size": 612, "hosted": false, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": ""}, {"name": "enzi-cover.jpg", "size": 146466, "hosted": true, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": "C:/Users/Administrator/Desktop/我的工作台/enzi-cover.jpg"}, {"name": "manifest.json", "size": 390995, "hosted": false, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": ""}, {"name": "OpenRouter注册步骤.html", "size": 4798, "hosted": true, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": "C:/Users/Administrator/Desktop/我的工作台/OpenRouter注册步骤.html"}, {"name": "index.html", "size": 2986592, "hosted": false, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": ""}, {"name": "DeepSeek官方Key步骤.html", "size": 4119, "hosted": true, "session": "dbe18df3-6acc-4f5f-ba8b-66f3e29df4ab", "abspath": "C:/Users/Administrator/Desktop/我的工作台/DeepSeek官方Key步骤.html"}]}, {"id": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "title": "熹美学的工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-08-01-21-57-49", "ws": "2026-08-01-21-57-49", "created": 1785592680001, "updated": 1785758894423, "deliverables": [{"name": "1_发给AI_第一份_军规.docx", "size": 8273, "hosted": true, "session": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "abspath": "C:/Users/Administrator/xwechat_files/wxid_vfuw0x0rk5a01_c783/msg/file/2026-08/1_发给AI_第一份_军规.docx"}, {"name": "后台.html", "size": 167982, "hosted": true, "session": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "abspath": "C:/Users/Administrator/WorkBuddy/2026-08-01-21-57-49/后台.html"}, {"name": "_selftest_sh_result.txt", "size": 529, "hosted": true, "session": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "abspath": "C:/Users/Administrator/WorkBuddy/2026-08-01-21-57-49/_selftest_sh_result.txt"}, {"name": "_selftest_set_result.txt", "size": 18, "hosted": true, "session": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "abspath": "C:/Users/Administrator/WorkBuddy/2026-08-01-21-57-49/_selftest_set_result.txt"}, {"name": "_selftest_set.js", "size": 5079, "hosted": false, "session": "7f2a0251-56d0-45ff-98bb-6dab8da082ac", "abspath": ""}]}, {"id": "4bccec86-5063-45d0-9202-d669024eb451", "title": "LESLEY仓库工作台(已完成)", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-30-22-08-58", "ws": "2026-07-30-22-08-58", "created": 1785420549418, "updated": 1785758866084, "deliverables": [{"name": "index.html", "size": 198234, "hosted": true, "session": "4bccec86-5063-45d0-9202-d669024eb451", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-22-08-58/lesley-warehouse/index.html"}, {"name": "deploy_lesley.py", "size": 2838, "hosted": false, "session": "4bccec86-5063-45d0-9202-d669024eb451", "abspath": ""}, {"name": "supabase_schema.sql", "size": 4386, "hosted": false, "session": "4bccec86-5063-45d0-9202-d669024eb451", "abspath": ""}]}, {"id": "3554f5ca-97dc-4341-99f2-8cdb7a6fddde", "title": "莱斯利产品系统（已完成）", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-31-20-34-01", "ws": "2026-07-31-20-34-01", "created": 1785501251420, "updated": 1785758446457, "deliverables": [{"name": "index.html", "size": 417114, "hosted": true, "session": "3554f5ca-97dc-4341-99f2-8cdb7a6fddde", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-31-20-34-01/index.html"}, {"name": "index.html", "size": 397653, "hosted": true, "session": "3554f5ca-97dc-4341-99f2-8cdb7a6fddde", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-31-20-34-01/leslie-deploy/index.html"}]}, {"id": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "title": "恩子聊美业", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785133256367, "updated": 1785588959291, "deliverables": [{"name": "恩子新号_落地总纲.html", "size": 31977, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子新号_落地总纲.html"}, {"name": "恩子新号_落地执行总汇总.html", "size": 448605, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子新号_落地执行总汇总.html"}, {"name": "恩子_产品矩阵_内部版.html", "size": 11243, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子_产品矩阵_内部版.html"}, {"name": "恩子_产品手册_客户版.html", "size": 11341, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子_产品手册_客户版.html"}, {"name": "恩子_产品运营模块_预览.html", "size": 44911, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子_产品运营模块_预览.html"}, {"name": "恩子新号-icon.jpg", "size": 101151, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子新号-icon.jpg"}, {"name": "manifest.json", "size": 390995, "hosted": false, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": ""}, {"name": "index.html", "size": 448605, "hosted": false, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": ""}, {"name": "恩子新号-icon.jpg", "size": 101151, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子新号_分享/恩子新号-icon.jpg"}, {"name": "恩子聊美业_第1条_恩子拆抖音_草稿.md", "size": 4139, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子聊美业_第1条_恩子拆抖音_草稿.md"}, {"name": "恩子聊美业_第1条_草稿_可复制.html", "size": 7426, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子聊美业_第1条_草稿_可复制.html"}, {"name": "恩子聊美业_第2条_草稿_可复制.html", "size": 6789, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子聊美业_第2条_草稿_可复制.html"}, {"name": "恩子聊美业_第3条_草稿_可复制.html", "size": 6966, "hosted": true, "session": "7a573c77-60e6-4ece-97ca-1aaab1e9ae1d", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子聊美业_第3条_草稿_可复制.html"}]}, {"id": "800804f4-a83a-46c0-a0a0-8c9f628ecb4c", "title": "小廖工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-31-00-33-07", "ws": "2026-07-31-00-33-07", "created": 1785429196851, "updated": 1785430193767, "deliverables": [{"name": "小廖学习工作台.html", "size": 112190, "hosted": true, "session": "800804f4-a83a-46c0-a0a0-8c9f628ecb4c", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-31-00-33-07/小廖学习工作台.html"}]}, {"id": "4e3368ab-68b6-496a-a092-74d4c9025248", "title": "小廖的工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-30-22-51-53", "ws": "2026-07-30-22-51-53", "created": 1785423125477, "updated": 1785429231083, "deliverables": [{"name": "index.html", "size": 27869, "hosted": true, "session": "4e3368ab-68b6-496a-a092-74d4c9025248", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-22-51-53/xliao-workbench/index.html"}]}, {"id": "21e40e94-e34e-4df4-9aaf-ed73b4d4721e", "title": "小廖的工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785260795744, "updated": 1785421091410, "deliverables": [{"name": "_xl_p1.html", "size": 13286, "hosted": true, "session": "21e40e94-e34e-4df4-9aaf-ed73b4d4721e", "abspath": "C:/Users/Administrator/Desktop/我的工作台/_xl_p1.html"}, {"name": "我的工作台.html", "size": 2986592, "hosted": true, "session": "21e40e94-e34e-4df4-9aaf-ed73b4d4721e", "abspath": "C:/Users/Administrator/Desktop/我的工作台/我的工作台.html"}, {"name": "index.html", "size": 2986592, "hosted": false, "session": "21e40e94-e34e-4df4-9aaf-ed73b4d4721e", "abspath": ""}]}, {"id": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "title": "LESLEY仓库工作台", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-30-15-47-54", "ws": "2026-07-30-15-47-54", "created": 1785397683408, "updated": 1785420381598, "deliverables": [{"name": "index.html", "size": 895, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse/index.html"}, {"name": "favicon.svg", "size": 306, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse/public/favicon.svg"}, {"name": "capacitor.config.ts", "size": 262, "hosted": false, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": ""}, {"name": "README.md", "size": 2764, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse/README.md"}, {"name": "DEPLOY.md", "size": 5276, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse/DEPLOY.md"}, {"name": "USAGE.md", "size": 3741, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse/USAGE.md"}, {"name": "index.html", "size": 18760, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse-standalone/index.html"}, {"name": "app.js", "size": 85159, "hosted": false, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": ""}, {"name": "index.html", "size": 249480, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse-standalone-single/index.html"}, {"name": "render-test.html", "size": 3615, "hosted": true, "session": "bf48aeab-02e5-4871-bd7a-d706bc8807a0", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-30-15-47-54/lesley-warehouse-standalone/render-test.html"}]}, {"id": "45a6df21-7700-46c4-8122-17c68e10027c", "title": "我想要做一个手机工作台，这个是怎么做的？", "status": "terminated", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-28-00-47-23", "ws": "2026-07-28-00-47-23", "created": 1785170852607, "updated": 1785173056975, "deliverables": []}, {"id": "9fbc2400-88ca-4874-bcc1-a635a508c9ff", "title": "设计三种账号的AI锁死身份指令", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785138806237, "updated": 1785139068294, "deliverables": [{"name": "三账号AI身份锁死指令库.html", "size": 19067, "hosted": true, "session": "9fbc2400-88ca-4874-bcc1-a635a508c9ff", "abspath": "C:/Users/Administrator/Desktop/我的工作台/三账号AI身份锁死指令库.html"}]}, {"id": "cd2f80e5-0461-4b29-b497-32dcc8a17aaa", "title": "恩子大号决策", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785078791778, "updated": 1785136623155, "deliverables": [{"name": "恩子阿屿·婚恋判断力IP落地总宝典.html", "size": 584118, "hosted": true, "session": "cd2f80e5-0461-4b29-b497-32dcc8a17aaa", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子阿屿·婚恋判断力IP落地总宝典.html"}, {"name": "index.html", "size": 584118, "hosted": false, "session": "cd2f80e5-0461-4b29-b497-32dcc8a17aaa", "abspath": ""}, {"name": "icon.jpg", "size": 99992, "hosted": true, "session": "cd2f80e5-0461-4b29-b497-32dcc8a17aaa", "abspath": "C:/Users/Administrator/Desktop/我的工作台/恩子阿屿_发布/icon.jpg"}]}, {"id": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "title": "大熹（落地宝典）", "status": "completed", "cwd": "C:\\Users\\Administrator\\Desktop\\我的工作台", "ws": "我的工作台（桌面）", "created": 1785051898944, "updated": 1785129062063, "deliverables": [{"name": "大熹（店铺号）自媒体思维.html", "size": 52913, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹（店铺号）自媒体思维.html"}, {"name": "大熹（店铺号）自媒体思维.docx", "size": 52241, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹（店铺号）自媒体思维.docx"}, {"name": "大熹（店铺号）消费者视角圈粉系列.html", "size": 46472, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹（店铺号）消费者视角圈粉系列.html"}, {"name": "大熹（店铺号）消费者视角圈粉系列.docx", "size": 49583, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹（店铺号）消费者视角圈粉系列.docx"}, {"name": "大熹的落地宝典.html", "size": 393771, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹的落地宝典.html"}, {"name": "大熹的落地宝典.docx", "size": 121227, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹的落地宝典.docx"}, {"name": "topics_data.py", "size": 99084, "hosted": false, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": ""}, {"name": "__src_sien.md", "size": 17237, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/__src_sien.md"}, {"name": "index.html", "size": 393771, "hosted": false, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": ""}, {"name": "大熹宝典二维码.png", "size": 13551, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹分享/大熹宝典二维码.png"}, {"name": "icon-180.png", "size": 39694, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹分享/icon-180.png"}, {"name": "icon-192.png", "size": 43146, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹分享/icon-192.png"}, {"name": "icon-512.png", "size": 161024, "hosted": true, "session": "a0ba2c83-f7f4-4190-930b-20127a9df10a", "abspath": "C:/Users/Administrator/Desktop/我的工作台/大熹分享/icon-512.png"}]}, {"id": "0978792d-8176-446f-bbee-096986ead81d", "title": "生成指令让DeepSeek整理聊天汇总", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-26-22-36-23", "ws": "2026-07-26-22-36-23", "created": 1785076590963, "updated": 1785078526184, "deliverables": [{"name": "发给DeepSeek的起号宝典整理指令.md", "size": 7896, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/发给DeepSeek的起号宝典整理指令.md"}, {"name": "发给DeepSeek专家模式的起号宝典指令.md", "size": 6172, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/发给DeepSeek专家模式的起号宝典指令.md"}, {"name": "发给DeepSeek的一键整理指令.md", "size": 4396, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/发给DeepSeek的一键整理指令.md"}, {"name": "发给DeepSeek的一键整理指令_纯文本版.txt", "size": 3413, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/发给DeepSeek的一键整理指令_纯文本版.txt"}, {"name": "发给WorkBuddy的汇总指令.md", "size": 4565, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/发给WorkBuddy的汇总指令.md"}, {"name": "一键复制_发给WorkBuddy指令.html", "size": 6331, "hosted": true, "session": "0978792d-8176-446f-bbee-096986ead81d", "abspath": "C:/Users/Administrator/WorkBuddy/2026-07-26-22-36-23/一键复制_发给WorkBuddy指令.html"}]}, {"id": "fa20d936-54d1-478a-be80-bd2bb1c3e040", "title": "恢复误归档无法查看的文件", "status": "completed", "cwd": "C:\\Users\\Administrator\\WorkBuddy\\2026-07-26-21-51-33", "ws": "2026-07-26-21-51-33", "created": 1785073902431, "updated": 1785075564883, "deliverables": [{"name": "大熹（店铺号）账号全汇总作战总纲.docx", "size": 0, "hosted": false, "session": "fa20d936-54d1-478a-be80-bd2bb1c3e040", "abspath": ""}]}], "workspaces": [{"path": "C:\\Users\\Administrator\\WorkBuddy\\Claw", "name": "Claw（当前工作区）", "files": []}, {"path": "C:\\Users\\Administrator\\Desktop\\我的工作台", "name": "我的工作台（桌面）", "files": [{"name": ".workbuddy/", "size": 0, "mtime": 0, "dir": true, "count": 1}, {"name": "DeepSeek官方Key步骤.html", "size": 4119, "mtime": 1785253705.9755645, "dir": false}, {"name": "OpenRouter注册步骤.html", "size": 4798, "mtime": 1785253738.188146, "dir": false}, {"name": "__pycache__/", "size": 0, "mtime": 0, "dir": true, "count": 8}, {"name": "__src_sien.md", "size": 17237, "mtime": 1785089735.5899913, "dir": false}, {"name": "_chk.js", "size": 2535864, "mtime": 1785757419.1244814, "dir": false}, {"name": "_mod_account.js", "size": 9137, "mtime": 1785181416.6666968, "dir": false}, {"name": "_mod_topic.js", "size": 7858, "mtime": 1785181514.2148623, "dir": false}, {"name": "_proxy.log", "size": 0, "mtime": 1785226809.0331507, "dir": false}, {"name": "_sync_test.txt", "size": 4, "mtime": 1785474742.690918, "dir": false}, {"name": "_tmp_docx/", "size": 0, "mtime": 0, "dir": true, "count": 6}, {"name": "_tmp_pdf/", "size": 0, "mtime": 0, "dir": true, "count": 1}, {"name": "_xl_clean.py", "size": 364, "mtime": 1785303424.4816482, "dir": false}, {"name": "_xl_copy.py", "size": 618, "mtime": 1785302807.806167, "dir": false}, {"name": "_xl_p1.html", "size": 13286, "mtime": 1785261028.2476115, "dir": false}, {"name": "_xl_p2.js", "size": 32932, "mtime": 1785261200.479133, "dir": false}, {"name": "_xl_p3.js", "size": 56650, "mtime": 1785261557.3369598, "dir": false}, {"name": "ai_key.txt", "size": 36, "mtime": 1785182203.2291744, "dir": false}, {"name": "ai_proxy.py", "size": 4286, "mtime": 1785182251.5535333, "dir": false}, {"name": "apply_ghibli_skin.py", "size": 6017, "mtime": 1785322495.5014813, "dir": false}, {"name": "apply_v9fix.py", "size": 8151, "mtime": 1785313364.5949872, "dir": false}, {"name": "build_doc.py", "size": 43746, "mtime": 1785052674.1614215, "dir": false}, {"name": "build_enzi_execute.py", "size": 123177, "mtime": 1785173213.4683087, "dir": false}, {"name": "build_enzi_playbook.py", "size": 61290, "mtime": 1785082603.4924943, "dir": false}, {"name": "build_enzi_v2.py", "size": 194442, "mtime": 1785173689.9671097, "dir": false}, {"name": "build_icon.py", "size": 706, "mtime": 1785128950.2189977, "dir": false}, {"name": "build_product_matrix.py", "size": 17158, "mtime": 1785149857.258295, "dir": false}, {"name": "build_product_ops.py", "size": 35878, "mtime": 1785151641.3462656, "dir": false}, {"name": "build_series.py", "size": 24169, "mtime": 1785054154.7122817, "dir": false}, {"name": "build_summary.py", "size": 53624, "mtime": 1785094605.7822783, "dir": false}, {"name": "build_v10.py", "size": 7126, "mtime": 1785311584.3071306, "dir": false}, {"name": "build_v9.py", "size": 16517, "mtime": 1785308745.0385468, "dir": false}, {"name": "build_workbench_v2.py", "size": 40304, "mtime": 1785172843.996199, "dir": false}, {"name": "build_workbench_v3.py", "size": 37395, "mtime": 1785175119.0402048, "dir": false}, {"name": "build_workbench_v4.py", "size": 173897, "mtime": 1785231398.8044472, "dir": false}, {"name": "build_workbench_v5.py", "size": 578764, "mtime": 1785757398.8119938, "dir": false}, {"name": "build_workbench_v5_bak_20260729.py", "size": 348173, "mtime": 1785319891.413469, "dir": false}, {"name": "build_workbench_v5_bak_handwritten_20260729.py", "size": 352662, "mtime": 1785322271.3575454, "dir": false}, {"name": "deploy_pages_script.py", "size": 1344, "mtime": 1785221159.975081, "dir": false}, {"name": "deploy_workbench.py", "size": 1923, "mtime": 1785249071.2131777, "dir": false}, {"name": "deploy_workbench_v2.py", "size": 2703, "mtime": 1785256011.7508254, "dir": false}, {"name": "doc_engine.py", "size": 41482, "mtime": 1785124385.219162, "dir": false}, {"name": "eng_mega_words.py", "size": 29520, "mtime": 1785243630.027084, "dir": false}, {"name": "eng_mega_words2.py", "size": 32361, "mtime": 1785244005.10965, "dir": false}, {"name": "enzi-cover.jpg", "size": 146466, "mtime": 1785227615.7123213, "dir": false}, {"name": "enzi-pages-deploy/", "size": 0, "mtime": 0, "dir": true, "count": 2}, {"name": "enzi_topics50.py", "size": 47472, "mtime": 1785160039.5886683, "dir": false}, {"name": "manifest.json", "size": 390995, "mtime": 1785757414.8738427, "dir": false}, {"name": "restyle_v1.py", "size": 2141, "mtime": 1785319981.4087296, "dir": false}, {"name": "sync_center_deploy.py", "size": 17146, "mtime": 1785759659.859983, "dir": false}, {"name": "t_bili.js", "size": 583169, "mtime": 1785178073.3749032, "dir": false}, {"name": "t_douyin.js", "size": 583169, "mtime": 1785178073.358909, "dir": false}, {"name": "t_xhs.js", "size": 583169, "mtime": 1785178073.367906, "dir": false}, {"name": "topics_data.py", "size": 99084, "mtime": 1785090803.5455234, "dir": false}, {"name": "transform_v8.py", "size": 12816, "mtime": 1785306284.5568438, "dir": false}, {"name": "update_azi_index.py", "size": 1468, "mtime": 1785221452.71254, "dir": false}, {"name": "v_bl.js", "size": 582960, "mtime": 1785178097.626099, "dir": false}, {"name": "v_dy.js", "size": 583122, "mtime": 1785178097.6091025, "dir": false}, {"name": "v_none.js", "size": 583169, "mtime": 1785178097.636097, "dir": false}, {"name": "v_xh.js", "size": 583125, "mtime": 1785178097.6180997, "dir": false}, {"name": "三账号AI身份锁死指令库.html", "size": 19067, "mtime": 1785139011.6323688, "dir": false}, {"name": "启动AI代理.bat", "size": 612, "mtime": 1785220590.9039953, "dir": false}, {"name": "大熹分享/", "size": 0, "mtime": 0, "dir": true, "count": 7}, {"name": "大熹的落地宝典.docx", "size": 121227, "mtime": 1785124454.9825246, "dir": false}, {"name": "大熹的落地宝典.html", "size": 393771, "mtime": 1785124454.9995177, "dir": false}, {"name": "大熹（店铺号）消费者视角圈粉系列.docx", "size": 49583, "mtime": 1785054165.6157691, "dir": false}, {"name": "大熹（店铺号）消费者视角圈粉系列.html", "size": 46472, "mtime": 1785054165.628766, "dir": false}, {"name": "大熹（店铺号）自媒体思维.docx", "size": 52241, "mtime": 1785052680.5207157, "dir": false}, {"name": "大熹（店铺号）自媒体思维.html", "size": 52913, "mtime": 1785052680.5254872, "dir": false}, {"name": "廖廖的空间.html", "size": 136768, "mtime": 1785472542.0931473, "dir": false}, {"name": "恩子_产品手册_客户版.html", "size": 11341, "mtime": 1785149864.8138633, "dir": false}, {"name": "恩子_产品矩阵_内部版.html", "size": 11243, "mtime": 1785149864.8118649, "dir": false}, {"name": "恩子_产品运营模块_预览.html", "size": 44911, "mtime": 1785151308.13729, "dir": false}, {"name": "恩子新号-icon.jpg", "size": 101151, "mtime": 1785171610.2516992, "dir": false}, {"name": "恩子新号_分享/", "size": 0, "mtime": 0, "dir": true, "count": 3}, {"name": "恩子新号_落地总纲.html", "size": 31977, "mtime": 1785139455.0075102, "dir": false}, {"name": "恩子新号_落地执行总汇总.html", "size": 448605, "mtime": 1785173229.7570636, "dir": false}, {"name": "恩子聊美业_第1条_恩子拆抖音_草稿.md", "size": 4139, "mtime": 1785577079.8328707, "dir": false}, {"name": "恩子聊美业_第1条_草稿_可复制.html", "size": 7426, "mtime": 1785577251.2147741, "dir": false}, {"name": "恩子聊美业_第2条_草稿_可复制.html", "size": 6789, "mtime": 1785588358.44534, "dir": false}, {"name": "恩子聊美业_第3条_草稿_可复制.html", "size": 6966, "mtime": 1785588358.44534, "dir": false}, {"name": "恩子阿屿_发布/", "size": 0, "mtime": 0, "dir": true, "count": 2}, {"name": "恩子阿屿·婚恋判断力IP落地总宝典.html", "size": 584118, "mtime": 1785173698.253597, "dir": false}, {"name": "我的工作台.html", "size": 2986592, "mtime": 1785757418.5516658, "dir": false}]}], "fmt": true}{};
+const PWHASH = "74a5b10c4c1299985df3e36d8e7d5b14fe16fe26ccda5c4ef57323e4e1d7c476";
+const STATUS_MAP = {working:["进行中","b-working"],completed:["已完成","b-completed"],
+  terminated:["已终止","b-terminated"],archived:["已归档","b-archived"]};
+
+async function sha256(s){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function unlock(){
+  const v = document.getElementById('pw').value;
+  const h = await sha256(v);
+  if(h === PWHASH){
+    localStorage.setItem('sc_ok','1');
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app').style.display='block';
+    render();
+  } else {
+    document.getElementById('err').textContent = '口令错误，请重试';
+  }
+}
+document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')unlock();});
+if(localStorage.getItem('sc_ok')==='1'){
+  document.getElementById('lock').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+// 容许离线缓存解锁状态（同浏览器）
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtSize(b){if(!b)return '';if(b<1024)return b+'B';if(b<1048576)return (b/1024).toFixed(0)+'KB';return (b/1048576).toFixed(1)+'MB';}
+function fmtTs(ms){if(!ms)return '';const d=new Date(ms/1000);const p=n=>(''+n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function switchTab(t){
+  document.getElementById('tab-tasks').classList.toggle('on',t==='tasks');
+  document.getElementById('tab-spaces').classList.toggle('on',t==='spaces');
+  document.getElementById('tasksView').style.display = t==='tasks'?'block':'none';
+  document.getElementById('spacesView').style.display = t==='spaces'?'block':'none';
+  render();
+}
+function render(){
+  document.getElementById('meta').textContent = '最近同步：'+DATA.generated+' · 共 '+DATA.tasks.length+' 个任务 / '+DATA.workspaces.length+' 个空间';
+  const q = (document.getElementById('search').value||'').toLowerCase();
+  const active = document.getElementById('tasksView').style.display!=='none';
+  if(active){
+    const box=document.getElementById('tasksView'); box.innerHTML='';
+    const list=DATA.tasks.filter(t=>(t.title||'').toLowerCase().includes(q));
+    if(!list.length){box.innerHTML='<div class="empty">没有匹配的任务</div>';return;}
+    list.forEach(t=>{
+      const [label,cls]=STATUS_MAP[t.status]||[t.status,'b-terminated'];
+      const dels=t.deliverables.filter(d=>d.hosted);
+      const locals=t.deliverables.filter(d=>!d.hosted && d.size>0);
+      let html='<div class="card"><div class="top"><div class="t">'+esc(t.title)+
+        '</div><span class="badge '+cls+'">'+esc(label)+'</span></div>'+
+        '<div class="ws-tag">📁 '+esc(t.ws)+'</div>'+
+        '<div class="upd">更新：'+fmtTs(t.updated)+'</div>';
+      if(dels.length||locals.length){
+        html+='<div class="dlist">';
+        dels.forEach(d=>{
+          const href='files/'+t.id+'/'+encodeURIComponent(d.name);
+          html+='<div class="ditem"><a href="'+href+'" target="_blank">📄 '+esc(d.name)+'</a><span class="sz">'+fmtSize(d.size)+' · 可打开</span></div>';
+        });
+        locals.forEach(d=>{
+          html+='<div class="ditem"><span class="local">📦 '+esc(d.name)+'</span><span class="sz">'+fmtSize(d.size)+' · 本地未同步</span></div>';
+        });
+        html+='</div>';
+      }
+      html+='</div>';
+      box.insertAdjacentHTML('beforeend',html);
+    });
+  } else {
+    const box=document.getElementById('spacesView'); box.innerHTML='';
+    DATA.workspaces.forEach(w=>{
+      let html='<div class="sec-title">'+esc(w.name)+' · <span style="font-weight:400">'+esc(w.path)+'</span></div><div class="card">';
+      if(!w.files.length){html+='<div class="empty">空目录</div>';}
+      // 建立交付文件快速索引（按文件名）
+      w.files.forEach(f=>{
+        const m=f.dir?('📁 '+esc(f.name)+' <span class="mt">'+ (f.count||0) +' 项</span>')
+                     :('📄 '+esc(f.name)+' <span class="mt">'+fmtSize(f.size)+'</span>');
+        html+='<div class="wfile"><span class="nm">'+m+'</span></div>';
+      });
+      html+='</div>';
+      box.insertAdjacentHTML('beforeend',html);
+    });
+  }
+}
+</script>
+</body>
+</html>

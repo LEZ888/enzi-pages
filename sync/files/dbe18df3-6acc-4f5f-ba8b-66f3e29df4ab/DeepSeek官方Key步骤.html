@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>DeepSeek 官方 API Key 步骤</title>
+  <style>
+    :root{--bg:#F7F3E9;--card:#FFFBF0;--line:#E8E0D0;--ink:#3C2D1E;--ink2:#6B5D4D;--accent:#D4A373;--accent-d:#B07D4E;--ok:#6BAF92;}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);line-height:1.7;padding:24px 18px 40px}
+    h1{font-size:22px;margin:0 0 8px}
+    .sub{font-size:14px;color:var(--ink2);margin-bottom:24px}
+    .step{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(60,45,30,.05)}
+    .num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-right:10px}
+    .title{font-weight:700;font-size:16px;display:inline}
+    .txt{margin-top:10px;font-size:15px;color:var(--ink2)}
+    .key{display:block;background:#F0EADF;border:1px dashed var(--accent);border-radius:10px;padding:10px 12px;font-family:monospace;font-size:13px;color:var(--ink);margin-top:10px;word-break:break-all}
+    .tip{background:#EAF6F0;border-left:4px solid var(--ok);padding:12px 14px;border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#2F5A46}
+    .warn{background:#FFF3E0;border-left:4px solid #FF9800;padding:12px 14px;border-radius:0 10px 10px 0;margin:20px 0;font-size:14px;color:#7A4E16}
+    a{color:var(--accent-d);text-decoration:none;font-weight:600}
+    .btn{display:block;width:100%;text-align:center;background:var(--accent);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;margin-top:10px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <h1>🚀 DeepSeek 官方 API Key 步骤</h1>
+  <div class="sub">拿到 Key 后，手机/电脑上的 AI秘书 都能直接对话，不需要本机代理。</div>
+
+  <div class="step">
+    <span class="num">1</span><span class="title">打开 DeepSeek 开发者平台</span>
+    <div class="txt">手机或电脑浏览器访问：<br><a href="https://platform.deepseek.com" target="_blank">https://platform.deepseek.com</a></div>
+  </div>
+
+  <div class="step">
+    <span class="num">2</span><span class="title">注册账号</span>
+    <div class="txt">点 <b>注册</b> → 用<b>手机号</b>或邮箱注册 → 验证登录。<br>新用户<strong>免费送 500 万 tokens</strong>，不用绑信用卡，日常对话够用很久。</div>
+  </div>
+
+  <div class="step">
+    <span class="num">3</span><span class="title">创建 API Key</span>
+    <div class="txt">① 登录后点左侧 <b>API Keys</b><br>② 点 <b>创建 API Key</b><br>③ 名称填「恩子工作台」<br>④ 点创建后复制这串字符：</div>
+    <div class="key">sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+  </div>
+
+  <div class="step">
+    <span class="num">4</span><span class="title">在工作台填入 Key</span>
+    <div class="txt">① 打开「我的工作台」<br>② 点底部 <b>我的</b><br>③ <b>AI 服务预设</b> 切换到 <b>DeepSeek 官方</b><br>④ 把刚才复制的 Key 粘贴进去<br>⑤ 点保存</div>
+  </div>
+
+  <div class="step">
+    <span class="num">5</span><span class="title">回到 AI秘书 测试</span>
+    <div class="txt">返回首页点 <b>AI秘书</b>，发条消息，应该能正常回复了。</div>
+  </div>
+
+  <div class="tip">💡 小提示：工作台默认使用 DeepSeek 官方模型 <b>deepseek-v4-flash</b>（便宜、快、日常够用）。如果想换更强的模型，可在「我的 → 模型名」填 deepseek-v4-pro。</div>
+  <div class="warn">⚠️ 注意：不要把 Key 截图发给别人。Key 只存在你的手机里，换手机需重新填。500 万 tokens 用完后可在 DeepSeek 平台低价充值。</div>
+
+  <a class="btn" href="https://platform.deepseek.com" target="_blank">👉 现在去 platform.deepseek.com</a>
+</body>
+</html>

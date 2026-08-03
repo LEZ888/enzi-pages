@@ -1,0 +1,17 @@
+PASS title_shareholder_present
+PASS masked_name_Zhang**_shown
+PASS raw_name_ZhangMeili_hidden
+PASS product_detail_lipstick_hidden_in_list
+PASS product_detail_mask_hidden_in_list
+PASS svc_card_total_1000
+PASS gross_total_1160
+PASS product_retail_total_160
+PASS lastmonth_order_WangFang_excluded
+PASS expand_shows_project_skincare
+PASS expand_shows_card_yearcard
+PASS expand_still_hides_product_lipstick
+PASS export_csv_no_error
+PASS employee_menu_excludes_shareholder
+PASS maskName_2chars
+PASS maskName_1char
+RESULT PASS=16 FAIL=0

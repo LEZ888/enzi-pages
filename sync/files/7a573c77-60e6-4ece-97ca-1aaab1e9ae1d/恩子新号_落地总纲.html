@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恩子·新独立账号 三合一落地总纲 v2</title>
+<style>
+  :root{
+    --blue:#1f3a5f; --blue2:#2c5282; --gold:#c9a227; --purple:#6b46c1;
+    --green:#2f855a; --red:#c53030; --bg:#f7f8fa; --card:#ffffff;
+    --ink:#1a202c; --mut:#5a6573;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7;}
+  body{overflow-x:hidden}
+  .wrap{max-width:900px;margin:0 auto;padding:20px 18px 90px;}
+  header.hero{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;
+    border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 6px 20px rgba(31,58,95,.18)}
+  header.hero h1{margin:0 0 6px;font-size:23px;letter-spacing:1px}
+  header.hero p{margin:4px 0;opacity:.92;font-size:13.5px}
+  .lock{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.35);
+    border-radius:10px;padding:10px 14px;margin-top:12px;font-size:13px}
+  .lock b{color:var(--gold)}
+  nav.toc{background:var(--card);border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  nav.toc summary{cursor:pointer;font-weight:700;color:var(--blue);font-size:15px}
+  nav.toc ol{margin:10px 0 0;padding-left:22px}
+  nav.toc li{margin:5px 0;font-size:14px}
+  nav.toc a{color:var(--blue2);text-decoration:none}
+  nav.toc a:hover{text-decoration:underline}
+  section.module{background:var(--card);border:1px solid #e2e8f0;border-radius:14px;
+    padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+  section.module h2{margin:0 0 12px;font-size:19px;color:var(--blue);
+    border-left:5px solid var(--gold);padding-left:10px}
+  section.module h3{font-size:15px;color:var(--blue2);margin:16px 0 8px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid #d8dee6;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#eef2f7;color:var(--blue);font-weight:700}
+  .callout{border-radius:12px;padding:13px 15px;margin:12px 0;font-size:14px}
+  .c-blue{background:#e8f0fb;border-left:5px solid var(--blue2)}
+  .c-gold{background:#fdf6e3;border-left:5px solid var(--gold)}
+  .c-green{background:#e9f7ef;border-left:5px solid var(--green)}
+  .c-red{background:#fdecec;border-left:5px solid var(--red)}
+  .c-purple{background:#f1ebfb;border-left:5px solid var(--purple)}
+  .twocol{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0}
+  .col{flex:1;min-width:240px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px}
+  .col.blue{border-top:4px solid var(--blue2)}
+  .col.green{border-top:4px solid var(--green)}
+  .col h4{margin:0 0 8px;font-size:15px}
+  .blue h4{color:var(--blue2)} .green h4{color:var(--green)}
+  .pill{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:700;margin:2px 0}
+  .p-go{background:#e9f7ef;color:var(--green)}
+  .p-watch{background:#fdf6e3;color:#a7791a}
+  .p-stop{background:#fdecec;color:var(--red)}
+  .p-b{background:#e8f0fb;color:var(--blue2)}
+  .script{border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin:8px 0;background:#fcfdff}
+  .script .t{font-weight:700;color:var(--blue2);font-size:14px}
+  .script .meta{font-size:12px;color:var(--mut);margin:2px 0 6px}
+  .script .body{font-size:13.5px;color:#2d3748;white-space:pre-wrap}
+  .copybtn{float:right;background:var(--blue2);color:#fff;border:none;border-radius:8px;
+    padding:4px 12px;font-size:12px;cursor:pointer}
+  .copybtn:hover{background:var(--blue)}
+  .dayplan{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin:10px 0}
+  .day{flex:1;min-width:150px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px}
+  .day b{color:var(--blue2)}
+  ul.tight{margin:8px 0;padding-left:20px;font-size:14px}
+  ul.tight li{margin:5px 0}
+  .backtop{position:fixed;right:16px;bottom:18px;width:42px;height:42px;border-radius:50%;
+    background:var(--blue);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.25);display:none}
+  footer{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}
+  @media(max-width:600px){
+    .wrap{padding:14px 12px 80px}
+    header.hero h1{font-size:19px}
+    table{font-size:11.5px}
+    th,td{padding:6px 5px}
+    .twocol,.dayplan{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>恩子 · 新独立账号 三合一落地总纲 v2</h1>
+  <p>与「大熹（店铺号）」「恩子阿屿（婚恋IP）」完全无关 · 纯新建 · 不挂靠不混用</p>
+  <p>主轴：轻资产变现（招商代理 · 加盟合作 · 知识变现）· 不直播 · 单号三栏目漏斗</p>
+  <div class="lock">
+    <b>🔒 身份锁死：</b>本项目我 = 12年美业策划运营营销总监 + 6年抖音账号/人设IP策划师 + 恩子的项目内容合伙人。所有内容先摸透抖音/小红书目标人群喜好再给，不偷懒、不虚构、带脑子做。
+  </div>
+</header>
+
+<nav class="toc">
+  <details open>
+    <summary>📑 目录（点此折叠/展开）</summary>
+    <ol>
+      <li><a href="#s1">一、身份锁死与执行标准</a></li>
+      <li><a href="#s2">二、平台调研实证（2026-07-27 搜证）</a></li>
+      <li><a href="#s3">三、三合一战略（单号三栏目漏斗）</a></li>
+      <li><a href="#s4">四、DeepSeek方案提取 + 总监校准</a></li>
+      <li><a href="#s5">五、三栏目拆解（B/C/A）</a></li>
+      <li><a href="#s6">六、前 7 天启动（调研校准版）</a></li>
+      <li><a href="#s7">七、前 20 条脚本包 v2（可复制）</a></li>
+      <li><a href="#s8">八、招商(B端)合规与话术红线</a></li>
+      <li><a href="#s9">九、周排期 + 数据看板</a></li>
+      <li><a href="#s10">十、给恩子的实话（执行力）</a></li>
+    </ol>
+  </details>
+</nav>
+
+<!-- 一 -->
+<section class="module" id="s1">
+  <h2>一、身份锁死与执行标准</h2>
+  <div class="callout c-purple">
+    <b>身份（用户硬性，跨所有会话不漂移）：</b>12年美业策划运营营销总监 + 6年抖音账号/人设IP策划师 + 恩子的项目内容合伙人。我用这个视角的专业判断做内容、审视、吃透每一条，不用"我是AI"的免责姿态。
+  </div>
+  <div class="callout c-blue">
+    <b>执行标准（用户硬性）：</b>
+    ① 所有内容先搜索抖音/小红书等主流平台目标人群喜好，再提供；<br>
+    ② 不准偷懒、不准乱虚构、不准乱生成；<br>
+    ③ 只提供对账号目标有达成帮助的内容；<br>
+    ④ 必须带脑子、带判断地做内容。
+  </div>
+</section>
+
+<!-- 二 -->
+<section class="module" id="s2">
+  <h2>二、平台调研实证（2026-07-27 已搜证）</h2>
+  <p class="meta">我按你的标准，去主流平台摸了真实喜好。下面每条都来自搜索结果，不是拍脑袋。</p>
+  <table>
+    <tr><th>调研问题</th><th>平台真实结论</th><th>对恩子账号的用法</th></tr>
+    <tr>
+      <td class="l"><b>美业视频前5秒怎么抓人？</b></td>
+      <td class="l">直接点题（"美业老板注意了"）或反常识（"我见过最赚钱的美容院从不低价拓客"）。真实+相关就够，不用花活。</td>
+      <td class="l">每条脚本开头套「痛点提问」或「反常识」，杜绝"家人们好我是XX"。</td>
+    </tr>
+    <tr>
+      <td class="l"><b>招商/加盟(B端)账号怎么建信任？</b></td>
+      <td class="l">三板斧：痛点→赚钱逻辑(说具体)→真实案例。禁收益保证。主页要像"项目说明书"，私信先筛选人群。</td>
+      <td class="l">A栏目按三板斧结构；话术禁"保赚/躺赚"；主页置顶项目介绍+合作流程。</td>
+    </tr>
+    <tr>
+      <td class="l"><b>正能量/逆袭故事为何能火？</b></td>
+      <td class="l">完播率比均值高<b>46%</b>、互动高<b>2.3倍</b>。公式=真实困境+场景化解+可执行希望。数字魔法（"273天早起"）强。</td>
+      <td class="l">C栏目用"真实困境+反转+希望"结构，敢用具体数字（19岁100万/26岁负债）。</td>
+    </tr>
+    <tr>
+      <td class="l"><b>小红书美业号怎么变现？</b></td>
+      <td class="l">轻人设+高客单+精准搜索流量。<b>88个粉丝</b>的美业号照样变现2880元——精准比数量重要。</td>
+      <td class="l">小红书做"恩子·思路开窍"轻人设号，主攻精准搜索词，不追粉量。</td>
+    </tr>
+    <tr>
+      <td class="l"><b>对标谁？</b></td>
+      <td class="l">芮丝学院陈思思（10w粉，美业商业培训，具象案例+正能量）、成杰新美业教育（21.9w粉，美业教育/招商策略）。</td>
+      <td class="l">人设锚定"美业实战家+正能量"，内容走"具象案例+商业思维"，不走高冷专家。</td>
+    </tr>
+  </table>
+</section>
+
+<!-- 三 -->
+<section class="module" id="s3">
+  <h2>三、三合一战略（单号三栏目漏斗）</h2>
+  <div class="callout c-gold"><b>核心结论：</b>不做3个号，不做2个号。做 <b>1 个「恩子」主号</b>，把三个想法拧成一股绳——B 负责拉人立专家，C 负责立真实人设，A 负责后端变现。你所有资源（供应链/经历/方法）都为同一个商业目标服务。</div>
+  <table>
+    <tr><th>栏目</th><th>角色</th><th>形式</th><th>占比</th><th>目的</th></tr>
+    <tr>
+      <td class="l"><b>B《恩子·思路开窍》</b><br><span class="meta">= 想法B</span></td>
+      <td class="l">内容引擎 / 获客</td>
+      <td class="l">口播（你强项）+ AI对话录屏/脑图展示（画中画）</td>
+      <td><span class="pill p-b">主力 50%</span></td>
+      <td class="l">吸引美业老板，立"实战思路开发师"人设</td>
+    </tr>
+    <tr>
+      <td class="l"><b>C《恩子·故事罐头》</b><br><span class="meta">= 想法C</span></td>
+      <td class="l">情感粘合剂</td>
+      <td class="l">漫画绘本风图片 + 你的配音旁白（批量生图，非手搓漫剧）</td>
+      <td><span class="pill p-watch">穿插 20%</span></td>
+      <td class="l">立真实、有血有肉的人设，巩固信任</td>
+    </tr>
+    <tr>
+      <td class="l"><b>A《恩子·项目严选》</b><br><span class="meta">= 想法A</span></td>
+      <td class="l">后端变现</td>
+      <td class="l">口播为主，穿插门店/供应链实物画面</td>
+      <td><span class="pill p-go">最终 30%</span></td>
+      <td class="l">展示专业度+供应体系，吸引主动链接（不直接硬卖）</td>
+    </tr>
+  </table>
+  <div class="callout c-blue"><b>漏斗：</b>短视频(故事立人设 + 方法论给价值 + 项目钩子) → 评论区/主页引流私域 → 私域一对一成交(招商 / 思路开发)。全程不直播。</div>
+</section>
+
+<!-- 四 -->
+<section class="module" id="s4">
+  <h2>四、DeepSeek方案提取 + 总监校准</h2>
+  <div class="twocol">
+    <div class="col blue">
+      <h4>✅ 从DeepSeek方案里"拿走用"的</h4>
+      <ul class="tight">
+        <li><b>1号3栏目漏斗</b>：与我的单号漏斗结论高度收敛，直接采用。</li>
+        <li><b>B栏目"口播+AI对话录屏/脑图"</b>：极聪明的低耗差异化——既展示方法又当内容，采用。</li>
+        <li><b>C栏目"漫画绘本图片+配音"</b>：比手搓漫剧轻，方向对。</li>
+        <li><b>A栏目"展示专业度、吸引主动链接、不直接卖"</b>：完全正确，B2B信任没到硬卖必翻车。</li>
+      </ul>
+    </div>
+    <div class="col green">
+      <h4>⚠️ 总监保留意见（必须校准）</h4>
+      <ul class="tight">
+        <li><b>C即便"批量生图"仍耗时</b>：你说"一天才搓1分钟绘本"。定为<b>月更1-2条</b>的hero内容，绝不做周更，保住执行力。</li>
+        <li><b>B的"我和AI聊了" vs 你的红线"不让人知用AI"</b>：录屏定位成"恩子的方法论演示"，不喊"我在用AI"，协调两线。</li>
+        <li><b>A的B2B招商冷启动最难</b>：需真实案例背书，且你"不爱线下见人"与成交冲突——前期只种草+私域，重信任后再收代理。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 五 -->
+<section class="module" id="s5">
+  <h2>五、三栏目拆解</h2>
+
+  <h3>栏目 B《恩子·思路开窍》· 主力 50%</h3>
+  <ul class="tight">
+    <li><b>定位：</b>美业老板的"思路开发师"。你不是教抖音技术，是帮他把身上资源挖成选题。</li>
+    <li><b>形式：</b>口播（手机原相机，你形象好口播强）+ 画中画插入"你和AI的对话录屏/脑图"（剪映画中画）。</li>
+    <li><b>选题来源：</b>你与AI对话开发出的真实思路、美业老板常见卡点、评论区征集。</li>
+    <li><b>钩子公式：</b>反常识 or 痛点前置 → "很多人这么做都错了，正确思路是…" → 给一个可执行动作。</li>
+    <li><b>红线：</b>不喊"AI专家"；录屏是方法演示不是"我在用AI"。</li>
+  </ul>
+
+  <h3>栏目 C《恩子·故事罐头》· 穿插 20%</h3>
+  <ul class="tight">
+    <li><b>定位：</b>有血有肉的真实恩子。正能量不是鸡汤，是"摔过还往前走"。</li>
+    <li><b>形式：</b>漫画绘本风图片（AI批量生图，DeepSeek写分镜描述）+ 你的配音旁白，剪映合成，40秒内。</li>
+    <li><b>选题来源：</b>手机备忘录建"故事罐头"文件夹，先丢10个高光/至暗关键词。</li>
+    <li><b>钩子公式：</b>真实困境（具体数字）+ 反转 + 希望。例："19岁赚100万，26岁负债累累，我没倒"。</li>
+    <li><b>红线：</b>月更1-2条，不量产；核心经历必须真实，不编。</li>
+  </ul>
+
+  <h3>栏目 A《恩子·项目严选》· 最终 30%</h3>
+  <ul class="tight">
+    <li><b>定位（已纠偏·核心）：</b>你不是"卖半成品产品的供应商"，你是<b>"输出项目体系方案的操盘手"</b>。产品只是交付的壳，真正卖的是那套"让门店直接落地赚钱的项目架构"。抖音上只干一件事：不断证明"我特别会开发赚钱的项目体系"，让缺好项目的同行主动来找你。不直接卖产品、不直接硬卖项目。</li>
+    <li><b>形式：</b>口播为主，穿插门店/实验室/供应链实物画面（增强可信）；秀"体系"不秀"货"。</li>
+    <li><b>选题来源：</b>你7年搭起的项目体系、县城门店常见坑、供应体系解构、帮同行开发项目的真实过程。</li>
+    <li><b>钩子公式（B端三板斧）：</b>痛点（老板怕什么）→ 赚钱/落地逻辑（说具体）→ 真实案例（可核验）。</li>
+    <li><b>可复用脚本结构《一个爆款项目如何诞生》4步：</b>①挖痛点（老板真实卡点）→ ②想思路（设计极低门槛/高价值感/纯体验的方案）→ ③搭体系（拆成"诊断+定制护理+跟踪"，产品只是搭配）→ ④亮结果（用真实数据或"店里新客成交率最高入口"等定性描述，<b>没有真实数据绝不编数字</b>）。结尾软钩子："你店也缺能落地的好项目体系，私信我聊聊你店的情况"。</li>
+    <li><b>红线：</b>不直接硬卖；禁"保赚/躺赚/稳赚"；工厂资质/备案先确认（涉《化妆品监督管理条例》）；产品只是载体，话术重心永远落在"项目体系"上。</li>
+  </ul>
+</section>
+
+<!-- 六 -->
+<section class="module" id="s6">
+  <h2>六、前 7 天启动（调研校准版）</h2>
+  <div class="dayplan">
+    <div class="day"><b>Day1</b><br>建号：昵称「恩子｜美业项目实战派」。简介："90后美业老板 | 7年门店实战 | 专注用AI为美业老板开发能赚钱的项目体系 | 经历过谷底，更懂带你向上"。手机备忘录建3个栏目文件夹：B先写"用AI帮迷茫老板找选题"、C先写"19岁赚第一个100万"、A先空着（有流量再启动）。</div>
+    <div class="day"><b>Day2</b><br>用AI开发第一条B脚本：让AI扮演"思路开发师"一步步提问，挖出10个适合你的选题；把对话全程录屏——这就是内容素材。写成口播脚本（结构：很多老板像你一样迷茫→我用一个方法帮人找到10个选题→她的优势是…）。</div>
+    <div class="day"><b>Day3</b><br>拍Day2脚本：手机原相机，光线好处，3分钟内讲清一个点。剪映：口播加速保密度、讲"我和AI对话"时画中画插录屏、关键结论打花字。</div>
+    <div class="day"><b>Day4</b><br>产第一条C：选"19岁赚100万"反差最大。AI生图（国内平替如美图WHEE/文心一格）输"漫画绘本风，年轻女孩看手机银行短信惊喜"，生成5-8张；剪映配你的旁白+轻BGM，40秒内。</div>
+    <div class="day"><b>Day5</b><br>发两条，不管数据。规划下周：再写1条B脚本、定下1个C故事。素材滚雪球。</div>
+  </div>
+  <div class="callout c-red"><b>精力预警：</b>你还在开店+做3个口播号。新号<b>不要日更</b>，3条/周起步，保质量不保数量。</div>
+</section>
+
+<!-- 七 -->
+<section class="module" id="s7">
+  <h2>七、前 20 条脚本包 v2（可复制 · 研究背书）</h2>
+  <p class="meta">所有开头套「痛点提问/反常识」钩子（来自美业调研）；C组用「真实困境+数字+希望」公式（完播+46%实证）；A组用B端三板斧。点「复制」取走文案。</p>
+
+  <h3>栏目 B《思路开窍》（8条）</h3>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B01 反常识：最赚钱的美容院不靠低价拓客</div>
+    <div class="meta">钩子：反常识 · 真实+相关</div>
+    <div class="body">我见过最赚钱的美容院，从来不靠9.9低价拓客。低价拉来的人，不是你的客，是来薅羊毛的。真正稳的店，靠的是一套让客人留下来、还带朋友的项目体系。今天聊透为什么"便宜"是最贵的引流。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B02 做抖音第一步不是学拍摄</div>
+    <div class="meta">钩子：痛点前置</div>
+    <div class="body">很多老板一上来问"用什么拍、怎么剪"。错。第一步是盘点你身上这3样：开店年份、踩过的坑、手里的货源。这些是别人抄不走的独家素材。先盘点，再开拍。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B03 你说没素材，其实天天都是</div>
+    <div class="meta">钩子：共鸣反转</div>
+    <div class="body">你说"我每天守店没东西发"。可你今天劝退了一个犹豫客人，昨天处理了一个过敏投诉，上周刚调了一款产品——这些全是内容。美业人的素材，藏在每一天里，只是你没看见。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B04 别抄同行，你的经历是独家库</div>
+    <div class="meta">钩子：差异</div>
+    <div class="body">同行都在抄爆款，抄完没魂。你把"我怎么从零开起300平店"讲透，就是别人抄不走的壁垒。真实，才稀缺。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B05 县城门店该做项目体系，不是贴牌成品</div>
+    <div class="meta">钩子：认知 · B+A交界</div>
+    <div class="body">很多县城门店还在找"成品货源"贴牌卖。我做了7年实体，越来越觉得该做"项目体系"——不是给一瓶货，是给一套能落地的架构。后者才留得住客人。下条拆怎么搭。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B06 一个内向店长，用我的方法挖出10个选题</div>
+    <div class="meta">钩子：方法演示（插AI对话录屏）</div>
+    <div class="body">昨天我用一个方法，帮一个性格内向、觉得自己"没故事"的店长，挖出了10个能拍的选题。她的优势既不是颜值也不是口才，是专业。很多人缺的不是内容，是发现自己内容的方法。这条我把过程录给你看。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B07 前5秒决定生死：别一上来"家人们好"</div>
+    <div class="meta">钩子：痛点+解法</div>
+    <div class="body">美业视频最废的开头就是"家人们好我是XX"。用户0.8秒就划走。正确开头：直接抛他的痛点——"你是不是也遇到客人做一次就不来了？"他才会停。前3秒说人话，比什么剪辑都重要。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">B08 小红书88粉也能变现2880</div>
+    <div class="meta">钩子：反直觉 · 精准>数量</div>
+    <div class="body">有人觉得没几万粉不能变现。我看到的真实案例：一个美业号，88个粉丝，一条笔记引流到店，直接成交2880。美业要的不是泛粉，是精准的、有项目有需求的人。所以别追粉量，追精准。</div>
+  </div>
+
+  <h3>栏目 C《故事罐头》（5条）</h3>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">C09 15岁打工，工资1000给家里一半</div>
+    <div class="meta">钩子：真实困境</div>
+    <div class="body">我15岁出来打工，做服务员一个月1000块，一半寄回家。不是因为我伟大，是家里真缺钱。穷过的孩子早当家，所以我比谁都懂"想翻身"那种劲。这段经历，后来成了我做生意的底色。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">C10 19岁赚100万，26岁负债累累</div>
+    <div class="meta">钩子：反差对比+数字魔法</div>
+    <div class="body">19岁，我赚到人生第一个100万，买房买车带团队。26岁，被最信任的人骗到负债累累，孤身换了一座陌生城市。从山顶到谷底，我只用了一年。但我没倒——因为我不信这辈子就这么完了。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">C11 26岁负债累累，从零再起</div>
+    <div class="meta">钩子：逆袭公式</div>
+    <div class="body">26岁那年，我身无分文，孤身到一个陌生城市。没人帮，就靠自己。从摆摊到进店，从一家小店到300平美容院，每一步都是咬着牙走的。我想告诉所有跌过的姐妹：谷底不是终点，是重新起跑的线。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">C12 负债累累我也没丧过</div>
+    <div class="meta">钩子：情感共鸣</div>
+    <div class="body">很多人问我怎么一直这么正能量。不是没难受过，是难受完我选择往前走。正能量不是装出来的，是摔多了发现——抱怨解决不了任何事，干才解决。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">C13 农村姑娘到300平美业女老板</div>
+    <div class="meta">钩子：系列钩子</div>
+    <div class="body">我是农村出来的姑娘，父母总打架、没人管成绩，初中毕业就打工。摆过地摊、进过工厂、做过推销。今天起，我把前半生怎么走到美业女老板，一段段讲给你听。先点关注，别走丢。</div>
+  </div>
+
+  <h3>栏目 A《项目严选》（4条）</h3>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">A14 做美业加盟，老板最怕的4件事</div>
+    <div class="meta">钩子：B端痛点板斧①</div>
+    <div class="body">想做项目体系的老板，最怕4件事：技术不行、产品没竞争力、没客户、压一堆货。这4个坑踩中任何一个，再便宜也别碰。今天先说"技术"这个坑怎么避开。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">A15 我搭了7年的体系，想开放给同行</div>
+    <div class="meta">钩子：赚钱逻辑（说具体）</div>
+    <div class="body">这些年我用自己的店，把产品体系从0跑通了。很多同行问我货从哪来、项目怎么搭。我想通了：与其各自摸索，不如把这套体系开放给真正想做项目的门店。不是卖你货，是卖你一套能落地的架构。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">A16 想找新项目体系？先搞清3个坑</div>
+    <div class="meta">钩子：避坑（真实场景）</div>
+    <div class="body">想换项目体系的老板，先看清3个坑：①只看进价不看复购 ②没培训只给货 ③资质不全后期被查。这三条踩中任何一条，再便宜也别碰。我踩过，才敢说。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">A17 为什么我劝县城门店别只找成品货源</div>
+    <div class="meta">钩子：认知·引私域</div>
+    <div class="body">县城门店别再只找"成品货源"贴牌了。成品谁都能拿，你没壁垒。我做的是把配方师+工厂+你门店场景，拼成能落地的项目。你拿到手不是一瓶东西，是一套能反复变现的体系。想了解，私我。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">A18 一个能落地的项目体系，是怎么被我想出来的</div>
+    <div class="meta">钩子：4步结构·秀体系不秀货·引私域</div>
+    <div class="body">很多转介绍来的新客，第一次成交特别难——信任不够。我就想：能不能设计一个极低门槛、高价值感、纯体验、不推销的"第一次接触"项目？后来我拉着产品实验室，把它拆成"1次专业诊断+1个定制居家护理包+1周线上跟踪"，产品只用咱核心原液去搭。这项目不是为了卖货，是让新客尖叫、主动问"下次啥时候来"。现在它成了我店新客成交率最高的入口。你店也缺能落地的好项目体系？私信我，聊聊你店的情况。</div>
+  </div>
+
+  <h3>互动（3条）</h3>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">I18 评论区点名：你是哪类门店？</div>
+    <div class="meta">钩子：参与</div>
+    <div class="body">做美业的姐妹，评论区打出来：你是美容院、皮肤管理、还是美甲美睫？你现在抖音最大的卡点是什么？我挑典型的下条视频帮你捋。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">I19 美业人做抖音最常问5个问题</div>
+    <div class="meta">钩子：干货</div>
+    <div class="body">整理了美业老板做抖音最高频的5个问题：没时间拍、不会写、怕被认出、发了没流量、不知怎么引流到店。这5个我一条条录，关注我不漏。</div>
+  </div>
+  <div class="script"><button class="copybtn" onclick="copy(this)">复制</button>
+    <div class="t">I20 评论区点名的门店，我帮你捋</div>
+    <div class="meta">钩子：定制</div>
+    <div class="body">上条有人留言"社区店老客不来"。我就拿你举例：你不该拍项目介绍，该拍"老客为什么三个月没来、我怎么一句问候拉回她"。具体话术下条给。你们的真实问题，就是最好的选题。</div>
+  </div>
+</section>
+
+<!-- 八 -->
+<section class="module" id="s8">
+  <h2>八、招商(B端)合规与话术红线</h2>
+  <ul class="tight">
+    <li><span class="pill p-stop">硬红线</span> <b>绝不直播。</b>变现全走短视频+私域。</li>
+    <li><span class="pill p-stop">合规</span> A的"半成品+配方师+工厂"供应涉《化妆品监督管理条例》，<b>必须先确认工厂资质/备案</b>，不具备则只讲"架构思路"不实际供货。</li>
+    <li><span class="pill p-stop">话术</span> 禁"保赚/躺赚/稳回本/月入X万"等收益保证（招商调研明确：承诺类违规是头号风险）。</li>
+    <li><span class="pill p-watch">分寸</span> B不喊"AI专家"，录屏是方法演示；不主动暴露内部工具细节。</li>
+    <li><span class="pill p-watch">真实</span> C故事核心经历必须真实，可艺术加工不可编造；A案例须可核验，不夸大。</li>
+    <li><span class="pill p-watch">精力</span> 不同时启动多号；现有3个口播号建议合并/暂停，腾带宽给主号。</li>
+  </ul>
+</section>
+
+<!-- 九 -->
+<section class="module" id="s9">
+  <h2>九、周排期 + 数据看板</h2>
+  <table>
+    <tr><th>星期</th><th>发什么</th><th>栏目</th><th>备注</th></tr>
+    <tr><td>周一</td><td>思路开窍口播</td><td class="l">B</td><td class="l">给价值，立专家</td></tr>
+    <tr><td>周三</td><td>故事罐头</td><td class="l">C</td><td class="l">立人设，拉共鸣（月1-2条即可）</td></tr>
+    <tr><td>周五</td><td>项目严选/招商钩子</td><td class="l">A</td><td class="l">轻展示，引私域</td></tr>
+    <tr><td>周末</td><td>互动或休息</td><td class="l">I</td><td class="l">评论区抓选题</td></tr>
+  </table>
+  <div class="callout c-blue">
+    <b>数据看板（来自平台调研阈值）：</b>
+    <ul class="tight">
+      <li>前3秒流失率&gt;60% 会被算法过滤 → 开头必须钩子。</li>
+      <li>进爆款池基准：点赞率&gt;3%、评论率&gt;1%、转发率&gt;0.5%。</li>
+      <li>正能量/逆袭类完播率显著高于均值（+46%）→ C栏目是天然流量池。</li>
+      <li>每月底复盘一次，死守"不直播"红线。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 十 -->
+<section class="module" id="s10">
+  <h2>十、给恩子的实话（执行力）</h2>
+  <div class="callout c-red">
+    <b>你最大的敌人不是没思路，是"想通了不拍"。</b>这套总纲故意做低门槛：口播为主（你强项）、不直播、3条/周、20条现成脚本直接照读。DeepSeek的方案和你自己的洞察已经非常接近正确解——现在差的就是按下录制键。
+  </div>
+  <div class="callout c-gold">
+    <b>一个动作破"准备癌"：</b>今天做 Day1——建号、写简介、往"故事罐头"丢10个关键词。明天 Day2 用AI开发第一条B脚本。<b>发完第一条回来告诉我，我陪你盯前3条数据、调方向。</b>
+  </div>
+  <div class="callout c-purple">
+    <b>关于"做2个号"：</b>等你主号跑出3个真实招商/思路开发成交案例，我们再开纯招商号(A)放大。现在开第二个，只会稀释你本就紧张的精力。先赢一个，再谈分身。
+  </div>
+</section>
+
+<footer>恩子·新独立账号三合一落地总纲 v2 · 与 大熹 / 恩子阿屿 无关 · 本页零第三方水印，可本地双击 / 发微信</footer>
+</div>
+
+<button class="backtop" id="bt" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+function copy(btn){
+  var el=btn.parentElement.querySelector('.body');
+  var txt=el.innerText.trim();
+  navigator.clipboard.writeText(txt).then(function(){
+    var o=btn.textContent;btn.textContent='已复制✓';btn.style.background='#2f855a';
+    setTimeout(function(){btn.textContent=o;btn.style.background='';},1500);
+  });
+}
+window.addEventListener('scroll',function(){
+  document.getElementById('bt').style.display = window.scrollY>400?'block':'none';
+});
+</script>
+</body>
+</html>

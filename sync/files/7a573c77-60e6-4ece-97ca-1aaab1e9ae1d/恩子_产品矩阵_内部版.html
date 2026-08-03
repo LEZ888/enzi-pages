@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"><title>产品矩阵内部版</title><style>
+:root{--blue:#2E9BD6;--blue-d:#1E78B4;--blue-l:#EAF6FC;--blue-ll:#F4FAFE;--ink:#22323f;--line:#CDE3F2;--gold:#E0A23B;--red:#C0392B;--green:#1E8A4C;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft Yahei",sans-serif;background:var(--blue-ll);color:var(--ink);font-size:16px;line-height:1.7;padding-bottom:60px;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--blue-d);color:#fff;padding:14px 16px;font-weight:700;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.sub{background:var(--blue-l);color:var(--blue-d);padding:10px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line);}
+.wrap{max-width:720px;margin:0 auto;padding:16px;}
+.block{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 14px;margin:16px 0;box-shadow:0 1px 4px rgba(30,120,180,.06);}
+h2{font-size:19px;margin:0 0 10px;color:var(--blue-d);border-left:5px solid var(--blue);padding-left:10px;}
+h3{font-size:16px;margin:14px 0 6px;color:var(--blue-d);}
+.t{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0;}
+.t th{background:var(--blue-d);color:#fff;padding:8px 6px;text-align:left;font-weight:700;}
+.t td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+.t tr:nth-child(even) td{background:var(--blue-ll);}
+.t .k{font-weight:700;color:var(--blue-d);white-space:nowrap;}
+.callout{border-radius:12px;padding:11px 13px;margin:10px 0;font-size:14px;}
+.blue{background:var(--blue-l);border:1px solid var(--line);}
+.gold{background:#FCF3E2;border:1px solid #F0D9A8;}
+.red{background:#FBE9E7;border:1px solid #F0C2BC;}
+.green{background:#E7F4EC;border:1px solid #BFE0CB;}
+.copy-btn{display:inline-block;background:var(--blue-d);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;margin:4px 0;}
+.copy-btn:active{opacity:.7;}
+.nav-fab{position:fixed;top:14px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:#fff;color:var(--blue-d);border:2px solid var(--blue-d);font-size:20px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;}
+.nav-fab.show{display:flex;}
+.nav-menu{position:fixed;top:60px;right:14px;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;display:none;max-height:78vh;overflow:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:200px;}
+.nav-menu.show{display:block;}
+.nav-menu a{display:block;padding:8px 10px;color:var(--ink);text-decoration:none;font-size:14px;border-radius:8px;}
+.nav-menu a:active{background:var(--blue-l);}
+.backtop{position:fixed;bottom:20px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:var(--blue-d);color:#fff;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;}
+.backtop.show{display:flex;}
+.foot{text-align:center;color:#8aa6b8;font-size:12px;padding:20px 10px;}
+.card{background:var(--blue-ll);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;}
+.card .pn{font-weight:800;color:var(--blue-d);font-size:16px;}
+.card .pp{font-weight:800;color:var(--red);font-size:16px;float:right;}
+.card .row{margin:5px 0;font-size:14px;}
+.card .lab{font-weight:700;color:var(--blue-d);}
+.tag{display:inline-block;background:var(--blue-d);color:#fff;border-radius:6px;padding:1px 7px;font-size:12px;margin-right:4px;}
+</style></head><body><div class="topbar">恩子聊美业 · 产品矩阵总览（内部版）</div><div class="sub">仅供你自己看 · 不对外 · 确认后才会并入落地执行总汇总</div><div class="nav-fab" id="navFab">☰</div><div class="nav-menu" id="navMenu"><a href="#s0">一、产品矩阵总览</a><a href="#s1">二、冷启动→收费路径</a><a href="#s2">三、各产品·对应选题系列钩子</a></div><div class="backtop" id="backTop">↑</div><div class="wrap"><div class="block" id="s0"><h2>一、产品矩阵总览</h2><div class="callout gold"><b>核心逻辑：</b>一号位（方案交付制·轻资产·快变现）为主，二号位（项目体系/半成品）降权后置。复购靠「成长阶段+消耗品+持续检视」四道锁焊死。</div><div style="overflow-x:auto"><table class="t" id="t_matrix"><thead><tr><th>类型</th><th>产品</th><th>架构/包含</th><th>价格</th><th>复购逻辑</th><th>针对人群</th><th>对应发哪系列选题丢钩子</th></tr></thead><tbody><tr><td class="k">一次性交付</td><td>落地方案 V1·起号版</td><td>定位+漏斗+前20条选题脚本框架+账号诊断卡</td><td>1980</td><td>她店起号跑通→自然要V2获客版</td><td>想做抖音但不会的美业老板（新客/免费期转化）</td><td>系列①重新开店、②说真话（种草思路开发）；阶段0免费诊断卡引流</td></tr><tr><td class="k">一次性交付</td><td>落地方案 V2·获客版</td><td>V1+完整系列选题库+系列定位+发布比例+同城/全国策略</td><td>2980</td><td>获客跑通→想放大要V3</td><td>已起号、想引流到店的老板</td><td>系列④为什么选我（案例展示「我帮人出方案」）</td></tr><tr><td class="k">一次性交付</td><td>落地方案 V3·放大版</td><td>V2+具体脚本样例/分镜+30天售后跟踪（非陪跑）</td><td>3980</td><td>店稳定→想开发第二账号/新项目</td><td>店稳想扩、或想招加盟的老板</td><td>系列④为什么选我、②说真话（逆袭样板）</td></tr><tr><td class="k">订阅·轻</td><td>定制选题库（仅选题）</td><td>按她店情况AI生成·月30条/季90条选题</td><td>399/月·999/季</td><td>拍完即缺+她自己开发不了思路→续</td><td>自己能写文案的省钱型客户</td><td>系列①③思路开发讲「拿到选题不会开发」痛点；预期管理组</td></tr><tr><td class="k">订阅·标</td><td>选题+文案包（人味稿）</td><td>选题+恩子先做人味稿再AI精修·月30/季90</td><td>699/月·1799/季</td><td>消耗品+升级档（从选题包升上来）</td><td>写不出文案的大多数客户</td><td>同上，加强「AI味文案没人看，我给你人味稿」</td></tr><tr><td class="k">订阅·泛</td><td>当月美业热点包</td><td>当月美业/抖音热点·30选题+30拍摄方式·一对多</td><td>99/月·199/季</td><td>月度更新·薄利多销</td><td>广大美业老板（低门槛引流/复购）</td><td>系列②说真话、③翻身计划讲当月热点；热点内容本身即钩子</td></tr><tr><td class="k">服务</td><td>视频诊断包（限次）</td><td>看视频+AI诊断+恩子定调·月4-8条/条≤2-3次</td><td>199/月·499/季</td><td>她持续发→持续需诊断（结构性复购）</td><td>已在执行的客户（含未买方案者低门槛入口）</td><td>系列④为什么选我展示诊断前后对比；「拍完不知道对不对」痛点</td></tr></tbody></table><button class="copy-btn" data-copy="t_matrix">复制本表</button></div><div class="callout blue"><b>价格带覆盖：</b>99（热点包）→ 399/699（订阅）→ 1980/2980/3980（方案）→ 引流免费诊断卡。从轻到重、从消耗到成长全价位都有。</div></div><div class="block" id="s1"><h2>二、冷启动 → 收费路径</h2><div class="callout green"><b>阶段0·免费引流期（0粉起步）：</b>诊断卡免费做钩子 → 引导关注/进群/私域。目的=攒粉+练手（跟AI协作出诊断）+攒案例口碑。此阶段不卖任何付费产品。</div><div class="callout blue"><b>转收费触发条件（满足任一）：</b>① 粉丝约3000 或单条破万播；② 每天稳定3-5个咨询；③ 免费做完30-50个诊断（攒够SOP+案例+话术）。数字你拍板。</div><div class="callout gold"><b>阶段1·收费期：</b>诊断卡可收费（轻/或仍免费种草）→ 推一次性方案 / 订阅 / 诊断包。免费期攒的三样（SOP+案例+话术库）就是收费信任弹药。</div></div><div class="block" id="s2"><h2>三、各产品 · 对应选题系列 & 钩子话术</h2><div style="overflow-x:auto"><table class="t" id="t_hook"><thead><tr><th>产品</th><th>发哪个系列</th><th>钩子话术示例（口播/文案方向）</th></tr></thead><tbody><tr><td class="k">落地方案 V1-V3</td><td>①重新开店 / ②说真话 / ④为什么选我</td><td>「我帮一个县城老板娘，从『不知道拍啥』到拿到一份能照做的落地汇总，只用了3天」——展示你交付物的样子</td></tr><tr><td class="k">定制选题库</td><td>①重新开店 / ③翻身计划 / 预期管理组</td><td>「很多人拿到选题还是不会想，那你缺的不是选题是思路——我按你店给你出专属选题库」</td></tr><tr><td class="k">选题+文案包</td><td>同上 + 加强痛点</td><td>「AI生成的文案一股AI味没人看，我先给你写人味稿再精修，你照拍就行」</td></tr><tr><td class="k">当月热点包</td><td>②说真话 / ③翻身计划</td><td>「这个月美业人都在聊XX，我整理成30个能拍的热点+拍法，评论区扣1」——热点即内容即钩子</td></tr><tr><td class="k">视频诊断包</td><td>④为什么选我 / 案例展示</td><td>「她第5条视频我帮诊断了2次，第8条就破千播——你拍完没人看，可能只是呈现歪了」</td></tr><tr><td class="k">免费诊断卡（阶段0）</td><td>①重新开店 / 预期管理组</td><td>「新号前30天免费帮100个老板娘出账号诊断卡，评论区扣1/进群送」</td></tr></tbody></table><button class="copy-btn" data-copy="t_hook">复制本表</button></div><div class="callout red"><b>红线：</b>二号位（项目体系/半成品）内容占比锁死20%，只「顺带被发现」，绝不抢CTA；对客不提「用AI」（AI是你背后工具）；不暴露单亲/带娃身份。</div></div><div class="foot">内部预览 · 生成于 2026-07-27 · 确认后并入落地执行总汇总</div></div>
+<script>
+function copyText(btn){
+  var t=btn.getAttribute('data-copy')||btn.innerText;
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){var o=btn.innerText;btn.innerText='已复制✓';setTimeout(function(){btn.innerText=o;},1200);});}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var fab=document.getElementById('navFab'),menu=document.getElementById('navMenu'),bt=document.getElementById('backTop');
+  fab.addEventListener('click',function(){menu.classList.toggle('show');});
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY;
+    fab.classList.toggle('show',y>200);
+    bt.classList.toggle('show',y>400);
+  });
+  bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  var links=menu.querySelectorAll('a');
+  links.forEach(function(a){a.addEventListener('click',function(){menu.classList.remove('show');});});
+});
+</script>
+</body></html>

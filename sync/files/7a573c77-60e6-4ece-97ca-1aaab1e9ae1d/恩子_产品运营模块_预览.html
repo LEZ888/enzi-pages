@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"><title>产品运营模块预览</title><style>
+:root{--blue:#2E9BD6;--blue-d:#1E78B4;--blue-l:#EAF6FC;--blue-ll:#F4FAFE;--ink:#22323f;--line:#CDE3F2;--gold:#E0A23B;--red:#C0392B;--green:#1E8A4C;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft Yahei",sans-serif;background:var(--blue-ll);color:var(--ink);font-size:16px;line-height:1.7;padding-bottom:60px;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--blue-d);color:#fff;padding:14px 16px;font-weight:700;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.sub{background:var(--blue-l);color:var(--blue-d);padding:10px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line);}
+.wrap{max-width:720px;margin:0 auto;padding:16px;}
+.block{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 14px;margin:16px 0;box-shadow:0 1px 4px rgba(30,120,180,.06);}
+h2{font-size:19px;margin:0 0 10px;color:var(--blue-d);border-left:5px solid var(--blue);padding-left:10px;}
+h3{font-size:16px;margin:14px 0 6px;color:var(--blue-d);}
+.t{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0;}
+.t th{background:var(--blue-d);color:#fff;padding:8px 6px;text-align:left;font-weight:700;}
+.t td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+.t tr:nth-child(even) td{background:var(--blue-ll);}
+.t .k{font-weight:700;color:var(--blue-d);white-space:nowrap;}
+.callout{border-radius:12px;padding:11px 13px;margin:10px 0;font-size:14px;}
+.blue{background:var(--blue-l);border:1px solid var(--line);}
+.gold{background:#FCF3E2;border:1px solid #F0D9A8;}
+.red{background:#FBE9E7;border:1px solid #F0C2BC;}
+.green{background:#E7F4EC;border:1px solid #BFE0CB;}
+.copy-btn{display:inline-block;background:var(--blue-d);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;margin:4px 0;}
+.copy-btn:active{opacity:.7;}
+.nav-fab{position:fixed;top:14px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:#fff;color:var(--blue-d);border:2px solid var(--blue-d);font-size:20px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;}
+.nav-fab.show{display:flex;}
+.nav-menu{position:fixed;top:60px;right:14px;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;display:none;max-height:78vh;overflow:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:210px;}
+.nav-menu.show{display:block;}
+.nav-menu a{display:block;padding:8px 10px;color:var(--ink);text-decoration:none;font-size:14px;border-radius:8px;}
+.nav-menu a:active{background:var(--blue-l);}
+.backtop{position:fixed;bottom:20px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:var(--blue-d);color:#fff;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;}
+.backtop.show{display:flex;}
+.foot{text-align:center;color:#8aa6b8;font-size:12px;padding:20px 10px;}
+.copy{border:1px solid #F0D9A8;background:#FFF9E6;border-radius:10px;padding:11px 13px;margin:11px 0;position:relative;}
+.copy-label{font-weight:700;color:#B8860B;font-size:13.5px;margin-bottom:5px;}
+.copy-body{font-size:13.5px;white-space:pre-wrap;word-break:break-word;line-height:1.65;}
+.copy .copy-btn{position:absolute;top:8px;right:8px;}
+.card{border:1px solid var(--line);border-radius:12px;padding:12px;margin:11px 0;background:var(--blue-ll);}
+.card .pn{font-weight:800;color:var(--blue-d);font-size:15px;}
+.card .pp{font-weight:800;color:var(--red);font-size:15px;float:right;}
+.card .lab{font-weight:700;color:var(--blue-d);}
+.tag{display:inline-block;background:var(--blue-d);color:#fff;border-radius:6px;padding:1px 7px;font-size:12px;margin-right:4px;margin-bottom:4px;}
+.listx{margin:6px 0 0;padding-left:20px;}
+.listx li{margin:4px 0;font-size:14px;}
+</style></head><body><div class="topbar">恩子聊美业 · 产品运营模块（预览·聊阶段）</div><div class="sub">售后与规避 · 成交步骤 · 产品命名 · 发给AI的交付指令 · 视频口播铺垫内容 — 仅供你确认，确认后才并入落地执行总汇总</div><div class="nav-fab" id="navFab">☰</div><div class="nav-menu" id="navMenu"><a href="#s0">一、产品命名重拟</a><a href="#s1">二、售后范围与规避</a><a href="#s2">三、成交步骤</a><a href="#s3">四、发给AI的交付指令</a><a href="#s4">五、视频口播铺垫内容</a></div><div class="backtop" id="backTop">↑</div><div class="wrap"><div class="block" id="s0"><h2>一、产品命名重拟（旧称 → 拟定名称）</h2><div class="callout gold"><b>命名原则：</b>克制、专业、不「老王卖瓜」。用「蓝图/弹药库/把脉/开拍/快报」等动作词，让人一听就知道是干嘛的，又不low。所有名称可改，你拍板。</div><div style="overflow-x:auto"><table class="t" id="t_name"><thead><tr><th>旧称（功能描述）</th><th>拟定产品名称</th><th>价格</th><th>类型</th></tr></thead><tbody><tr><td class="k">账号诊断卡（免费）</td><td><b>恩子·新号把脉卡</b></td><td>0 元（阶段0免费）</td><td>免费引流</td></tr><tr><td class="k">落地方案 V1·起号版</td><td><b>抖音落地蓝图·起航版</b></td><td>1980 元</td><td>一次性交付</td></tr><tr><td class="k">落地方案 V2·获客版</td><td><b>抖音落地蓝图·获客版</b></td><td>2980 元</td><td>一次性交付</td></tr><tr><td class="k">落地方案 V3·放大版</td><td><b>抖音落地蓝图·定制版</b></td><td>3980 元</td><td>一次性交付</td></tr><tr><td class="k">定制选题库（仅选题）</td><td><b>恩子选题弹药库·季更</b></td><td>399/月 · 999/季</td><td>订阅·轻</td></tr><tr><td class="k">选题+文案包（人味稿）</td><td><b>开拍文案包·定制</b></td><td>699/月 · 1799/季</td><td>订阅·标</td></tr><tr><td class="k">当月美业热点包</td><td><b>当月热点快报·美业版</b></td><td>99/月 · 199/季</td><td>订阅·泛</td></tr><tr><td class="k">视频诊断包（限次）</td><td><b>恩子·视频把脉包</b></td><td>199/月 · 499/季</td><td>服务</td></tr></tbody></table><button class="copy-btn" data-copy="账号诊断卡（免费） | &lt;b&gt;恩子·新号把脉卡&lt;/b&gt; | 0 元（阶段0免费） | 免费引流
+落地方案 V1·起号版 | &lt;b&gt;抖音落地蓝图·起航版&lt;/b&gt; | 1980 元 | 一次性交付
+落地方案 V2·获客版 | &lt;b&gt;抖音落地蓝图·获客版&lt;/b&gt; | 2980 元 | 一次性交付
+落地方案 V3·放大版 | &lt;b&gt;抖音落地蓝图·定制版&lt;/b&gt; | 3980 元 | 一次性交付
+定制选题库（仅选题） | &lt;b&gt;恩子选题弹药库·季更&lt;/b&gt; | 399/月 · 999/季 | 订阅·轻
+选题+文案包（人味稿） | &lt;b&gt;开拍文案包·定制&lt;/b&gt; | 699/月 · 1799/季 | 订阅·标
+当月美业热点包 | &lt;b&gt;当月热点快报·美业版&lt;/b&gt; | 99/月 · 199/季 | 订阅·泛
+视频诊断包（限次） | &lt;b&gt;恩子·视频把脉包&lt;/b&gt; | 199/月 · 499/季 | 服务">复制本表</button></div><div class="callout blue">价格带已覆盖：0（把脉卡）→ 99/399/699（订阅/包）→ 1980/2980/3980（蓝图）。从轻到重、从消耗到成长全价位都有。</div></div><div class="block" id="s1"><h2>二、每产品 · 售后范围与规避说明</h2><div class="callout red"><b>总红线：</b>所有产品均为「知识/方法交付」，不承诺具体涨粉、收益、到店数字；不代运营、不写医疗违规、不对客提AI。争议处理以「学校隐喻」前置（学霸学渣）为准，过程到位≠结果保证。</div><div class="card"><span class="pn">恩子·新号把脉卡</span><span class="pp">0 元（阶段0免费）</span><div><span class="lab">售后包含（在保）：</span>免费即免责；诊断基于用户自述，不核实数据真伪；不承诺任何结果</div><div><span class="lab">售后不包含（规避边界）：</span>不代运营、不保证涨粉、不提供落地方案全文、不一对一长期跟进</div><div><span class="lab">争议处理原则：</span>免费服务无售后义务；用户转发需注明「恩子聊美业」来源</div></div><div class="card"><span class="pn">抖音落地蓝图·起航版</span><span class="pp">1980 元</span><div><span class="lab">售后包含（在保）：</span>30天内限时文字答疑（群内/私信）+ 1次方案微调</div><div><span class="lab">售后不包含（规避边界）：</span>不代拍代剪、不保证播放/粉丝/变现额、不含V2/V3内容与后续选题供给</div><div><span class="lab">争议处理原则：</span>知识交付，结果因执行力/账号基础而异；不承诺保赚；30天跟踪为有限答疑，非1v1陪跑</div></div><div class="card"><span class="pn">抖音落地蓝图·获客版</span><span class="pp">2980 元</span><div><span class="lab">售后包含（在保）：</span>30天内限时文字答疑 + 1次方案微调</div><div><span class="lab">售后不包含（规避边界）：</span>不代运营、不保证到店数、不含V3深度脚本与分镜</div><div><span class="lab">争议处理原则：</span>同上；引流效果取决于门店承接与本地推配合，不承诺到店量</div></div><div class="card"><span class="pn">抖音落地蓝图·定制版</span><span class="pp">3980 元</span><div><span class="lab">售后包含（在保）：</span>30天售后跟踪（回答你做到哪、哪里不懂），跟踪≠陪跑，不长期绑</div><div><span class="lab">售后不包含（规避边界）：</span>不代运营、不保证加盟数、不含后续持续选题供给</div><div><span class="lab">争议处理原则：</span>同上；放大效果取决于执行与资金，不承诺加盟/营收数字</div></div><div class="card"><span class="pn">恩子选题弹药库·季更</span><span class="pp">399/月 · 999/季</span><div><span class="lab">售后包含（在保）：</span>订阅期内按约定频次更新；过期不补</div><div><span class="lab">售后不包含（规避边界）：</span>不代写完整文案、不保证上热门、不含落地方案与一对一</div><div><span class="lab">争议处理原则：</span>选题为方向建议，实际效果取决于拍摄与账号；不承诺流量</div></div><div class="card"><span class="pn">开拍文案包·定制</span><span class="pp">699/月 · 1799/季</span><div><span class="lab">售后包含（在保）：</span>订阅期内按约定频次交付；人味稿版权归恩子</div><div><span class="lab">售后不包含（规避边界）：</span>不代拍、不保证爆、不含视频诊断与方案</div><div><span class="lab">争议处理原则：</span>文案为可拍脚本非效果保证；AI精修不对外披露</div></div><div class="card"><span class="pn">当月热点快报·美业版</span><span class="pp">99/月 · 199/季</span><div><span class="lab">售后包含（在保）：</span>当月内更新；过期失效</div><div><span class="lab">售后不包含（规避边界）：</span>不保证蹭上流量、不代拍、不含非当月内容</div><div><span class="lab">争议处理原则：</span>热点有时效，过期不补；标注风险但不担保审核通过</div></div><div class="card"><span class="pn">恩子·视频把脉包</span><span class="pp">199/月 · 499/季</span><div><span class="lab">售后包含（在保）：</span>限次用完即止；含1次复看</div><div><span class="lab">售后不包含（规避边界）：</span>不代剪、不限次、不保证爆、不含选题</div><div><span class="lab">争议处理原则：</span>诊断基于提供视频，限次用完即止；改法为建议非保证</div></div></div><div class="block" id="s2"><h2>三、成交步骤（从刷到视频 → 复购 全链路）</h2><div style="overflow-x:auto"><table class="t" id="t_flow"><thead><tr><th>步骤</th><th>动作</th><th>话术要点</th><th>产物/工具</th><th>红线</th></tr></thead><tbody><tr><td class="k">1 触达</td><td>视频/图文铺垫（明确+隐晦产品内容）让人刷到并停留</td><td>钩子要「痛/反常识/真实」，不硬广</td><td>账号内容（见模块五）</td><td>不承诺结果、不露单亲/带娃</td></tr><tr><td class="k">2 兴趣</td><td>用户对「我有这能力/这服务」产生认知</td><td>轻引导进主页/看往期</td><td>主页简介+合集</td><td>二号位内容占比锁20%只顺带</td></tr><tr><td class="k">3 私域</td><td>引导关注/评论区扣1/进群</td><td>用免费把脉卡做钩子</td><td>恩子·新号把脉卡</td><td>免费期不卖任何付费品</td></tr><tr><td class="k">4 免费诊断</td><td>出把脉卡，建信任+收客户信息</td><td>像真人唠嗑，点出她真问题</td><td>诊断卡4模块模板</td><td>免费即免责，不核实数据</td></tr><tr><td class="k">5 方案沟通</td><td>恩子整理→与AI分析→出框架→注入经验→报价</td><td>不说是AI在干活</td><td>专属落地汇总（草稿）</td><td>对客不提AI</td></tr><tr><td class="k">6 成交</td><td>客户选档/加购（蓝图V1/V2/V3或订阅/包）</td><td>用痛点+案例自然推，不逼单</td><td>订单/付款</td><td>不承诺保赚，学校隐喻前置</td></tr><tr><td class="k">7 交付</td><td>交付落地汇总HTML/文档</td><td>一个账号一份，不长期绑</td><td>交付物</td><td>含清晰执行标准</td></tr><tr><td class="k">8 售后跟踪</td><td>30天有限答疑（非陪跑）</td><td>回答做到哪、哪里不懂</td><td>群/私信</td><td>跟踪≠陪跑，不长期绑</td></tr><tr><td class="k">9 复购</td><td>选题库/热点包/把脉包/文案包/升级V2V3</td><td>消耗品+成长阶段连续推</td><td>续费/升级</td><td>AI记录复用降本</td></tr></tbody></table><button class="copy-btn" data-copy="1 触达 | 视频/图文铺垫（明确+隐晦产品内容）让人刷到并停留 | 钩子要「痛/反常识/真实」，不硬广 | 账号内容（见模块五） | 不承诺结果、不露单亲/带娃
+2 兴趣 | 用户对「我有这能力/这服务」产生认知 | 轻引导进主页/看往期 | 主页简介+合集 | 二号位内容占比锁20%只顺带
+3 私域 | 引导关注/评论区扣1/进群 | 用免费把脉卡做钩子 | 恩子·新号把脉卡 | 免费期不卖任何付费品
+4 免费诊断 | 出把脉卡，建信任+收客户信息 | 像真人唠嗑，点出她真问题 | 诊断卡4模块模板 | 免费即免责，不核实数据
+5 方案沟通 | 恩子整理→与AI分析→出框架→注入经验→报价 | 不说是AI在干活 | 专属落地汇总（草稿） | 对客不提AI
+6 成交 | 客户选档/加购（蓝图V1/V2/V3或订阅/包） | 用痛点+案例自然推，不逼单 | 订单/付款 | 不承诺保赚，学校隐喻前置
+7 交付 | 交付落地汇总HTML/文档 | 一个账号一份，不长期绑 | 交付物 | 含清晰执行标准
+8 售后跟踪 | 30天有限答疑（非陪跑） | 回答做到哪、哪里不懂 | 群/私信 | 跟踪≠陪跑，不长期绑
+9 复购 | 选题库/热点包/把脉包/文案包/升级V2V3 | 消耗品+成长阶段连续推 | 续费/升级 | AI记录复用降本">复制本表</button></div><div class="callout green"><b>成交话术骨架（不硬广）：</b>「你这账号问题在X，我先给你张把脉卡你自测下」→ 诊断建立信任 →「你这情况，我见过N个老板娘，照这份蓝图走少走3个月弯路」→ 顺价推档。全程用「诊断/案例/地图」切入，不用「快来买课」。</div><div class="callout blue"><b>冷启动保护：</b>0粉阶段只做免费把脉卡引流+攒案例；满足转收费触发（约3000粉/日3-5咨询/免费做完30-50个）才收费，避免早期消耗信任。</div></div><div class="block" id="s3"><h2>四、各产品 · 发给AI的交付指令模板</h2><div class="callout gold"><b>用法：</b>客户付款后，把对应模板复制给AI，把【】里的客户信息补上，AI就能产出「符合该产品名称/架构/包含物/人群/目的」的交付内容。每个模板都可一键复制。</div><div class="card"><span class="pn">恩子·新号把脉卡</span><span class="pp">0 元（阶段0免费）</span><div><span class="lab">针对什么人：</span>0粉起步、想做抖音但脑子空白的美业老板</div><div><span class="lab">什么目的：</span>先体验，看清自己店抖音的问题与现成素材，建立信任</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 恩子·新号把脉卡</div><div class="copy-body">你是我（恩子，12年美业+6年抖音账号策略师）的账号分析助理。我要给一位【刚想做抖音、0粉的美业老板】出一份【恩子·新号把脉卡】。<br>产品名称：恩子·新号把脉卡（免费引流钩子）<br>产品架构（交付4模块）：① 现状判断——她现在为什么没流量/没方向；② 隐藏素材挖掘——她店其实有哪些现成可拍的；③ 初步123方向——先拍哪三类；④ 一句大实话——最该改的一点。<br>针对人群：想做抖音但不会起头、对自己店有没有料没信心的老板。<br>人群目的：让她当场知道「我有东西可拍、该往哪走」，愿意关注/进群/私域。<br>请基于我提供的【客户自述+店铺情况】，按上面4模块生成一份口语、像真人老板娘唠嗑的诊断（禁用AI味套话、禁用「家人们/宝子」）。<br>禁忌：不承诺涨粉、不写疗效/保证、不抄袭、不对客提AI。</div><button class="copy-btn" data-copy="你是我（恩子，12年美业+6年抖音账号策略师）的账号分析助理。我要给一位【刚想做抖音、0粉的美业老板】出一份【恩子·新号把脉卡】。
+产品名称：恩子·新号把脉卡（免费引流钩子）
+产品架构（交付4模块）：① 现状判断——她现在为什么没流量/没方向；② 隐藏素材挖掘——她店其实有哪些现成可拍的；③ 初步123方向——先拍哪三类；④ 一句大实话——最该改的一点。
+针对人群：想做抖音但不会起头、对自己店有没有料没信心的老板。
+人群目的：让她当场知道「我有东西可拍、该往哪走」，愿意关注/进群/私域。
+请基于我提供的【客户自述+店铺情况】，按上面4模块生成一份口语、像真人老板娘唠嗑的诊断（禁用AI味套话、禁用「家人们/宝子」）。
+禁忌：不承诺涨粉、不写疗效/保证、不抄袭、不对客提AI。">复制指令</button></div><div class="card"><span class="pn">抖音落地蓝图·起航版</span><span class="pp">1980 元</span><div><span class="lab">针对什么人：</span>想做抖音但不会起头的新客（免费期转化）</div><div><span class="lab">什么目的：</span>从「脑子空白」变成「拿着就能拍的前20条」</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 抖音落地蓝图·起航版</div><div class="copy-body">你是我（恩子，12年美业+6年抖音账号策略师）的方案撰写助理。我要给一位【具体类型美业老板】交付一份【抖音落地蓝图·起航版】专属落地执行汇总。<br>产品名称：抖音落地蓝图·起航版（1980）<br>产品架构：账号定位 + 三栏目漏斗 + 前20条选题脚本框架 + 她的专属诊断卡。<br>包含物：一份她「拿着就能拍」的执行汇总（定位句、栏目配比、选题脚本、发布节奏、变现路径），一个账号一份。<br>针对人群：想做抖音但不会起头的新客。人群目的：把「脑子空白」变成「看得见的、照着做的图纸」。<br>请基于我提供的【客户深度沟通记录+店铺信息】，按架构生成 Markdown 汇总（参考我给你的既有汇总风格：表格+色块+复制+钩子公式）。先由我注入经验判断再定稿。<br>禁忌：不承诺保赚/保流量、不写医疗违规、不对客提AI、不套通用模板。</div><button class="copy-btn" data-copy="你是我（恩子，12年美业+6年抖音账号策略师）的方案撰写助理。我要给一位【具体类型美业老板】交付一份【抖音落地蓝图·起航版】专属落地执行汇总。
+产品名称：抖音落地蓝图·起航版（1980）
+产品架构：账号定位 + 三栏目漏斗 + 前20条选题脚本框架 + 她的专属诊断卡。
+包含物：一份她「拿着就能拍」的执行汇总（定位句、栏目配比、选题脚本、发布节奏、变现路径），一个账号一份。
+针对人群：想做抖音但不会起头的新客。人群目的：把「脑子空白」变成「看得见的、照着做的图纸」。
+请基于我提供的【客户深度沟通记录+店铺信息】，按架构生成 Markdown 汇总（参考我给你的既有汇总风格：表格+色块+复制+钩子公式）。先由我注入经验判断再定稿。
+禁忌：不承诺保赚/保流量、不写医疗违规、不对客提AI、不套通用模板。">复制指令</button></div><div class="card"><span class="pn">抖音落地蓝图·获客版</span><span class="pp">2980 元</span><div><span class="lab">针对什么人：</span>已起号、想引流到店的老板</div><div><span class="lab">什么目的：</span>不止会拍，还知道怎么用内容把客人从抖音引到店里</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 抖音落地蓝图·获客版</div><div class="copy-body">你是我（恩子）的方案撰写助理。我要给一位【已起号、想引流到店的美业老板】交付【抖音落地蓝图·获客版】。<br>产品名称：抖音落地蓝图·获客版（2980）<br>产品架构：V1全部 + 完整系列选题库 + 系列定位 + 发布比例 + 同城/全国策略。<br>针对人群：已起号、想引流到店的老板。人群目的：不止会拍，还知道怎么用内容把客人从抖音引到店里。<br>请基于我提供的【客户账号现状+门店信息】，生成含「同城POI+本地推+团购锁转化」路径的汇总。先由我注入经验再定稿。<br>禁忌：不承诺到店量、不代运营、不写违规医疗、不对客提AI。</div><button class="copy-btn" data-copy="你是我（恩子）的方案撰写助理。我要给一位【已起号、想引流到店的美业老板】交付【抖音落地蓝图·获客版】。
+产品名称：抖音落地蓝图·获客版（2980）
+产品架构：V1全部 + 完整系列选题库 + 系列定位 + 发布比例 + 同城/全国策略。
+针对人群：已起号、想引流到店的老板。人群目的：不止会拍，还知道怎么用内容把客人从抖音引到店里。
+请基于我提供的【客户账号现状+门店信息】，生成含「同城POI+本地推+团购锁转化」路径的汇总。先由我注入经验再定稿。
+禁忌：不承诺到店量、不代运营、不写违规医疗、不对客提AI。">复制指令</button></div><div class="card"><span class="pn">抖音落地蓝图·定制版</span><span class="pp">3980 元</span><div><span class="lab">针对什么人：</span>店稳、想放大或招加盟的老板</div><div><span class="lab">什么目的：</span>有一套能复制的打法，想开二店/招加盟都有图纸</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 抖音落地蓝图·定制版</div><div class="copy-body">你是我（恩子）的方案撰写助理。我要给一位【店稳、想放大或招加盟的美业老板】交付【抖音落地蓝图·定制版】。<br>产品名称：抖音落地蓝图·定制版（3980）<br>产品架构：V2全部 + 具体脚本样例/分镜 + 30天售后跟踪说明（非陪跑）。<br>针对人群：店稳想放大或招加盟的老板。人群目的：有一套可复制打法，开二店/招加盟有图纸。<br>请基于我提供的【客户多店/加盟意向资料】，生成含脚本分镜与复制路径的汇总，并写明30天跟踪边界（有限答疑非陪跑）。先由我注入经验再定稿。<br>禁忌：不承诺加盟/营收数字、不代运营、不对客提AI。</div><button class="copy-btn" data-copy="你是我（恩子）的方案撰写助理。我要给一位【店稳、想放大或招加盟的美业老板】交付【抖音落地蓝图·定制版】。
+产品名称：抖音落地蓝图·定制版（3980）
+产品架构：V2全部 + 具体脚本样例/分镜 + 30天售后跟踪说明（非陪跑）。
+针对人群：店稳想放大或招加盟的老板。人群目的：有一套可复制打法，开二店/招加盟有图纸。
+请基于我提供的【客户多店/加盟意向资料】，生成含脚本分镜与复制路径的汇总，并写明30天跟踪边界（有限答疑非陪跑）。先由我注入经验再定稿。
+禁忌：不承诺加盟/营收数字、不代运营、不对客提AI。">复制指令</button></div><div class="card"><span class="pn">恩子选题弹药库·季更</span><span class="pp">399/月 · 999/季</span><div><span class="lab">针对什么人：</span>自己能写文案、想持续有「拍什么」的省钱型客户</div><div><span class="lab">什么目的：</span>永远不缺选题，且每条结合她店非通用模板</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 恩子选题弹药库·季更</div><div class="copy-body">你是我（恩子）的选题生成助理。我要给一位【具体类型美业老板】交付【恩子选题弹药库·季更】。<br>产品名称：恩子选题弹药库·季更（399/月·999/季）<br>产品架构：按她店实情生成 月30条/季90条 专属选题，每条含：选题标题 + 前3秒钩子 + 对应她店的拍摄角度 + 复制给AI的核心指令。<br>针对人群：自己能写文案、想持续有「拍什么」的省钱型客户。人群目的：永远不缺选题，且每条结合她店非通用模板。<br>请基于我提供的【客户账号定位+阶段+店铺特色】，生成选题表。<br>禁忌：不保证上热门、不代写完整文案、不抄袭、不对客提AI。</div><button class="copy-btn" data-copy="你是我（恩子）的选题生成助理。我要给一位【具体类型美业老板】交付【恩子选题弹药库·季更】。
+产品名称：恩子选题弹药库·季更（399/月·999/季）
+产品架构：按她店实情生成 月30条/季90条 专属选题，每条含：选题标题 + 前3秒钩子 + 对应她店的拍摄角度 + 复制给AI的核心指令。
+针对人群：自己能写文案、想持续有「拍什么」的省钱型客户。人群目的：永远不缺选题，且每条结合她店非通用模板。
+请基于我提供的【客户账号定位+阶段+店铺特色】，生成选题表。
+禁忌：不保证上热门、不代写完整文案、不抄袭、不对客提AI。">复制指令</button></div><div class="card"><span class="pn">开拍文案包·定制</span><span class="pp">699/月 · 1799/季</span><div><span class="lab">针对什么人：</span>拿到选题也不会写文案的大多数客户（升级档）</div><div><span class="lab">什么目的：</span>直接照稿拍，文案有「人味」平台爱推，不自己憋AI味烂稿</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 开拍文案包·定制</div><div class="copy-body">你是我（恩子）的内容生产助理。我要给一位【经营X类美容院、自己不会写口播文案的美业老板】交付【开拍文案包·定制】。<br>产品名称：开拍文案包·定制（699/月·1799/季）<br>产品架构：N条（默认10条）选题 + 人味文案稿 + 拍摄提示。<br>包含物（每条）：① 选题标题 ② 前3秒钩子 ③ 口播正文（口语、有情绪、像真人老板娘唠嗑，禁用「家人们/宝子/绝绝子」等网红腔与AI味句式）④ 拍摄提示（场景/镜头/字幕）。<br>针对人群：开美容院但不会写口播、拿到选题也写不出文案的老板。人群目的：拿到就能照拍、说出人味、不被平台判AI敷衍。<br>请基于我提供的【客户账号信息+选定选题方向】，按上面架构生成 Markdown 表格。<br>禁忌：不承诺爆款、不写医疗疗效/保证、不抄袭他人文案、不对客提及AI。</div><button class="copy-btn" data-copy="你是我（恩子）的内容生产助理。我要给一位【经营X类美容院、自己不会写口播文案的美业老板】交付【开拍文案包·定制】。
+产品名称：开拍文案包·定制（699/月·1799/季）
+产品架构：N条（默认10条）选题 + 人味文案稿 + 拍摄提示。
+包含物（每条）：① 选题标题 ② 前3秒钩子 ③ 口播正文（口语、有情绪、像真人老板娘唠嗑，禁用「家人们/宝子/绝绝子」等网红腔与AI味句式）④ 拍摄提示（场景/镜头/字幕）。
+针对人群：开美容院但不会写口播、拿到选题也写不出文案的老板。人群目的：拿到就能照拍、说出人味、不被平台判AI敷衍。
+请基于我提供的【客户账号信息+选定选题方向】，按上面架构生成 Markdown 表格。
+禁忌：不承诺爆款、不写医疗疗效/保证、不抄袭他人文案、不对客提及AI。">复制指令</button></div><div class="card"><span class="pn">当月热点快报·美业版</span><span class="pp">99/月 · 199/季</span><div><span class="lab">针对什么人：</span>广大美业老板（低门槛引流/复购）</div><div><span class="lab">什么目的：</span>花小钱拿到当月能拍的热点清单，不自己费脑搜</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 当月热点快报·美业版</div><div class="copy-body">你是我（恩子）的热点整理助理。我要给美业老板们交付【当月热点快报·美业版】（一对多，同月通用）。<br>产品名称：当月热点快报·美业版（99/月·199/季）<br>产品架构：当月 30个美业/抖音相关热点，每个含：热点简述 + 可拍角度 + 风险标注（是否涉医疗/争议）。<br>针对人群：想蹭当月热点、低成本跟内容的广大美业老板。人群目的：花小钱拿到当月能拍的热点清单，不自己费脑搜。<br>请基于【当月真实热点检索】，生成清单并标注时效与风险。<br>禁忌：不保证蹭上流量、不代拍、过期不补、不写违规蹭热点。</div><button class="copy-btn" data-copy="你是我（恩子）的热点整理助理。我要给美业老板们交付【当月热点快报·美业版】（一对多，同月通用）。
+产品名称：当月热点快报·美业版（99/月·199/季）
+产品架构：当月 30个美业/抖音相关热点，每个含：热点简述 + 可拍角度 + 风险标注（是否涉医疗/争议）。
+针对人群：想蹭当月热点、低成本跟内容的广大美业老板。人群目的：花小钱拿到当月能拍的热点清单，不自己费脑搜。
+请基于【当月真实热点检索】，生成清单并标注时效与风险。
+禁忌：不保证蹭上流量、不代拍、过期不补、不写违规蹭热点。">复制指令</button></div><div class="card"><span class="pn">恩子·视频把脉包</span><span class="pp">199/月 · 499/季</span><div><span class="lab">针对什么人：</span>已在执行、想有人看对不对的客户（含未买方案者低门槛入口）</div><div><span class="lab">什么目的：</span>有人批改作业：哪对了、哪歪了、怎么调</div></div><div class="copy"><div class="copy-label">📋 发给AI的指令 · 恩子·视频把脉包</div><div class="copy-body">你是我（恩子）的视频诊断助理。我要给一位【已在发视频、想有人看对不对的客户】做【恩子·视频把脉包】诊断（限次）。<br>产品名称：恩子·视频把脉包（199/月·499/季）<br>产品架构：看她发的视频 → 给 ① 哪里对了（保留）② 哪里歪了（问题）③ 怎么调（具体改法）④ 1次复看。<br>针对人群：已在执行、需要外部视角批改作业的美业老板（含未买方案者低门槛入口）。人群目的：有人告诉她「哪对了哪歪了」，把呈现做到位。<br>请基于我提供的【客户视频链接/描述 + 她的账号定位】，生成口语、像老师批改的诊断反馈。<br>禁忌：不代剪、不限次、不保证爆、不对客提AI。</div><button class="copy-btn" data-copy="你是我（恩子）的视频诊断助理。我要给一位【已在发视频、想有人看对不对的客户】做【恩子·视频把脉包】诊断（限次）。
+产品名称：恩子·视频把脉包（199/月·499/季）
+产品架构：看她发的视频 → 给 ① 哪里对了（保留）② 哪里歪了（问题）③ 怎么调（具体改法）④ 1次复看。
+针对人群：已在执行、需要外部视角批改作业的美业老板（含未买方案者低门槛入口）。人群目的：有人告诉她「哪对了哪歪了」，把呈现做到位。
+请基于我提供的【客户视频链接/描述 + 她的账号定位】，生成口语、像老师批改的诊断反馈。
+禁忌：不代剪、不限次、不保证爆、不对客提AI。">复制指令</button></div></div><div class="block" id="s4"><h2>五、产品系列 · 视频口播铺垫内容（明确 + 隐晦）</h2><div class="callout blue"><b>两条腿走路：</b>「明确」= 直接讲产品价值/存在（但用价值切入不硬广）；「隐晦」= 讲痛点/故事/案例，让人自己想到「这人有这服务」从而来询。两者混发，账号既有内容又有产品存在感，不招人烦。</div><h3>通用「铺垫视频」文案架构（套用到每条）</h3><div class="copy"><div class="copy-label">📋 铺垫视频文案架构（复制给AI生成口播）</div><div class="copy-body">你是我（恩子，美业老板娘+抖音策略师）的口播撰稿助理。我要拍一条「铺垫产品存在感」的短视频，不能像广告。<br>结构：<br>① 前3秒钩子——痛点/反常识/真实场景（"你是不是也…" / "我见过太多…" / "上周一个老板娘…"），让人停下来。<br>② 中间——价值输出 或 故事/案例（展示「我懂行/我帮过人」），不提"买"。<br>③ 结尾软CTA——轻引导（"想知道你店属于哪种，评论区扣1我帮你看看" / "新号前30天免费把脉，进群送"）。<br>要求：口语、像真人老板娘唠嗑；禁用"家人们/宝子/绝绝子"；不承诺保赚/保流量；不对客提AI；时长30-60秒。</div><button class="copy-btn" data-copy="你是我（恩子，美业老板娘+抖音策略师）的口播撰稿助理。我要拍一条「铺垫产品存在感」的短视频，不能像广告。
+结构：
+① 前3秒钩子——痛点/反常识/真实场景（&quot;你是不是也…&quot; / &quot;我见过太多…&quot; / &quot;上周一个老板娘…&quot;），让人停下来。
+② 中间——价值输出 或 故事/案例（展示「我懂行/我帮过人」），不提&quot;买&quot;。
+③ 结尾软CTA——轻引导（&quot;想知道你店属于哪种，评论区扣1我帮你看看&quot; / &quot;新号前30天免费把脉，进群送&quot;）。
+要求：口语、像真人老板娘唠嗑；禁用&quot;家人们/宝子/绝绝子&quot;；不承诺保赚/保流量；不对客提AI；时长30-60秒。">复制指令</button></div><div class="card"><span class="pn">恩子·新号把脉卡</span><span class="pp">0 元（阶段0免费）</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>新号前30天我免费帮100个老板娘出账号诊断卡，评论区扣1就能领</li><li>你店到底有没有料可拍？一张把脉卡3分钟帮你测出来</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>我见过太多老板娘，店开得挺好，一拍抖音就觉得自己啥也不是——其实你缺的不是颜值，是有人帮你把店翻译成内容</li><li>一个县城美容院，老板娘自己都没发现她有3个现成爆款素材，全浪费了</li></ul><div class="card"><span class="pn">抖音落地蓝图·起航版</span><span class="pp">1980 元</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>我帮一个县城老板娘，从「不知道拍啥」到拿到一份能照做的落地汇总，只用了3天</li><li>做抖音最怕的不是不会拍，是你连「该做成什么样」都没见过——我给你看一份完整图纸</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>同样开美容院，有人抖音月引50个客，有人发200条还是0咨询——差的就是最开始那张图有没有画对</li><li>我整理过上百个美业账号，发现能跑通的就3种结构，其余都在瞎忙</li></ul><div class="card"><span class="pn">抖音落地蓝图·获客版</span><span class="pp">2980 元</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>店起号了但没人到店？内容引流到店这步走错，前面拍得再好也白搭</li><li>我给你看的不是「怎么拍」，是「怎么让刷到你的人，真的走到你店里」</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>很多人抖音粉丝不少，一问到店转化就哑火——内容在自嗨，客人没被「领过来」</li><li>同城流量是美业最便宜的客源，但90%的人把它当全国号玩废了</li></ul><div class="card"><span class="pn">抖音落地蓝图·定制版</span><span class="pp">3980 元</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>店稳了想开二店/招加盟？先别急，你缺的是一套能复制的打法图纸</li><li>我帮稳定门店做「放大版」方案，重点不是多拍，是把跑通的变成可复制</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>单店赚钱靠老板娘个人，多店赚钱靠系统——你现在是在卖手艺还是在卖模式？</li><li>为什么有些人开一家火一家，有些人开一家累死一家？差别在第1家有没有留下图纸</li></ul><div class="card"><span class="pn">恩子选题弹药库·季更</span><span class="pp">399/月 · 999/季</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>很多人拿到选题还是不会想，那你缺的不是选题是思路——我按你店给你出专属选题库，月30条</li><li>自己开发的选题和按你店定制的选题，差的不止10倍</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>为什么你刷到的爆款你模仿不来？因为那是别人的店、别人的客——你需要的是「你的店」的选题</li><li>拍完一条没流量就慌？问题可能出在选题阶段就歪了</li></ul><div class="card"><span class="pn">开拍文案包·定制</span><span class="pp">699/月 · 1799/季</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>AI生成的文案一股AI味没人看，我先给你写人味稿再精修，你照拍就行</li><li>拿到选题也不会写文案？我直接给你能念的人味稿</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>你有没有发现，有些老板娘念稿像念课文，有些像唠嗑——平台推的是后者</li><li>同样一个选题，一句「家人们冲」和一句「我隔壁王姐上周…」流量差10倍</li></ul><div class="card"><span class="pn">当月热点快报·美业版</span><span class="pp">99/月 · 199/季</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>这个月美业人都在聊XX，我整理成30个能拍的热点+拍法，评论区扣1</li><li>不想每天想拍啥？当月热点包给你30个现成角度，很便宜</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>每个月都有那么几个词，谁拍谁有流量——但你得先知道是哪些</li><li>上周那个热搜，美业人拍对了的全涨粉了，你错过了没？</li></ul><div class="card"><span class="pn">恩子·视频把脉包</span><span class="pp">199/月 · 499/季</span></div><div style="margin:6px 0"><span class="tag">明确方向</span></div><ul class="listx"><li>她第5条视频我帮诊断了2次，第8条就破千播——你拍完没人看，可能只是呈现歪了</li><li>你拍的视频对不对，找我「把个脉」，月包很便宜</li></ul><div style="margin:6px 0"><span class="tag">隐晦方向</span></div><ul class="listx"><li>很多人努力拍了半年，其实第3秒就让人划走了——自己看一百遍也发现不了</li><li>同一个内容，镜头近一点远一点，完播率能差一倍，你觉察得到吗？</li></ul><h3>周节奏搭配模板（4-5更 · 守50/30/20）</h3><div class="callout green">账号主体仍是「思路吸引50% + 故事粘合30% + 产品价值20%」。产品内容约2条/周（明确+隐晦各一），不喧宾夺主，又能让人「顺带发现」有产品。二号位（项目体系）锁20%内且只顺带。</div><div style="overflow-x:auto"><table class="t" id="t_week"><thead><tr><th>星期</th><th>内容类型</th><th>示例（含产品明确/隐晦）</th></tr></thead><tbody><tr><td class="k">周一</td><td>思路开窍（吸引50%）</td><td>抖音思路开发口播：一个让美业老板茅塞顿开的思路</td></tr><tr><td class="k">周三</td><td>产品铺垫·隐晦</td><td>如蓝图隐晦选题：故事/案例带出「我有这能力」</td></tr><tr><td class="k">周四</td><td>思路开窍（吸引50%）</td><td>第二条思路口播（补足吸引层）</td></tr><tr><td class="k">周五</td><td>故事罐头（粘合30%）</td><td>真实创业/逆袭故事，立人设</td></tr><tr><td class="k">周日</td><td>产品铺垫·明确</td><td>轻量讲一个产品价值，软导向把脉卡/私域（如把脉卡/热点包）</td></tr></tbody></table><button class="copy-btn" data-copy="周一 | 思路开窍（吸引50%） | 抖音思路开发口播：一个让美业老板茅塞顿开的思路
+周三 | 产品铺垫·隐晦 | 如蓝图隐晦选题：故事/案例带出「我有这能力」
+周四 | 思路开窍（吸引50%） | 第二条思路口播（补足吸引层）
+周五 | 故事罐头（粘合30%） | 真实创业/逆袭故事，立人设
+周日 | 产品铺垫·明确 | 轻量讲一个产品价值，软导向把脉卡/私域（如把脉卡/热点包）">复制本表</button></div><div class="callout gold">进阶：下周换另一款产品做铺垫（如这周讲把脉卡+蓝图，下周讲选题弹药库+把脉包），让8款产品轮着露脸，既不天天讲产品，也不藏着不敢讲。</div></div><div class="foot">内部预览 · 生成于 2026-07-27 · 确认后并入落地执行总汇总</div></div>
+<script>
+function copyText(btn){
+  var raw=btn.getAttribute('data-copy')||btn.innerText;
+  var t=raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){var o=btn.innerText;btn.innerText='已复制✓';setTimeout(function(){btn.innerText=o;},1300);});}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var btns=document.querySelectorAll('.copy-btn');
+  btns.forEach(function(b){b.addEventListener('click',function(){copyText(b);});});
+  var fab=document.getElementById('navFab'),menu=document.getElementById('navMenu'),bt=document.getElementById('backTop');
+  fab.addEventListener('click',function(){menu.classList.toggle('show');});
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY;
+    fab.classList.toggle('show',y>200);
+    bt.classList.toggle('show',y>400);
+  });
+  bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  var links=menu.querySelectorAll('a');
+  links.forEach(function(a){a.addEventListener('click',function(){menu.classList.remove('show');});});
+});
+</script>
+</body></html>

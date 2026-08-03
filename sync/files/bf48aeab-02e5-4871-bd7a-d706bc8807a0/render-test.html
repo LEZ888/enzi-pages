@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>render-test</title>
+<style>body{font-family:sans-serif;margin:0}</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+// ===== 注入内存版 IndexedDB（绕过无头 Chrome 不支持 IDB 导致挂起的问题）=====
+(function(){
+  function makeReq(promise){
+    var done=false, value, err=null, sf=null, ef=null;
+    var req={
+      get result(){return value;},
+      get error(){return err;},
+      set onsuccess(fn){sf=fn; if(done&&!err) fn({target:req});},
+      get onsuccess(){return sf;},
+      set onerror(fn){ef=fn; if(done&&err) fn({target:req});},
+      get onerror(){return ef;}
+    };
+    promise.then(function(v){done=true;value=v;if(sf)sf({target:null,result:v});},
+                      function(e){done=true;err=e;if(ef)ef({target:req,error:e});});
+    return req;
+  }
+  function makeStore(name,keyPath){
+    var map=new Map(), indexes={};
+    var store={
+      name:name, keyPath:keyPath,
+      createIndex:function(idx,key){indexes[idx]=key;return store;},
+      getAll:function(){return makeReq(Promise.resolve(Array.from(map.values())));},
+      get:function(k){return makeReq(Promise.resolve(map.has(k)?map.get(k):undefined));},
+      put:function(v){var k=v[keyPath];map.set(k,v);return makeReq(Promise.resolve(k));},
+      delete:function(k){map.delete(k);return makeReq(Promise.resolve());},
+      clear:function(){map.clear();return makeReq(Promise.resolve());},
+      index:function(idxName){var key=indexes[idxName];return{
+        getAll:function(val){return makeReq(Promise.resolve(Array.from(map.values()).filter(function(it){return it&&it[key]===val;})));}
+      };}
+    };
+    return store;
+  }
+  function makeDB(name){
+    var stores={};
+    var db={
+      name:name, version:0,
+      objectStoreNames:{contains:function(n){return !!stores[n];}},
+      createObjectStore:function(n,opts){var st=makeStore(n,opts&&opts.keyPath);stores[n]=st;return st;},
+      transaction:function(names,mode){
+        var list=Array.isArray(names)?names:[names];
+        var tx={mode:mode,oncomplete:null,onerror:null,
+          objectStore:function(n){return stores[n];}};
+        Promise.resolve().then(function(){if(tx.oncomplete)tx.oncomplete({target:tx});});
+        return tx;
+      }
+    };
+    return db;
+  }
+  var _dbs={};
+  var FakeIDB={
+    open:function(name,version){
+      var req={onupgradeneeded:null,onsuccess:null,onerror:null,result:null,error:null};
+      var existing=_dbs[name];
+      var needUpgrade=!existing||(version&&existing.version<version);
+      Promise.resolve().then(function(){
+        var db=existing;
+        if(!db){db=makeDB(name);_dbs[name]=db;}
+        if(needUpgrade){
+          var ev={oldVersion:db.version||0};
+          var areq={result:db};
+          if(req.onupgradeneeded)req.onupgradeneeded.call(areq,ev);
+          db.version=version||db.version||1;
+        }
+        req.result=db;
+        if(req.onsuccess)req.onsuccess({target:req});
+      });
+      return req;
+    }
+  };
+  Object.defineProperty(window,'indexedDB',{value:FakeIDB,configurable:true});
+  window.__fakeIDB=true;
+})();
+</script>
+<script src="vendor/react.js"></script>
+<script src="vendor/react-dom.js"></script>
+<script src="vendor/htm.umd.js"></script>
+<script src="app.js"></script>
+<script>
+  window.addEventListener('error', function(e){ console.log('WINERR: ' + (e.message||e.error)); });
+  setTimeout(function(){
+    var r=document.getElementById('root');
+    window.__rendered = r ? r.innerHTML.length : -1;
+    console.log('RENDER_LEN: ' + window.__rendered);
+  }, 3500);
+</script>
+</body>
+</html>

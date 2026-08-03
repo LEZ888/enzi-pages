@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"><title>产品手册客户版</title><style>
+:root{--blue:#2E9BD6;--blue-d:#1E78B4;--blue-l:#EAF6FC;--blue-ll:#F4FAFE;--ink:#22323f;--line:#CDE3F2;--gold:#E0A23B;--red:#C0392B;--green:#1E8A4C;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft Yahei",sans-serif;background:var(--blue-ll);color:var(--ink);font-size:16px;line-height:1.7;padding-bottom:60px;}
+.topbar{position:sticky;top:0;z-index:50;background:var(--blue-d);color:#fff;padding:14px 16px;font-weight:700;font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.sub{background:var(--blue-l);color:var(--blue-d);padding:10px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line);}
+.wrap{max-width:720px;margin:0 auto;padding:16px;}
+.block{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 14px;margin:16px 0;box-shadow:0 1px 4px rgba(30,120,180,.06);}
+h2{font-size:19px;margin:0 0 10px;color:var(--blue-d);border-left:5px solid var(--blue);padding-left:10px;}
+h3{font-size:16px;margin:14px 0 6px;color:var(--blue-d);}
+.t{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0;}
+.t th{background:var(--blue-d);color:#fff;padding:8px 6px;text-align:left;font-weight:700;}
+.t td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+.t tr:nth-child(even) td{background:var(--blue-ll);}
+.t .k{font-weight:700;color:var(--blue-d);white-space:nowrap;}
+.callout{border-radius:12px;padding:11px 13px;margin:10px 0;font-size:14px;}
+.blue{background:var(--blue-l);border:1px solid var(--line);}
+.gold{background:#FCF3E2;border:1px solid #F0D9A8;}
+.red{background:#FBE9E7;border:1px solid #F0C2BC;}
+.green{background:#E7F4EC;border:1px solid #BFE0CB;}
+.copy-btn{display:inline-block;background:var(--blue-d);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;margin:4px 0;}
+.copy-btn:active{opacity:.7;}
+.nav-fab{position:fixed;top:14px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:#fff;color:var(--blue-d);border:2px solid var(--blue-d);font-size:20px;font-weight:700;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;}
+.nav-fab.show{display:flex;}
+.nav-menu{position:fixed;top:60px;right:14px;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;display:none;max-height:78vh;overflow:auto;box-shadow:0 4px 16px rgba(0,0,0,.15);min-width:200px;}
+.nav-menu.show{display:block;}
+.nav-menu a{display:block;padding:8px 10px;color:var(--ink);text-decoration:none;font-size:14px;border-radius:8px;}
+.nav-menu a:active{background:var(--blue-l);}
+.backtop{position:fixed;bottom:20px;right:14px;z-index:60;width:42px;height:42px;border-radius:50%;background:var(--blue-d);color:#fff;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:pointer;}
+.backtop.show{display:flex;}
+.foot{text-align:center;color:#8aa6b8;font-size:12px;padding:20px 10px;}
+.card{background:var(--blue-ll);border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;}
+.card .pn{font-weight:800;color:var(--blue-d);font-size:16px;}
+.card .pp{font-weight:800;color:var(--red);font-size:16px;float:right;}
+.card .row{margin:5px 0;font-size:14px;}
+.card .lab{font-weight:700;color:var(--blue-d);}
+.tag{display:inline-block;background:var(--blue-d);color:#fff;border-radius:6px;padding:1px 7px;font-size:12px;margin-right:4px;}
+</style></head><body><div class="topbar">恩子聊美业 · 产品手册</div><div class="sub">帮美业老板把「店」翻译成「抖音上能涨粉能成交的内容思路」</div><div class="nav-fab" id="navFab">☰</div><div class="nav-menu" id="navMenu"><a href="#s0">产品总览</a><a href="#s1">各产品详情</a><a href="#s2">购买须知·预期管理</a></div><div class="backtop" id="backTop">↑</div><div class="wrap"><div class="block" id="s0"><h2>产品总览</h2><div style="overflow-x:auto"><table class="t" id="t_cov"><thead><tr><th>类型</th><th>产品名称</th><th>价格</th><th>一句话好处</th></tr></thead><tbody><tr><td class="k">免费</td><td>账号诊断卡</td><td>0（阶段0免费）</td><td>先体验，看我能不能帮你理清</td></tr><tr><td class="k">一次性</td><td>落地方案 V1/V2/V3</td><td>1980 / 2980 / 3980</td><td>一份看得见的、照着做的账号执行汇总</td></tr><tr><td class="k">订阅</td><td>定制选题库</td><td>399/月 · 999/季</td><td>按你店情况，持续供专属选题</td></tr><tr><td class="k">订阅</td><td>选题+文案包</td><td>699/月 · 1799/季</td><td>选题+人味文案，照拍就行</td></tr><tr><td class="k">订阅</td><td>当月美业热点包</td><td>99/月 · 199/季</td><td>当月热点+拍法，一对多</td></tr><tr><td class="k">服务</td><td>视频诊断包</td><td>199/月 · 499/季</td><td>你拍我检，把呈现做到位</td></tr></tbody></table><button class="copy-btn" data-copy="t_cov">复制本表</button></div><div class="callout blue">从免费体验到几千元方案，从轻量订阅到深度定制——总有一款适合你现在的阶段。</div></div><div class="block" id="s1"><h2>各产品详情</h2><div class="card"><span class="pn">账号诊断卡（免费体验）</span><span class="pp">0 元</span><div class="row"><span class="lab">包含：</span>1份轻量诊断：现状判断+隐藏素材挖掘+初步123方向+一句大实话</div><div class="row"><span class="lab">说明：</span>新号阶段0免费送，作为认识我的见面礼</div><div class="row"><span class="lab">你得到的好处：</span>当场知道你店抖音为什么没流量、你其实有哪些现成素材、该往哪走——不花钱先看清路</div></div><div class="card"><span class="pn">落地方案 V1·起号版</span><span class="pp">1980 元</span><div class="row"><span class="lab">包含：</span>账号定位+三栏目漏斗+前20条选题脚本框架+你的专属诊断卡</div><div class="row"><span class="lab">说明：</span>一份专属的、能照着一步步落地的账号执行汇总（一个账号一份，不长期绑）</div><div class="row"><span class="lab">你得到的好处：</span>从「脑子空白」变成「拿着就能拍的前20条」，少走3个月弯路</div></div><div class="card"><span class="pn">落地方案 V2·获客版</span><span class="pp">2980 元</span><div class="row"><span class="lab">包含：</span>V1全部+完整系列选题库+系列定位+发布比例+同城/全国策略</div><div class="row"><span class="lab">说明：</span>店起号后想引流到店的进阶方案</div><div class="row"><span class="lab">你得到的好处：</span>不止会拍，还知道怎么用内容把客人从抖音引到店里</div></div><div class="card"><span class="pn">落地方案 V3·放大版</span><span class="pp">3980 元</span><div class="row"><span class="lab">包含：</span>V2全部+具体脚本样例/分镜+30天售后跟踪（非陪跑）</div><div class="row"><span class="lab">说明：</span>店稳定想放大或招加盟的完整方案</div><div class="row"><span class="lab">你得到的好处：</span>有一套能复制的打法，想开二店/招加盟都有图纸</div></div><div class="card"><span class="pn">定制选题库（仅选题）</span><span class="pp">399/月 · 999/季</span><div class="row"><span class="lab">包含：</span>按你店实情AI生成·月30条/季90条专属选题</div><div class="row"><span class="lab">说明：</span>你拿到选题自己能写文案时用（省钱档）</div><div class="row"><span class="lab">你得到的好处：</span>永远不缺「拍什么」，且每条都是结合你店的，不是通用模板</div></div><div class="card"><span class="pn">选题+文案包（人味稿）</span><span class="pp">699/月 · 1799/季</span><div class="row"><span class="lab">包含：</span>选题+恩子先写人味稿再AI精修·月30/季90</div><div class="row"><span class="lab">说明：</span>你拿到选题也不会写文案时用（大多数人选这个）</div><div class="row"><span class="lab">你得到的好处：</span>直接照稿拍，文案有「人味」平台爱推，不用自己憋AI味烂稿</div></div><div class="card"><span class="pn">当月美业热点包</span><span class="pp">99/月 · 199/季</span><div class="row"><span class="lab">包含：</span>当月美业/抖音热点·30选题+30拍摄方式（一对多）</div><div class="row"><span class="lab">说明：</span>想蹭当月热点、低成本跟内容的老板</div><div class="row"><span class="lab">你得到的好处：</span>花小钱拿到当月能拍的热点清单，不自己费脑搜</div></div><div class="card"><span class="pn">视频诊断包（限次）</span><span class="pp">199/月 · 499/季</span><div class="row"><span class="lab">包含：</span>看视频+AI诊断+恩子定调·月4-8条/每条≤2-3次</div><div class="row"><span class="lab">说明：</span>你已经在拍、想有人帮你看看对不对（低门槛入口）</div><div class="row"><span class="lab">你得到的好处：</span>有人批改你的作业：哪对了、哪歪了、怎么调；剩下的交给算法</div></div></div><div class="block" id="s2"><h2>购买须知 · 预期管理</h2><div class="callout gold"><b>一句话说清：</b>我卖的是「地图和方法」，不是「司机和结果」。同样一份方案，有人当学霸有人当学渣——走不走、走多快，在你。</div><div class="callout blue"><b>我能承诺的：</b>过程到位、方法靠谱、帮你少走弯路、避开平台不推的坑。</div><div class="callout red"><b>我不承诺的：</b>具体涨粉数字、收益保证。抖音流量有算法和运气成分，任何承诺「保赚/躺赚」的都是忽悠。</div><div class="callout green"><b>售后：</b>方案交付含清晰执行标准；旗舰版含30天售后跟踪（回答你做到哪、哪里不懂），跟踪≠陪跑，不长期绑。</div></div><div class="foot">恩子聊美业 · 客户版产品手册 · 生成于 2026-07-27</div></div>
+<script>
+function copyText(btn){
+  var t=btn.getAttribute('data-copy')||btn.innerText;
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){var o=btn.innerText;btn.innerText='已复制✓';setTimeout(function(){btn.innerText=o;},1200);});}
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var fab=document.getElementById('navFab'),menu=document.getElementById('navMenu'),bt=document.getElementById('backTop');
+  fab.addEventListener('click',function(){menu.classList.toggle('show');});
+  window.addEventListener('scroll',function(){
+    var y=window.scrollY;
+    fab.classList.toggle('show',y>200);
+    bt.classList.toggle('show',y>400);
+  });
+  bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  var links=menu.querySelectorAll('a');
+  links.forEach(function(a){a.addEventListener('click',function(){menu.classList.remove('show');});});
+});
+</script>
+</body></html>

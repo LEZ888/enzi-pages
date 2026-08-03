@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一键复制 · 发给 WorkBuddy 的汇总指令</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         margin: 0; padding: 24px; background: #f5f7fa; color: #1f2937; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: #6b7280; font-size: 13px; margin: 0 0 20px; }
+  .card { background: #fff; border-radius: 12px; padding: 16px 18px; margin-bottom: 18px;
+          box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .card h2 { font-size: 15px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #4338ca; }
+  textarea { width: 100%; height: 260px; border: 1px solid #e5e7eb; border-radius: 8px;
+             padding: 10px; font-size: 13px; line-height: 1.6; resize: vertical;
+             font-family: "PingFang SC", "Microsoft YaHei", monospace; background: #fafafa; }
+  .btn { margin-top: 10px; background: #2563eb; color: #fff; border: none; border-radius: 8px;
+         padding: 10px 18px; font-size: 14px; cursor: pointer; font-weight: 600; }
+  .btn:hover { background: #1d4ed8; }
+  .btn.green { background: #059669; }
+  .btn.green:hover { background: #047857; }
+  .toast { display: inline-block; margin-left: 12px; color: #059669; font-size: 13px; font-weight: 600;
+           opacity: 0; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+  .note { font-size: 12px; color: #6b7280; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <h1>一键复制 · 发给 WorkBuddy 的汇总指令</h1>
+  <p class="sub">点击下方按钮即可复制对应内容到剪贴板，然后粘贴给 WorkBuddy（或直接把 A/B 合并文件贴给当前对话的 WorkBuddy）。</p>
+
+  <div class="card">
+    <h2>① 核心指令（复制后发给 WorkBuddy）<span class="tag">必复制</span></h2>
+    <textarea id="tpl1" readonly>你是我的「账号落地总编」——既是账号操盘手，也是文档架构师。我要你把我给你的两份材料，综合成一份我后续能照着一步步把账号做起来的《从零起号落地总宝典》，并输出成一个排版清晰、用颜色和色块区分内容的单文件（HTML）。
+
+【我给你的输入】
+一个文件，里面含两部分，已用分隔标题标明：
+=== A 原始素材 ===
+（我和 ChatGPT 两个月聊天的原始汇总，杂乱、有重复、有偏离目标的内容）
+=== B DeepSeek 整理版 ===
+（DeepSeek 把我内容整理成的《从零起号运营宝典》）
+
+【综合规则】
+规则一：以 B 的结构为主骨架，但必须回看 A，把 B 里遗漏的、对起号有价值的好素材 / 好想法 / 好故事补回来。
+规则二：去重——A 与 B 重复的内容只留一份，保留更完整、更落地的表述。
+规则三：解决冲突——A 与 B 不一致时，按“更符合新账号定位、更可落地”的原则取舍，并在该处用【注意】标注两种说法。
+规则四：剔除非目标——与账号方向 / 人设无关的内容，无论来自 A 还是 B，都放入文末《暂存 / 舍弃》区，不混进正文。
+规则五：一切以“我能照着做”为最高标准——每条结论都给动作、模板或清单，不写空话。
+
+【输出要求：单文件 HTML，强视觉区分】
+1. 顶部：标题 + 一句话定位 + 可点击跳转的目录。
+2. 颜色体系（每个一级模块一种主题色 + 同色色块标题）：
+   战略定位 = 蓝；内容战略 = 绿；执行路线图 = 橙；日常运营 SOP = 青；素材资产库 = 紫；风险避坑 = 红；落地计划 = 深灰。
+3. 不同内容性质用不同视觉样式：
+   · 行动清单 → 带☑的勾选框卡片；
+   · 模板 / 话术 → 浅底代码块或虚线边框卡片；
+   · 坑 / 红线 → 红色警示块（⚠ 图标）；
+   · 金句 / 素材 → 引用块（左侧色条）；
+   · 阶段 / 时间 → 时间轴或步骤条。
+4. 每章结构：Why（为什么）+ How（怎么做）+ 模板 / 清单 + 关键指标。
+5. 文末两区：《30天 / 90天执行看板》（可勾选）+ 《暂存 / 舍弃》区（标注来自 A 还是 B）。
+6. 来源标注：关键结论若主要来自 A 原始素材标【原】；主要来自 B 标【D】；综合得出标【综】。轻量标注，不喧宾夺主。
+7. 整份文件自包含（内联 CSS），不依赖外部资源，双击即可在浏览器打开。
+
+请直接产出这份 HTML 文件并交给我。</textarea>
+    <button class="btn" onclick="copy('tpl1', 'toast1')">一键复制核心指令</button>
+    <span class="toast" id="toast1">已复制 ✓</span>
+  </div>
+
+  <div class="card">
+    <h2>② 输入文件模板（复制后填入你的 A/B 内容）<span class="tag">准备工作</span></h2>
+    <textarea id="tpl2" readonly>=== A 原始素材 ===
+（在这里粘贴你和 ChatGPT 的原始聊天汇总）
+
+=== B DeepSeek 整理版 ===
+（在这里粘贴 DeepSeek 整理好的《从零起号运营宝典》）</textarea>
+    <button class="btn green" onclick="copy('tpl2', 'toast2')">一键复制输入模板</button>
+    <span class="toast" id="toast2">已复制 ✓</span>
+    <p class="note">用法：把上面模板保存成文本文件，填入你的 A（原始聊天）和 B（DeepSeek 整理版），然后把整份内容连同「核心指令」一起发给 WorkBuddy。内容太长可分两次发，每次开头注明“这是合并文件的第 X 部分，先暂存”。</p>
+  </div>
+
+<script>
+function copy(id, toastId) {
+  var el = document.getElementById(id);
+  var toast = document.getElementById(toastId);
+  var done = function(){ toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 1500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(el.value).then(done, function(){ fallback(el, done); });
+  } else {
+    fallback(el, done);
+  }
+}
+function fallback(el, done) {
+  try {
+    el.focus(); el.select();
+    document.execCommand('copy');
+    done();
+  } catch (e) {
+    alert('复制失败，请手动长按选择文本后复制。');
+  }
+}
+</script>
+</body>
+</html>
