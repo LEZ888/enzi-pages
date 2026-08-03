@@ -184,6 +184,8 @@
   .modal .box h3{margin:0 0 14px;font-size:16px}
   /* 导入弹窗（链接抓取/粘贴）样式与移动端适配 */
   .imf-input{width:100%;height:96px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box}
+  /* 确保弹窗/表单内的输入框在手机上可正常选中与粘贴 */
+  .modal input,.modal textarea,.modal select,.modal [contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   .imf-rows{margin-top:12px}
   .imf-row{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--c-line,#eee);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--c-card,#fff);box-sizing:border-box}
   .imf-cb{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--c-primary)}
@@ -1081,7 +1083,7 @@ function parseProductText(text){
   const get=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
   const r={};
   let name=get(['产品名称','商品名称','商品名','品名','名称','标题','名字','产品名']);
-  if(!name)name=lines[0];
+  if(!name){const first=lines.find(function(l){return !/^https?:\/\//i.test(l);});if(first)name=first;}
   if(name)r.name=name;
   const brand=get(['品牌','牌子','商标']);if(brand)r.brand=brand;
   const cat=get(['分类','类别','品类']);if(cat)r.cat=cat;
@@ -1129,6 +1131,7 @@ async function doPasteFill(){
   let text=null;
   try{if(navigator.clipboard&&navigator.clipboard.readText)text=await navigator.clipboard.readText();}catch(e){text=null;}
   if(!text||!text.trim()){openPasteModal();return;}
+  if(isPureUrl(text.trim())){const im=openImportModal();const ta=im.querySelector('#imfInput');ta.value=text.trim();const st=im.querySelector('#imfStatus');if(st)st.textContent='检测到是商品链接，点「识别」即可自动抓取（抓取失败会自动改用文案解析）。';return;}
   const filled=applyParsed(parseProductText(text));
   const hint=document.getElementById('pasteHint');
   if(filled.length){toast('已自动填入：'+filled.join('、'));if(hint)hint.textContent='已识别 '+filled.length+' 项';}
@@ -1136,7 +1139,7 @@ async function doPasteFill(){
 }
 function openPasteModal(){
   const m=document.createElement('div');m.className='modal';
-  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:170px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:13px;resize:vertical" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
+  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:170px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
   document.body.appendChild(m);
   const ta=m.querySelector('#pmText');setTimeout(function(){ta.focus();},50);
   m.querySelector('#pmCancel').onclick=function(){m.remove();};
@@ -1147,8 +1150,10 @@ document.getElementById('importBtn').onclick=openImportFromForm;
 
 /* --- 从链接抓取产品 + 可勾选导入预览 --- */
 function unescapeHtml(s){if(!s)return s;const d=document.createElement('div');d.innerHTML=String(s).replace(/<\/?[^>]*>/g,'');return (d.textContent||String(s)).replace(/\s+/g,' ').trim();}
-function isProductUrl(s){return /https?:\/\/[^\s"'<>]*?(taobao\.com|tmall\.com|1688\.com|alibaba\.com)/i.test(s);}
+function isProductUrl(s){return /https?:\/\/[^\s"'<>]*?(taobao\.com|tmall\.com|1688\.com|alibaba\.com|yangkeduo\.com|pinduoduo\.com)/i.test(s);}
 function isPureUrl(s){return /^\s*https?:\/\/\S+\s*$/.test(s);}
+function firstUrl(s){const m=String(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0]:null;}
+function looksStructured(t){if(/[\u4e00-\u9fa5]{2,}[:：]/.test(String(t||'')))return true;if(/^(product|name|brand|title|category|tags?|description)[:：]/im.test(String(t||'').trim()))return true;return false;}
 const IMPORT_TARGETS=[
  {v:'f_name',t:'标题'},
  {v:'f_brand',t:'品牌'},
@@ -1200,17 +1205,18 @@ function getMeta(html,prop){
 function parseProductHtml(html,url){
   const fields=[];
   let title=getMeta(html,'og:title');
-  if(!title){const m=html.match(/<title>([^<]*)<\/title>/i);if(m){title=m[1].replace(/\s*[-–|｜]\s*(淘宝|天猫|阿里巴巴|1688|Taobao|Tmall|Alibaba).*$/i,'').trim();}}
+  if(!title){const m=html.match(/<title>([^<]*)<\/title>/i);if(m){title=m[1].replace(/\s*[-–|｜]\s*(淘宝|天猫|阿里巴巴|1688|拼多多|PDD|Taobao|Tmall|Alibaba|Pinduoduo).*$/i,'').trim();}}
+  if(!title){const m=html.match(/goodsName["']?\s*:\s*["']([^"']+)["']/i);if(m)title=m[1];}
   if(title)fields.push({label:'标题',value:unescapeHtml(title),target:'f_name'});
-  const pm=html.match(/"price"\s*:\s*"?(\d+\.?\d*)"?(?:\s*[,}])/i)||html.match(/￥\s*(\d+\.?\d*)/)||html.match(/class="tb-rmb-num"[^>]*>([\d.]+)/i)||html.match(/offerPrice["']?\s*:\s*"?(\d+\.?\d*)/i);
-  if(pm)fields.push({label:'价格',value:pm[1],target:''});
+  const pm=html.match(/"price"\s*:\s*"?(\d+\.?\d*)"?(?:\s*[,}])/i)||html.match(/"minGroupPrice"\s*:\s*"?(\d+)"/i)||html.match(/"minNormalPrice"\s*:\s*"?(\d+)"/i)||html.match(/￥\s*(\d+\.?\d*)/)||html.match(/class="tb-rmb-num"[^>]*>([\d.]+)/i)||html.match(/offerPrice["']?\s*:\s*"?(\d+\.?\d*)/i);
+  if(pm){let p=pm[1];if(/^\d+$/.test(p)&&Number(p)>1000)p=(Number(p)/100).toFixed(2).replace(/\.00$/,'');fields.push({label:'价格',value:p,target:''});}
   let img=getMeta(html,'og:image');if(img)fields.push({label:'主图',value:img,target:'f_sharethumb'});
   let desc=getMeta(html,'og:description')||getMeta(html,'description');if(desc)fields.push({label:'产品描述',value:unescapeHtml(desc),target:'desc'});
   let brand=getMeta(html,'og:brand');if(brand)fields.push({label:'品牌',value:unescapeHtml(brand),target:'f_brand'});
   return fields;
 }
 async function fetchProductPage(url){
-  const PROXIES=[u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://thingproxy.freeboard.io/fetch/'+u];
+  const PROXIES=[u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u),u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://thingproxy.freeboard.io/fetch/'+u];
   for(let i=0;i<PROXIES.length;i++){
     try{
       const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
@@ -1237,8 +1243,8 @@ function openImportModal(){
   if(_importModal)_importModal.remove();
   const m=document.createElement('div');m.className='modal';m.id='importModal';
   m.innerHTML='<div class="box" style="max-width:640px"><h3>🔗 从链接抓取 / 粘贴产品</h3>'+
-    '<div class="help" id="imfStatus">把淘宝/1688 商品链接粘贴到下方（留空则直接粘贴商品文案），点「识别」。链接抓取走公共代理，若被反爬拦截会自动改为手动粘贴文案模式。</div>'+
-    '<textarea id="imfInput" class="imf-input" placeholder="粘贴淘宝/1688 链接，或直接粘贴商品文案：\n产品名称：xxx\n品牌：xxx\n..."></textarea>'+
+    '<div class="help" id="imfStatus">把<b>淘宝/天猫/1688/拼多多</b>等任意平台商品链接粘贴到下方，点「识别」即可自动抓取。若平台反爬拦截抓取，会自动提示你改为粘贴商品文案。</div>'+
+    '<textarea id="imfInput" class="imf-input" placeholder="粘贴商品链接（淘宝/天猫/1688/拼多多等），或直接粘贴商品文案：\n产品名称：xxx\n品牌：xxx\n..."></textarea>'+
     '<div class="btn-row" style="margin-top:8px"><button class="btn" id="imfCancel">取消</button><button class="btn primary" id="imfRecognize">识别</button></div>'+
     '<div id="imfRows" class="imf-rows"></div>'+
     '<div class="btn-row" style="margin-top:10px;justify-content:space-between"><button class="btn sm" id="imfAdd">+ 添加字段</button><div class="imf-bottom"><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">确认导入选中</button></div></div></div>';
@@ -1255,18 +1261,28 @@ async function runRecognition(m){
   const ta=m.querySelector('#imfInput');const text=ta.value.trim();
   const status=m.querySelector('#imfStatus');
   if(!text){status.textContent='请先粘贴链接或商品文案再点识别。';return;}
-  if(isPureUrl(text)&&isProductUrl(text)){
-    status.textContent='正在通过代理抓取页面，请稍候…';
-    const html=await fetchProductPage(text);
-    if(!html){status.innerHTML='⚠️ 链接抓取失败（淘宝/1688 反爬或代理暂不可用）。<b>请直接把商品页复制的文案粘贴到上方文本框</b>，再点「识别」。';return;}
-    const fields=parseProductHtml(html,text);
-    if(!fields.length){status.textContent='⚠️ 抓到了页面但没解析出产品信息，请改用手动粘贴文案。';return;}
-    renderImportRows(m,fields);
-    status.textContent='已从链接识别 '+fields.length+' 项，请勾选并选择要导入的字段：';
-    return;
+  const url=firstUrl(text);
+  // 去掉链接后是否还包含“像描述”的文字（多行 / 含常见商品字段 / 剩余字数较多）
+  const stripped=text.replace(url||'','').replace(/\s+/g,'');
+  const looksDesc=text.split(/\r?\n/).length>=2||/价格|￥|¥|标题|名称|品牌|功效|卖点|描述|详情|规格|库存|券|促销|参数|材质|产地|颜色|尺寸|重量|店铺/i.test(text)||stripped.length>15;
+  if(url&&!looksDesc&&!looksStructured(text)){
+    const isPd=/yangkeduo\.com|pinduoduo\.com/i.test(url);
+    const kind=isPd?'拼多多':(isProductUrl(url)?'电商':'链接');
+    status.textContent='正在通过代理抓取页面，请稍候…（'+kind+'）';
+    const html=await fetchProductPage(url);
+    if(html){
+      const fields=parseProductHtml(html,url);
+      if(fields.length){renderImportRows(m,fields);status.textContent='已从'+kind+'链接识别 '+fields.length+' 项，请勾选并选择要导入的字段：';return;}
+    }
+    status.textContent='链接抓取未取到内容，已自动改用「粘贴文案解析」处理你输入的内容…';
   }
   const r=parseProductText(text);const fields=objectToFields(r);
-  if(!fields.length){status.textContent='未识别到可导入字段，可点「+ 添加字段」手动补。';return;}
+  // 排除“纯链接被当成标题”的无效情况
+  const onlyUrlTitle=fields.length===1&&fields[0].target==='f_name'&&/^https?:\/\//i.test(fields[0].value);
+  if(!fields.length||onlyUrlTitle){
+    status.innerHTML='未识别到可导入字段。若粘贴的是商品<strong>链接</strong>且平台反爬抓不到，请改为复制商品页的<strong>文字信息</strong>粘贴进来，或直接点「+ 添加字段」手动补。';
+    return;
+  }
   renderImportRows(m,fields);
   status.textContent='已识别 '+fields.length+' 项，请勾选并选择要导入的字段：';
 }
