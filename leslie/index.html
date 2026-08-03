@@ -183,7 +183,7 @@
   .modal .box{background:#fff;width:100%;max-width:460px;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);max-height:92vh;overflow-y:auto}
   .modal .box h3{margin:0 0 14px;font-size:16px}
   /* 导入弹窗（链接抓取/粘贴）样式与移动端适配 */
-  .imf-input{width:100%;height:96px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box}
+  .imf-input{width:100%;height:140px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box}
   /* 确保弹窗/表单内的输入框在手机上可正常选中与粘贴 */
   .modal input,.modal textarea,.modal select,.modal [contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
   .imf-rows{margin-top:12px}
@@ -191,7 +191,7 @@
   .imf-cb{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--c-primary)}
   .imf-mid{flex:1;min-width:0}
   .imf-lab{width:100%;font-size:15px;color:var(--c-sub,#888);border:1px solid var(--c-line,#ddd);border-radius:6px;padding:6px 8px;margin-bottom:6px;box-sizing:border-box}
-  .imf-val{width:100%;font-size:16px;border:1px solid var(--c-line,#ddd);border-radius:6px;padding:9px;resize:vertical;box-sizing:border-box;min-height:48px}
+  .imf-val{width:100%;font-size:16px;border:1px solid var(--c-line,#ddd);border-radius:6px;padding:9px;resize:vertical;box-sizing:border-box;min-height:48px;white-space:pre-wrap;word-break:break-word;line-height:1.6}
   .imf-right{display:flex;flex-direction:row;gap:6px;align-items:center;flex:none}
   .imf-sel{font-size:16px;max-width:170px;min-height:40px;box-sizing:border-box}
   .imf-del{padding:8px 14px;flex:none}
@@ -225,7 +225,8 @@
   .rte-bar{display:flex;flex-direction:row;flex-wrap:wrap;gap:4px;padding:6px;background:#f7f7f7;border:1px solid var(--c-line);border-radius:var(--radius);margin-bottom:8px}
   .rte-bar button{width:34px;height:30px;border:1px solid var(--c-line);background:#fff;border-radius:3px;font-size:14px}
   .rte-bar .sep{width:1px;background:#ddd;margin:2px 3px}
-  .rte{width:100%;min-height:160px;border:1px solid var(--c-line);border-radius:var(--radius);padding:10px;font-size:14px;line-height:1.7;outline:none;background:#fff}
+  .rte{width:100%;min-height:350px;border:1px solid var(--c-line);border-radius:var(--radius);padding:10px;font-size:14px;line-height:1.7;outline:none;background:#fff}
+  @media(max-width:560px){.rte{min-height:300px}}
   .rte:empty:before{content:attr(data-ph);color:#bbb}
   .emoji-pick{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
   .emoji-pick span{cursor:pointer;font-size:18px;padding:2px 4px}
@@ -1139,9 +1140,11 @@ async function doPasteFill(){
 }
 function openPasteModal(){
   const m=document.createElement('div');m.className='modal';
-  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:170px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
+  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:200px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.6;resize:vertical;white-space:pre-wrap;word-break:break-word" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
   document.body.appendChild(m);
-  const ta=m.querySelector('#pmText');setTimeout(function(){ta.focus();},50);
+  const ta=m.querySelector('#pmText');
+  ta.addEventListener('paste',function(){setTimeout(function(){ta.focus();},30);},false);
+  setTimeout(function(){ta.focus();},100);
   m.querySelector('#pmCancel').onclick=function(){m.remove();};
   m.querySelector('#pmOk').onclick=function(){const txt=ta.value;m.remove();const filled=applyParsed(parseProductText(txt));toast(filled.length?('已自动填入：'+filled.join('、')):'未识别到字段');};
 }
@@ -1249,7 +1252,12 @@ function openImportModal(){
     '<div id="imfRows" class="imf-rows"></div>'+
     '<div class="btn-row" style="margin-top:10px;justify-content:space-between"><button class="btn sm" id="imfAdd">+ 添加字段</button><div class="imf-bottom"><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">确认导入选中</button></div></div></div>';
   document.body.appendChild(m);_importModal=m;
-  const ta=m.querySelector('#imfInput');setTimeout(function(){ta.focus();},50);
+  const ta=m.querySelector('#imfInput');
+  // 手机端粘贴防御：确保 paste 事件能正常写入（部分手机浏览器对动态创建的 textarea 粘贴支持差）
+  ta.addEventListener('paste',function(e){setTimeout(function(){const s=ta.querySelector('#imfStatus');if(s&&!ta.value.trim())s.textContent='已粘贴内容，请点「识别」继续。';},50);},false);
+  // 增强焦点：延迟更长 + 点击空白区域也能聚焦
+  setTimeout(function(){ta.focus();},100);
+  ta.addEventListener('click',function(){ta.focus();},false);
   m.querySelector('#imfCancel').onclick=function(){m.remove();_importModal=null;};
   m.querySelector('#imfClose').onclick=function(){m.remove();_importModal=null;};
   m.querySelector('#imfRecognize').onclick=function(){runRecognition(m);};
@@ -1296,7 +1304,9 @@ function makeRow(f){
   const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.className='imf-cb';
   const mid=document.createElement('div');mid.className='imf-mid';
   const lab=document.createElement('input');lab.value=f.label||'字段';lab.className='imf-lab';
-  const val=document.createElement('textarea');val.value=f.value||'';val.rows=2;val.className='imf-val';
+  const val=document.createElement('textarea');val.value=f.value||'';val.className='imf-val';
+  // 按内容行数自动撑高：至少3行，中文约18字符折一行，英文约40字符，上限25行
+  const txt=f.value||'';const nl=txt.split('\n').length;const cjk=(txt.match(/[\u4e00-\u9fa5]/g)||[]).length;const nonCjk=txt.length-cjk;const est=Math.max(3,Math.min(25,nl,Math.ceil(cjk/18)+Math.ceil(nonCjk/40)));val.rows=est;
   mid.appendChild(lab);mid.appendChild(val);
   const right=document.createElement('div');right.className='imf-right';
   const sel=document.createElement('select');IMPORT_TARGETS.forEach(function(t){const o=document.createElement('option');o.value=t.v;o.textContent=t.t;if(t.v===(f.target||''))o.selected=true;sel.appendChild(o);});sel.className='imf-sel';
