@@ -1012,7 +1012,7 @@ function openProductForm(id) {
         <div id="pf_url_tip" class="rec-tip"></div>
       </div>
       <div class="rec-pane" id="rec_pane_text" style="display:none">
-        <textarea id="pf_paste" rows="3" placeholder="把商品信息粘贴到这里，示例任选其一：&#10;①按行格式：名称：XX精华液 / 分类：护肤 / 零售价：298 / 简介：补水保湿&#10;②直接粘商品页整段文字（标题会自动识别为名称、正文会写到详情）&#10;③粘淘宝/天猫/1688/拼多多商品页复制的文字或分享语" oninput="scheduleRecAuto('text')"></textarea>
+        <textarea id="pf_paste" rows="3" placeholder="把商品信息粘贴到这里，支持任一格式：&#10;①「标签-内容」分段：&#10;  产品简介：补水保湿，深层修护屏障&#10;  产品详情：&#10;    核心基底：长时间植物油发酵体系&#10;    适用人群：敏感肌、干皮&#10;  零售价：298&#10;  会员价：198&#10;②直接粘整段商品介绍（自动归详情；【标题】自动当名称）&#10;③粘淘宝/天猫/1688/拼多多 商品页复制的文字或分享语" oninput="scheduleRecAuto('text')"></textarea>
         <div class="rec-btns">
           <button type="button" class="btn sm" onclick="recognizeProduct()">⚡ 一键识别</button>
           <button type="button" class="btn sm ghost" onclick="pasteFromClipboard('pf_paste')">📋 粘贴</button>
@@ -1103,22 +1103,22 @@ function addProductVideo() {
   }).catch(() => { tip.textContent = '视频读取失败'; });
 }
 /* ============ 淘宝 / 天猫 / 1688 / 阿里巴巴 / 拼多多 一键识别（链接抓取 + 文本粘贴 + 字段选择面板） ============ */
-// 产品字段映射：key -> { 中文标签, 应用函数 }
+// 产品字段映射：key -> { 中文标签, 字段元素id, 应用函数 }
 const PF_FIELDS = {
-  name:    { label: '商品名称', apply: v => setVal('pf_name', v) },
-  category:{ label: '分类',     apply: v => applyCategory(v) },
-  retail:  { label: '零售价',   apply: v => setVal('pf_retail', v) },
-  member:  { label: '会员价',   apply: v => setVal('pf_member', v) },
-  stock:   { label: '库存',     apply: v => setVal('pf_stock', v) },
-  warn:    { label: '预警阈值', apply: v => setVal('pf_warn', v) },
-  prod:    { label: '生产日期', apply: v => setVal('pf_prod', v) },
-  shelf:   { label: '保质期(月)', apply: v => setVal('pf_shelf', v) },
-  sort:    { label: '排序值',   apply: v => setVal('pf_sort', v) },
-  hot:     { label: '角标文字', apply: v => setVal('pf_hot', v) },
-  intro:   { label: '简介',     apply: v => setVal('pf_intro', v) },
-  video:   { label: '视频链接', apply: v => setVal('pf_video_url', v) },
-  images:  { label: '图片链接', apply: v => applyImages(v) },
-  detail:  { label: '详情',     apply: v => { const d = document.getElementById('pf_detail'); if (d) d.innerHTML = v; } },
+  name:    { label: '商品名称',   fieldId: 'pf_name',      apply: v => setVal('pf_name', v) },
+  category:{ label: '分类',       fieldId: 'pf_cats',      apply: v => applyCategory(v) },
+  retail:  { label: '零售价',     fieldId: 'pf_retail',    apply: v => setVal('pf_retail', v) },
+  member:  { label: '会员价',     fieldId: 'pf_member',    apply: v => setVal('pf_member', v) },
+  stock:   { label: '库存',       fieldId: 'pf_stock',     apply: v => setVal('pf_stock', v) },
+  warn:    { label: '预警阈值',   fieldId: 'pf_warn',      apply: v => setVal('pf_warn', v) },
+  prod:    { label: '生产日期',   fieldId: 'pf_prod',      apply: v => setVal('pf_prod', v) },
+  shelf:   { label: '保质期(月)', fieldId: 'pf_shelf',     apply: v => setVal('pf_shelf', v) },
+  sort:    { label: '排序值',     fieldId: 'pf_sort',      apply: v => setVal('pf_sort', v) },
+  hot:     { label: '角标文字',   fieldId: 'pf_hot',       apply: v => setVal('pf_hot', v) },
+  intro:   { label: '简介',       fieldId: 'pf_intro',     apply: v => setVal('pf_intro', v) },
+  video:   { label: '视频链接',   fieldId: 'pf_video_url', apply: v => setVal('pf_video_url', v) },
+  images:  { label: '图片链接',   fieldId: null,           apply: v => applyImages(v) },
+  detail:  { label: '详情',       fieldId: 'pf_detail',    apply: v => { const d = document.getElementById('pf_detail'); if (d) d.innerHTML = v; } },
 };
 function setVal(id, v) { const el = document.getElementById(id); if (el && v != null && String(v).trim() !== '') el.value = v; }
 function applyCategory(val) {
@@ -1152,10 +1152,12 @@ function applyDetected(detected) {
   const labels = [];
   arr.forEach(d => {
     try {
-      const f = PF_FIELDS[d.key];
-      f.apply(d.value);
-      const el = document.querySelector('#pf_form [data-pf="' + d.key + '"], #' + (d.key === 'intro' ? 'pf_intro' : d.key === 'name' ? 'pf_name' : d.key === 'retail' ? 'pf_retail' : d.key === 'member' ? 'pf_member' : d.key === 'stock' ? 'pf_stock' : d.key === 'warn' ? 'pf_warn' : d.key === 'prod' ? 'pf_prod' : d.key === 'shelf' ? 'pf_shelf' : d.key === 'sort' ? 'pf_sort' : d.key === 'hot' ? 'pf_hot' : d.key === 'video' ? 'pf_video_url' : ''));
-      if (el) { el.classList.remove('rec-flash'); void el.offsetWidth; el.classList.add('rec-flash'); }
+      PF_FIELDS[d.key].apply(d.value);
+      const fid = PF_FIELDS[d.key].fieldId;
+      if (fid) {
+        const el = document.getElementById(fid);
+        if (el) { el.classList.remove('rec-flash'); void el.offsetWidth; el.classList.add('rec-flash'); }
+      }
       labels.push(PF_FIELDS[d.key].label);
     } catch (e) {}
   });
@@ -1188,74 +1190,210 @@ function scheduleRecAuto(kind) {
     else recognizeProduct(true);
   }, 500);
 }
-// 文本粘贴识别（改：直接调 PF_FIELDS.apply 写入；新增\"无关键词纯文字\"启发式处理）
+// 文本粘贴识别（重写：标签-内容段扫描模式）
+//   用户文本可以是：
+//   A. "标签：值" 同行  → 取同行值写入对应字段（同行多标签也能切分："零售价：298  会员价：198" → 两条）
+//   B. "标签" 单独成行  → 标签后所有非标签行（直到下一个标签或结尾）整体写入该字段
+//   C. 散落无标签文字   → 整段写详情；【xxx】/首段当名称
+//   长标签优先匹配（"产品详情介绍" 优先于 "产品介绍"/"介绍"）
 function recognizeProduct(auto, textOverride, forceName) {
+  if (forceName === undefined) forceName = true; // 启发式名称兜底默认开
   const ta = document.getElementById('pf_paste');
   const text = (textOverride != null ? String(textOverride) : (ta && ta.value || '')).trim();
   if (!text) { if (!auto) toast('请先粘贴商品信息'); return; }
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const detected = [];
-  const push = (k, v) => { if (v != null && String(v).trim() !== '') detected.push({ key: k, value: String(v).trim() }); };
-  const numAfter = (line, kw) => {
-    const idx = line.search(kw);
-    if (idx < 0) return null;
-    const m = line.slice(idx).match(/[¥￥]?\s*(\d+(?:\.\d+)?)/);
-    return m ? m[1] : null;
+  // 纯 URL → 走链接识别
+  if (/^https?:\/\/\S+\s*$/i.test(text)) return recognizeUrl(auto);
+  // 标签-字段映射（长标签在前，长度倒序排列后用同一组正则）
+  const LABEL_TO_KEY = [
+    // detail 类
+    ['产品详情介绍', 'detail'], ['产品介绍', 'detail'], ['商品介绍', 'detail'],
+    ['产品详情', 'detail'], ['商品详情', 'detail'], ['产品描述', 'detail'],
+    ['产品说明', 'detail'], ['产品卖点', 'detail'], ['详细介绍', 'detail'],
+    ['产品介绍文案', 'detail'], ['详情', 'detail'], ['描述', 'detail'],
+    // intro 类
+    ['产品简介', 'intro'], ['商品简介', 'intro'], ['产品卖点介绍', 'intro'],
+    ['核心卖点', 'intro'], ['卖点', 'intro'], ['功效', 'intro'],
+    ['产品亮点', 'intro'], ['亮点', 'intro'], ['简介', 'intro'],
+    // name 类
+    ['商品标题', 'name'], ['产品标题', 'name'], ['产品名称', 'name'], ['商品名称', 'name'],
+    ['产品名', 'name'], ['商品名', 'name'], ['产品名字', 'name'],
+    ['品名', 'name'], ['标题', 'name'], ['名称', 'name'], ['名字', 'name'],
+    // price 类
+    ['零售价', 'retail'], ['原价', 'retail'], ['售价', 'retail'],
+    ['单价', 'retail'], ['券后价', 'retail'], ['促销价', 'retail'], ['价格', 'retail'],
+    ['会员价', 'member'], ['VIP价', 'member'], ['vip价', 'member'],
+    // stock / warn
+    ['库存', 'stock'], ['库存数量', 'stock'], ['数量', 'stock'], ['存货', 'stock'], ['余量', 'stock'],
+    ['预警阈值', 'warn'], ['提醒阈值', 'warn'], ['预警', 'warn'], ['警戒', 'warn'], ['补货阈值', 'warn'],
+    // shelf / prod
+    ['保质期', 'shelf'], ['保质期(月)', 'shelf'], ['保质期月数', 'shelf'], ['有效期', 'shelf'],
+    ['生产日期', 'prod'], ['出厂日期', 'prod'],
+    // hot / sort
+    ['角标文字', 'hot'], ['角标内容', 'hot'], ['角标', 'hot'], ['标签', 'hot'],
+    ['排序号', 'sort'], ['排序值', 'sort'], ['排序', 'sort'], ['优先级', 'sort'],
+    // category
+    ['分类', 'category'], ['类别', 'category'], ['品类', 'category'], ['所属分类', 'category'],
+    // video
+    ['视频链接', 'video'], ['视频URL', 'video'], ['视频地址', 'video'], ['产品视频', 'video'], ['视频', 'video'],
+    // images
+    ['图片链接', 'images'], ['图片URL', 'images'], ['产品图片', 'images'], ['主图', 'images'], ['图片', 'images'],
+  ];
+  const LABEL_MAP = Object.fromEntries(LABEL_TO_KEY);
+  const LABEL_KEYS = Object.keys(LABEL_MAP).sort((a, b) => b.length - a.length);
+  const labelAlt = LABEL_KEYS.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const RE_LABEL_ONLY = new RegExp('^(' + labelAlt + ')\\s*[:：]?\\s*$');
+  const RE_LABEL_INLINE = new RegExp('^(' + labelAlt + ')\\s*[:：]\\s*(.+)$');
+  // 数字提取（行内任意位置第一个数字）
+  const numAny = (s) => { const m = String(s).match(/(\d+(?:\.\d+)?)/); return m ? m[1] : null; };
+  // 月数提取
+  const monthAny = (s) => { const m = String(s).match(/(\d+(?:\.\d+)?)\s*(?:个)?\s*月/); return m ? m[1] : null; };
+  // 日期提取
+  const dateAny = (s) => { const m = String(s).match(/(\d{4})[.\-/年](\d{1,2})[.\-/月](\d{1,2})/); if (!m) return null; return m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0'); };
+  // URL 提取
+  const urlAny = (s) => { const m = String(s).match(/https?:\/\/[^\s]+/); return m ? m[0] : null; };
+  // 数字字段归一化
+  const normalizeNumField = (key, value) => {
+    if (!value) return null;
+    if (key === 'shelf') return monthAny(value) || dateAny(value) || numAny(value);
+    return numAny(value);
   };
-  const findDate = (line) => { const m = line.match(/(\d{4})[.\-/年](\d{1,2})[.\-/月](\d{1,2})/); if (m) { const y = m[1], mo = String(m[2]).padStart(2, '0'), d = String(m[3]).padStart(2, '0'); return y + '-' + mo + '-' + d; } return null; };
-  const isTb = /taobao\.com|tmall\.com|1688\.com|tb\.cn|alibaba\.com|yangkeduo\.com|pinduoduo\.com/i.test(text);
-  // ①名称（多格式兜底：含\"名称：\"关键词 → 含平台链接 → 第一段实质文字）
-  let name = null;
-  for (const ln of lines) { const m = ln.match(/^[\s\【\[]*(?:名称|品名|商品名|商品标题|产品名|名字|标题|商品名)[：:\s]+(.+)/); if (m) { const v = m[1].trim(); if (v) { name = v; break; } } }
-  if (!name && isTb) {
-    for (const ln of lines) { const t = ln.trim(); if (t.length > 3 && !/https?:\/\//.test(t) && !/[¥￥]/.test(t) && !/^(复制此段|打开|淘宝|天猫|阿里巴巴|拼多多|链接|点击|【|】)/.test(t)) { name = t; break; } }
-  }
-  if (!name && forceName) {
-    for (const ln of lines) { const t = ln.trim(); if (t.length > 1 && !/https?:\/\//.test(t) && !/^[¥￥]/.test(t) && !/^(复制此段|打开|淘宝|天猫|阿里巴巴|拼多多|链接|点击|请|【|】)/.test(t)) { name = t; break; } }
-  }
-  if (name) push('name', name);
-  // ②分类
-  const catLine = lines.find(l => /^[\s\【\[]*(?:分类|类别|品类)[：:\s]+/.test(l));
-  if (catLine) { const cv = catLine.replace(/^[\s\【\[]*(?:分类|类别|品类)[：:\s]+/, '').trim(); if (cv) push('category', cv); }
-  // ③价格 / 库存 / 预警
-  for (const ln of lines) {
-    if (/(零售价|零售价|零售|售价|标价|价格|到手价|券后|促销价)/.test(ln) && !/^(会员|VIP)/.test(ln)) { const n = numAfter(ln, /零售价|零售|售价|标价|价格|到手价|券后|促销价/); if (n) push('retail', n); }
-    if (/(会员价|会员价|会员|VIP价|折扣价)/.test(ln)) { const n = numAfter(ln, /会员价|会员|VIP价|折扣价/); if (n) push('member', n); }
-    if (/(库存|库存件数|数量|存货|余量|现货)/.test(ln)) { const n = numAfter(ln, /库存|库存件数|数量|存货|余量|现货/); if (n) push('stock', n); }
-    if (/(预警阈值|预警|警戒|提醒阈值|低于|补货)/.test(ln)) { const n = numAfter(ln, /预警阈值|预警|警戒|提醒阈值|低于|补货/); if (n) push('warn', n); }
-  }
-  // ④生产日期
-  for (const ln of lines) { if (/(生产日期|出厂日期|生产时间|生产)/.test(ln)) { const d = findDate(ln); if (d) push('prod', d); } }
-  // ⑤保质期
-  for (const ln of lines) { if (/(保质期|有效期|保质)/.test(ln)) { const m = ln.match(/(\d+(?:\.\d+)?)\s*(?:个)?\s*月/); if (m) push('shelf', m[1]); else { const d = findDate(ln); if (d) push('shelf', d); } } }
-  // ⑥排序 / 角标 / 简介 / 视频
-  for (const ln of lines) {
-    if (/(排序值|排序|优先级)/.test(ln)) { const n = numAfter(ln, /排序值|排序|优先级/); if (n) push('sort', n); }
-    if (/(角标|标签|角标文字)/.test(ln)) { const v = ln.replace(/^[\s\【\[]*(?:角标|标签|角标文字)[：:\s]+/, '').trim(); if (v) push('hot', v); }
-    if (/(简短简介|简介|描述|产品简介|卖点|亮点)/.test(ln)) { const v = ln.replace(/^[\s\【\[]*(?:简短简介|简介|描述|产品简介|卖点|亮点)[：:\s]+/, '').trim(); if (v) push('intro', v); }
-    if (/(视频链接|视频|抖音|B站|Tencent|腾讯视频|优酷|爱奇艺)/i.test(ln)) { const m = ln.match(/(https?:\/\/[^\s]+)/); if (m) push('video', m[1]); }
-  }
-  // ⑦任意行的图片链接
-  const imgUrls = [];
-  for (const ln of lines) { const ms = ln.match(/(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp))(?:\?[^\s]*)?/gi); if (ms) imgUrls.push(...ms); }
-  if (imgUrls.length) push('images', imgUrls.join('\n'));
-  // ⑧未识别到任何字段标签 + 整段无结构化关键词 → 启发式：把整段作为详情，从首段截取短名称
-  const hasStructured = lines.some(l => /(名称|商品|分类|零售|售价|会员|库存|保质|生产|简介|描述|卖点|亮点|视频|图片|链接|价格|标题)/.test(l));
-  if (!hasStructured && text.length >= 8) {
-    // 把整段塞入详情
-    push('detail', text.replace(/\n/g, '<br>'));
-    // 名称兜底：从第一个逗号、句号、或 30 字前截取
-    if (!name) {
-      const firstSeg = text.split(/[，,。！？!?；;]/)[0].trim();
-      const guess = firstSeg.length <= 30 ? firstSeg : firstSeg.slice(0, 30).trim();
-      if (guess) push('name', guess);
+  // 写入收集器（同 key 重复时合并）
+  const detected = [];
+  const push = (k, v) => {
+    if (v == null) return;
+    const sv = String(v).trim();
+    if (!sv) return;
+    const idx = detected.findIndex(d => d.key === k);
+    if (idx >= 0) detected[idx].value = detected[idx].value + '\n' + sv;
+    else detected.push({ key: k, value: sv });
+  };
+  // 数字/日期类字段处理（输入 value 可能是含其他文字的一行）
+  const handleValue = (key, value) => {
+    if (value == null || value === '') return;
+    if (key === 'retail' || key === 'member' || key === 'stock' || key === 'warn' || key === 'sort') {
+      const n = normalizeNumField(key === 'shelf' ? 'shelf' : key, value);
+      if (n) push(key, n);
+    } else if (key === 'prod') {
+      const d = dateAny(value);
+      if (d) push(key, d);
+    } else if (key === 'shelf') {
+      const m = monthAny(value) || dateAny(value) || numAny(value);
+      if (m) push(key, m);
+    } else if (key === 'video') {
+      const u = urlAny(value) || value;
+      push(key, u);
+    } else if (key === 'images') {
+      push(key, value);
+    } else {
+      push(key, value);
     }
+  };
+  // 收集一个标签后到下一个标签前的所有非空行（保留原始换行结构）
+  const collectValueLines = (startIdx, lines) => {
+    const out = [];
+    let i = startIdx;
+    while (i < lines.length) {
+      const r = lines[i];
+      const t = r.trim();
+      if (!t) { out.push(''); i++; continue; }
+      if (RE_LABEL_ONLY.test(t) || RE_LABEL_INLINE.test(t) || parseInlineLabels(t).length > 0) break;
+      out.push(r);
+      i++;
+    }
+    return { lines: out, next: i };
+  };
+  // 解析行内所有"标签：值"组合，返回 [{key, value}, ...]
+  function parseInlineLabels(line) {
+    const re = new RegExp('(' + labelAlt + ')\\s*[:：]\\s*', 'g');
+    const matches = [];
+    let m;
+    while ((m = re.exec(line)) !== null) {
+      matches.push({ label: m[1], headerEnd: m.index + m[0].length });
+    }
+    if (!matches.length) return [];
+    if (matches.length === 1) {
+      const v = line.slice(matches[0].headerEnd).trim();
+      return [{ key: LABEL_MAP[matches[0].label], value: v }];
+    }
+    const result = [];
+    for (let i = 0; i < matches.length; i++) {
+      const cur = matches[i];
+      const next = matches[i + 1];
+      const valueEnd = next ? next.start : line.length;
+      const v = line.slice(cur.headerEnd, valueEnd).trim();
+      if (v) result.push({ key: LABEL_MAP[cur.label], value: v });
+    }
+    return result;
+  }
+  const lines = text.split(/\r?\n/);
+  const tailLines = [];
+  let hasAnyLabel = false;
+  let i = 0;
+  while (i < lines.length) {
+    const raw = lines[i];
+    const line = raw.trim();
+    if (!line) { i++; continue; }
+    // 尝试行内多标签切分
+    const inlinePairs = parseInlineLabels(line);
+    if (inlinePairs.length > 0) {
+      hasAnyLabel = true;
+      if (inlinePairs.length === 1) {
+        // 单标签同行：value = 同行剩余 + 后续非标签行
+        const key = inlinePairs[0].key;
+        const inlineVal = inlinePairs[0].value;
+        i++;
+        const seg = collectValueLines(i, lines);
+        const combined = (inlineVal + '\n' + seg.lines.join('\n')).trim();
+        if (combined) handleValue(key, combined);
+        i = seg.next;
+      } else {
+        // 同行多标签：每个 value 限定在同行内（标签1到标签2之间）
+        for (const p of inlinePairs) handleValue(p.key, p.value);
+        i++;
+      }
+      continue;
+    }
+    // 纯标签行（无冒号/无值）→ 标签+后续行模式
+    const m1 = line.match(RE_LABEL_ONLY);
+    if (m1) {
+      hasAnyLabel = true;
+      const key = LABEL_MAP[m1[1].trim()];
+      i++;
+      const seg = collectValueLines(i, lines);
+      const flat = seg.lines.join('\n').trim();
+      if (flat) handleValue(key, flat);
+      i = seg.next;
+      continue;
+    }
+    // 散落行
+    tailLines.push(raw);
+    i++;
+  }
+  // 散落文字：拼成详情；提取【xxx】当名称
+  if (tailLines.length) {
+    const tailText = tailLines.join('\n').trim();
+    if (tailText) {
+      push('detail', tailText.replace(/\n/g, '<br>'));
+      if (!detected.find(d => d.key === 'name')) {
+        const bracket = tailText.match(/[【\[]([^\]【】\n]{2,40})[】\]]/);
+        if (bracket) push('name', bracket[1].trim());
+        else if (!hasAnyLabel && forceName) {
+          const firstSeg = tailText.split(/[，,。！？!?；;\n]/)[0].trim();
+          if (firstSeg) push('name', firstSeg.length <= 30 ? firstSeg : firstSeg.slice(0, 30));
+        }
+      }
+    }
+  }
+  // 任何时候都尝试从整段里抓【xxx】当名称兜底（不覆盖已有名称）
+  if (!detected.find(d => d.key === 'name')) {
+    const bracket = text.match(/[【\[]([^\]【】\n]{2,40})[】\]]/);
+    if (bracket) push('name', bracket[1].trim());
   }
   const labels = applyDetected(detected);
   if (labels.length) {
     setRecTip('pf_paste_tip', '✓ 已自动填入 ' + labels.length + ' 项：' + labels.join(' / '), true);
   } else {
-    setRecTip('pf_paste_tip', '未识别到字段，请把信息按\"名称：xxx\"\"零售价：xxx\"等格式换行写，或粘整段商品介绍', false);
+    setRecTip('pf_paste_tip', '未识别到字段。请按"产品简介：xxx"、"产品详情：xxx"等格式换行写，或粘整段商品介绍（【标题】会被自动当作名称）', false);
   }
 }
 // 链接抓取（简化：只解析链接参数，跨域限制的联网抓取路径去掉——已多次验证不可用）
