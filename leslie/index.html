@@ -238,6 +238,18 @@
     #formActionBar .btn{width:100%}
   }
   .help{font-size:12px;color:var(--c-sub);line-height:1.6;background:#fafafa;border:1px solid var(--c-line);border-radius:var(--radius);padding:10px;margin-top:8px}
+.crop-modal{z-index:90}
+.crop-stage{position:relative;display:inline-block;line-height:0;max-width:100%;touch-action:none;-webkit-user-select:none;user-select:none}
+.crop-stage>img{max-width:100%;max-height:56vh;width:auto;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
+.crop-box{position:absolute;border:2px solid #fff;background-color:rgba(255,255,255,.10);background-image:linear-gradient(rgba(255,255,255,.45) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.45) 1px,transparent 1px);background-size:33.33% 33.33%;box-shadow:0 0 0 1px rgba(0,0,0,.25);box-sizing:border-box;cursor:move;touch-action:none}
+.crop-box .ch{position:absolute;width:18px;height:18px;background:#fff;border:2px solid var(--c-primary);border-radius:50%;box-sizing:border-box;z-index:2}
+.crop-box .ch.tl{left:-9px;top:-9px;cursor:nwse-resize}
+.crop-box .ch.tr{right:-9px;top:-9px;cursor:nesw-resize}
+.crop-box .ch.bl{left:-9px;bottom:-9px;cursor:nesw-resize}
+.crop-box .ch.br{right:-9px;bottom:-9px;cursor:nwse-resize}
+.crop-ratios{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ar-btn{padding:5px 12px;font-size:13px;border:1px solid var(--c-line);border-radius:20px;background:#fff;color:var(--c-sub);cursor:pointer;line-height:1}
+.ar-btn.active{background:var(--c-primary);color:#fff;border-color:var(--c-primary)}
   .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:14px;z-index:90;opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1}
   .empty{padding:50px 20px;text-align:center;color:var(--c-sub);font-size:14px}
@@ -569,6 +581,121 @@ function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">"
 function plain(t){const d=document.createElement("div");d.innerHTML=t||"";return (d.textContent||"").replace(/\s+/g," ").trim();}
 async function fileToCompressedDataURL(file,maxW=1200,q=0.82){return new Promise((res,rej)=>{var r=new FileReader();r.onload=function(){var raw=r.result;var img=new Image();img.onload=function(){try{var w=img.naturalWidth||img.width||0,h=img.naturalHeight||img.height||0;if(!w||!h){res(raw);return;}if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}var c=document.createElement("canvas");c.width=w;c.height=h;var ctx=c.getContext("2d");ctx.fillStyle="#ffffff";ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);var out=c.toDataURL("image/jpeg",q);if(!out||out.length<200)out=raw;res(out);}catch(e){res(raw);}};img.onerror=function(){res(raw);};img.src=raw;};r.onerror=rej;r.readAsDataURL(file);});}
 async function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
+/* ============ 图片裁剪 ============ */
+function openCropper(file,opts){
+  opts=opts||{};
+  var maxW=opts.maxW||1200,q=opts.q||0.82,aspect=opts.aspect||0;
+  return new Promise(function(resolve){
+    try{
+      fileToDataURL(file).then(function(src){
+        var img=new Image();
+        img.onload=function(){
+          var natW=img.naturalWidth||img.width, natH=img.naturalHeight||img.height;
+          if(!natW||!natH){resolve(null);return;}
+          var modal=document.createElement("div");
+          modal.className="modal crop-modal";
+          modal.innerHTML='<div class="box" style="max-width:520px">'
+            +'<h3 style="margin:0 0 4px;font-size:16px">裁剪图片</h3>'
+            +'<div style="font-size:12px;color:var(--c-sub);margin-bottom:10px">拖动选框移动位置，拖四角缩放；不想裁就点「不裁剪，直接用」</div>'
+            +'<div class="crop-stage" id="cropStage"><img id="cropImg" src="'+src+'" draggable="false">'
+            +'<div class="crop-box" id="cropBox"><span class="ch tl"></span><span class="ch tr"></span><span class="ch bl"></span><span class="ch br"></span></div></div>'
+            +'<div class="crop-ratios" id="cropRatios">'
+            +'<button type="button" data-ar="0" class="ar-btn">自由</button>'
+            +'<button type="button" data-ar="1" class="ar-btn">1:1</button>'
+            +'<button type="button" data-ar="0.75" class="ar-btn">3:4</button>'
+            +'<button type="button" data-ar="1.3333" class="ar-btn">4:3</button>'
+            +'<button type="button" data-ar="1.7778" class="ar-btn">16:9</button>'
+            +'</div>'
+            +'<div class="btn-row" style="margin-top:12px">'
+            +'<button type="button" class="btn sm" id="cropCancel">取消</button>'
+            +'<button type="button" class="btn sm" id="cropSkip">不裁剪，直接用</button>'
+            +'<button type="button" class="btn sm primary" id="cropOk">裁剪并保存</button>'
+            +'</div></div>';
+          document.body.appendChild(modal);
+          var stage=modal.querySelector("#cropStage");
+          var cropImg=modal.querySelector("#cropImg");
+          var box=modal.querySelector("#cropBox");
+          var dispW=0,dispH=0,bx=0,by=0,bw=0,bh=0,ar=aspect;
+          function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+          function applyBox(){box.style.left=bx+"px";box.style.top=by+"px";box.style.width=bw+"px";box.style.height=bh+"px";}
+          function setAr(na){
+            ar=na;
+            modal.querySelectorAll(".ar-btn").forEach(function(b){b.classList.toggle("active",parseFloat(b.getAttribute("data-ar"))===ar);});
+            if(ar){
+              var nw=bw,nh=nw/ar;
+              if(nh>dispH){nh=dispH;nw=nh*ar;}
+              bw=nw;bh=nh;bx=(dispW-nw)/2;by=(dispH-nh)/2;applyBox();
+            }
+          }
+          function initBox(){
+            var r=cropImg.getBoundingClientRect();
+            dispW=r.width||Math.min(480,natW); dispH=r.height||Math.min(360,natH);
+            stage.style.width=dispW+"px"; stage.style.height=dispH+"px";
+            bw=dispW*0.8; bh=dispH*0.8; bx=(dispW-bw)/2; by=(dispH-bh)/2;
+            applyBox(); setAr(ar);
+          }
+          requestAnimationFrame(initBox);
+          function getPt(e){return {x:e.clientX,y:e.clientY};}
+          function startDrag(e,mode){
+            e.preventDefault(); e.stopPropagation();
+            var pt=getPt(e),sx=pt.x,sy=pt.y,ox=bx,oy=by,ow=bw,oh=bh;
+            function move(ev){
+              var p=getPt(ev),dx=p.x-sx,dy=p.y-sy;
+              if(mode==="move"){ bx=clamp(ox+dx,0,dispW-ow); by=clamp(oy+dy,0,dispH-oh); }
+              else{
+                var nx=ox,ny=oy,nw=ow,nh=oh;
+                if(mode==="br"){nw=ow+dx;nh=oh+dy;}
+                else if(mode==="tl"){nx=ox+dx;ny=oy+dy;nw=ow-dx;nh=oh-dy;}
+                else if(mode==="tr"){ny=oy+dy;nw=ow+dx;nh=oh-dy;}
+                else if(mode==="bl"){nx=ox+dx;nw=ow-dx;nh=oh+dy;}
+                nw=Math.max(24,nw); nh=Math.max(24,nh);
+                if(ar){
+                  nh=nw/ar;
+                  if(mode==="tl"){nx=ox+ow-nw;ny=oy+oh-nh;}
+                  else if(mode==="tr"){ny=oy+oh-nh;}
+                  else if(mode==="bl"){nx=ox+ow-nw;}
+                }
+                bx=clamp(nx,0,dispW-nw); by=clamp(ny,0,dispH-nh); bw=nw; bh=nh;
+              }
+              applyBox();
+            }
+            function up(){document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);}
+            document.addEventListener("pointermove",move);
+            document.addEventListener("pointerup",up);
+          }
+          box.addEventListener("pointerdown",function(e){startDrag(e,"move");});
+          box.querySelectorAll(".ch").forEach(function(h){
+            h.addEventListener("pointerdown",function(e){
+              var cls=h.className.indexOf("tl")>=0?"tl":h.className.indexOf("tr")>=0?"tr":h.className.indexOf("bl")>=0?"bl":"br";
+              startDrag(e,cls);
+            });
+          });
+          modal.querySelectorAll(".ar-btn").forEach(function(b){b.onclick=function(){setAr(parseFloat(b.getAttribute("data-ar")));};});
+          function finish(useCrop){
+            var scaleX=natW/dispW, scaleY=natH/dispH, out=null;
+            if(useCrop){
+              var sx=bx*scaleX,sy=by*scaleY,sw=bw*scaleX,sh=bh*scaleY;
+              if(sw>0&&sh>0){
+                var sc=Math.min(1,maxW/(sw||1)),cw=Math.max(1,Math.round(sw*sc)),chh=Math.max(1,Math.round(sh*sc));
+                var c=document.createElement("canvas");c.width=cw;c.height=chh;
+                var ctx=c.getContext("2d");
+                try{ctx.drawImage(img,sx,sy,sw,sh,0,0,cw,chh);out=c.toDataURL("image/jpeg",q);}catch(err){out=null;}
+                if(!out||out.length<200)out=null;
+              }
+            }
+            if(modal.parentNode)modal.remove();
+            resolve(out);
+          }
+          modal.querySelector("#cropCancel").onclick=function(){if(modal.parentNode)modal.remove();resolve(null);};
+          modal.querySelector("#cropSkip").onclick=function(){fileToCompressedDataURL(file,maxW,q).then(function(d){if(modal.parentNode)modal.remove();resolve(d);});};
+          modal.querySelector("#cropOk").onclick=function(){finish(true);};
+        };
+        img.onerror=function(){resolve(null);};
+        img.src=src;
+      },function(){resolve(null);});
+    }catch(err){resolve(null);}
+  });
+}
 function applyTheme(){
   const c=STATE.settings.shop.colors,s=STATE.settings.shop;
   const root=document.documentElement.style;
@@ -925,8 +1052,8 @@ function openMomentsHome(){
     <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="mhCancel">取消</button><button class="btn primary" id="mhSave">保存</button></div></div>`;
   document.body.appendChild(modal);
   let cover=m.cover,av=m.author.avatar;
-  modal.querySelector("#mhCover").onchange=async e=>{const f=e.target.files[0];if(f){cover=await fileToCompressedDataURL(f,1200,0.82);modal.querySelector("#mhCn").textContent=f.name;}};
-  modal.querySelector("#mhAv").onchange=async e=>{const f=e.target.files[0];if(f){av=await fileToCompressedDataURL(f,200,0.9);modal.querySelector("#mhAn").textContent=f.name;}};
+  modal.querySelector("#mhCover").onchange=async e=>{const f=e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:1200,q:0.82,aspect:1.7778});if(r==null){e.target.value="";return;}cover=r;modal.querySelector("#mhCn").textContent=f.name;};
+  modal.querySelector("#mhAv").onchange=async e=>{const f=e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:200,q:0.9,aspect:1});if(r==null){e.target.value="";return;}av=r;modal.querySelector("#mhAn").textContent=f.name;};
   modal.querySelector("#mhCancel").onclick=()=>modal.remove();
   modal.querySelector("#mhSave").onclick=async()=>{m.cover=cover;m.author.avatar=av;m.author.nickname=modal.querySelector("#mhName").value.trim()||"店铺";m.auditMode=modal.querySelector("#mhAudit").value;await Store.saveAll();modal.remove();renderMomentsTab(document.getElementById("pbody"));toast("已保存主页设置");};
 }
@@ -950,7 +1077,7 @@ function openMomentEditor(id){
   document.body.appendChild(modal);
   let imgs=(f.imgs||[]).slice(),video=f.video||"",savedDraft=false;
   const saveDraft=()=>{localStorage.setItem(MOMENT_DRAFT_KEY,JSON.stringify({text:modal.querySelector("#meText").value,imgs,video,productId:modal.querySelector("#meProd").value}));};
-  modal.querySelector("#meImgs").onchange=async e=>{const fs=[...e.target.files].slice(0,9);imgs=[];for(const file of fs)imgs.push(await fileToCompressedDataURL(file,1200,0.82));modal.querySelector("#meImgsN").textContent=imgs.length+" 张已选";if(modal.querySelector("#meImgsPrev"))modal.querySelector("#meImgsPrev").innerHTML=imgs.map(src=>`<img src="${src}" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--c-line)">`).join("");saveDraft();};
+  modal.querySelector("#meImgs").onchange=async e=>{const fs=[...e.target.files].slice(0,9);imgs=[];for(const file of fs){var r=await openCropper(file,{maxW:1200,q:0.82});if(r!=null)imgs.push(r);}modal.querySelector("#meImgsN").textContent=imgs.length+" 张已选";if(modal.querySelector("#meImgsPrev"))modal.querySelector("#meImgsPrev").innerHTML=imgs.map(src=>`<img src="${src}" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--c-line)">`).join("");saveDraft();};
   modal.querySelector("#meVideo").onchange=async e=>{const file=e.target.files[0];if(file){video=await fileToDataURL(file);modal.querySelector("#meVideoN").textContent=file.name;saveDraft();}};
   modal.querySelector("#meWhen").onchange=()=>{modal.querySelector("#meSchWrap").style.display=modal.querySelector("#meWhen").value==="schedule"?"block":"none";};
   const close=()=>modal.remove();
@@ -1010,7 +1137,7 @@ function openVirtualUsers(){
       <div class="field"><label>昵称</label><input id="veNm" value="${esc(v.nickname||"")}" placeholder="如：小美 / 妆容达人Lisa"></div>
       <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="veC">取消</button><button class="btn primary" id="veS">保存</button></div></div>`;
     document.body.appendChild(fm);let av=v.avatar||"";
-    fm.querySelector("#veAv").onchange=async e=>{const f=e.target.files[0];if(f){try{av=await fileToCompressedDataURL(f,120,0.9);fm.querySelector("#veAn").textContent=f.name+" ✓";var _pv=fm.querySelector("#vePv");if(_pv)_pv.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;display:block">';}catch(err){console.error("avatar load err",err);fm.querySelector("#veAn").textContent="读取失败";toast("头像读取失败，请重试");}}};
+    fm.querySelector("#veAv").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{var r=await openCropper(f,{maxW:120,q:0.9,aspect:1});if(r==null){e.target.value="";return;}av=r;fm.querySelector("#veAn").textContent=f.name+" ✓";var _pv=fm.querySelector("#vePv");if(_pv)_pv.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;display:block">';}catch(err){console.error("avatar load err",err);fm.querySelector("#veAn").textContent="读取失败";toast("头像读取失败，请重试");}};
     fm.querySelector("#veC").onclick=()=>fm.remove();
     fm.querySelector("#veS").onclick=async()=>{const nm=fm.querySelector("#veNm").value.trim();if(!nm){toast("请填昵称");return;}v.avatar=av;v.nickname=nm;if(isNew)vs.push(v);await Store.saveAll();fm.remove();renderV();toast("已保存");};
   };
@@ -1207,9 +1334,9 @@ function getActValue(){
     if(pv){const t=plain(rte.innerHTML);pv.textContent=t.length?t.slice(0,40)+(t.length>40?'…':''):'空';}
   });
 })();
-document.getElementById("f_imgs").onchange=async e=>{for(const f of Array.from(e.target.files||[]))if(f.type.startsWith("image/"))FORM.images.push(await fileToCompressedDataURL(f));renderThumbs();toast("图片已加入（可点✎在线编辑）");};
+document.getElementById("f_imgs").onchange=async e=>{for(const f of Array.from(e.target.files||[])){if(!f.type.startsWith("image/"))continue;var r=await openCropper(f);if(r==null)continue;FORM.images.push(r);}renderThumbs();toast("图片已加入（可点✎在线编辑）");};
 document.getElementById("f_video").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>30*1024*1024){toast("视频超过30MB，建议压缩");return;}FORM.video=await fileToDataURL(f);document.getElementById("f_video_name").textContent=f.name;};
-document.getElementById("f_long").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;FORM.longImage=await fileToCompressedDataURL(f,1600,0.85);document.getElementById("f_long_name").textContent=f.name;};
+document.getElementById("f_long").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:1600,q:0.85});if(r==null){e.target.value="";return;}FORM.longImage=r;document.getElementById("f_long_name").textContent=f.name;};
 document.getElementById("formCancel").onclick=()=>{document.getElementById("formModal").classList.add("hidden");};
 document.getElementById("formPreview").onclick=()=>previewProduct();
 document.getElementById("formSave").onclick=async()=>{
@@ -1592,7 +1719,7 @@ function openSerForm(s){
     <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="sfCancel">取消</button><button class="btn primary" id="sfSave">保存</button></div></div>`;
   document.body.appendChild(m);
   let cover=(s&&s.cover)||"";
-  m.querySelector("#sf_cover").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(f){cover=await fileToCompressedDataURL(f);m.querySelector("#sf_cn").textContent=f.name;}};
+  m.querySelector("#sf_cover").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;var r=await openCropper(f,{aspect:1.7778});if(r==null){e.target.value="";return;}cover=r;m.querySelector("#sf_cn").textContent=f.name;};
   m.querySelector("#sfCancel").onclick=()=>m.remove();
   m.querySelector("#sfSave").onclick=async()=>{const name=m.querySelector("#sf_name").value.trim();if(!name){toast("请填名称");return;}
     if(s){s.name=name;s.cover=cover;s.desc=m.querySelector("#sf_desc").value.trim();}
@@ -1628,7 +1755,7 @@ function openSecForm(s){
     <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="sfCancel">取消</button><button class="btn primary" id="sfSave">保存</button></div></div>`;
   document.body.appendChild(m);
   let cover=(s&&s.cover)||"";let filter=(s&&s.filter)||{type:"all",value:[]};
-  m.querySelector("#sf_cover").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(f){cover=await fileToCompressedDataURL(f);m.querySelector("#sf_cn").textContent=f.name;}};
+  m.querySelector("#sf_cover").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;var r=await openCropper(f,{aspect:1.7778});if(r==null){e.target.value="";return;}cover=r;m.querySelector("#sf_cn").textContent=f.name;};
   const renderFval=()=>{const w=m.querySelector("#fvalWrap");const t=m.querySelector("#sf_filter").value;
     if(t==="cat")w.innerHTML=`<select id="sf_cat">${STATE.settings.categories.map(c=>`<option value="${c.id}" ${(filter.type==="cat"&&filter.value===c.id)?"selected":""}>${esc(c.name)}</option>`).join("")}</select>`;
     else if(t==="series")w.innerHTML=`<select id="sf_ser">${STATE.settings.series.map(x=>`<option value="${x.id}" ${(filter.type==="series"&&filter.value===x.id)?"selected":""}>${esc(x.name)}</option>`).join("")}</select>`;
@@ -1727,9 +1854,9 @@ function renderDecorTab(b){
   b.querySelector("#dc_r").oninput=async e=>{sh.radius=+e.target.value;applyThemeLive();};
   b.querySelector("#dc_g").oninput=async e=>{sh.spacing=+e.target.value;applyThemeLive();};
   b.querySelector("#dc_name").onchange=async e=>{sh.name=e.target.value;applyThemeLive();};
-  b.querySelector("#dc_logo").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(f){sh.logo=await fileToCompressedDataURL(f,200,0.9);b.querySelector("#dc_logon").textContent="已设置";applyThemeLive();}};
+  b.querySelector("#dc_logo").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:200,q:0.9,aspect:1});if(r==null){e.target.value="";return;}sh.logo=r;b.querySelector("#dc_logon").textContent="已设置";applyThemeLive();};
   b.querySelector("#dc_sub").onchange=async e=>{sh.subtitle=e.target.value;applyThemeLive();};
-  b.querySelector("#dc_bgimg").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(f){sh.bgImage={src:await fileToCompressedDataURL(f,1200,0.7),tile:false,opacity:1,blur:0};b.querySelector("#dc_bgn").textContent="已设置";applyThemeLive();}};
+  b.querySelector("#dc_bgimg").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:1200,q:0.7});if(r==null){e.target.value="";return;}sh.bgImage={src:r,tile:false,opacity:1,blur:0};b.querySelector("#dc_bgn").textContent="已设置";applyThemeLive();};
   b.querySelector("#dc_wx").onchange=async e=>{sh.contact.wechat=e.target.value;applyThemeLive();};
   b.querySelector("#dc_phone").onchange=async e=>{sh.contact.phone=e.target.value;applyThemeLive();};
   b.querySelector("#dc_catstyle").onchange=async e=>{STATE.settings.catTabStyle=e.target.value;applyThemeLive();};
@@ -4371,7 +4498,7 @@ async function _editRedeemItem(id){
     <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="riCancel">取消</button><button class="btn primary" id="riSave">保存</button></div></div>`;
   document.body.appendChild(modal);
   let img=it&&it.img||"",icon=it&&it.icon||"🎁";
-  modal.querySelector("#riImg").onchange=async e=>{const f=e.target.files[0];if(f){img=await fileToCompressedDataURL(f,600,0.82);modal.querySelector("#riImgN").textContent=f.name;}};
+  modal.querySelector("#riImg").onchange=async e=>{const f=e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:600,q:0.82});if(r==null){e.target.value="";return;}img=r;modal.querySelector("#riImgN").textContent=f.name;};
   modal.querySelector("#riCancel").onclick=()=>modal.remove();
   modal.querySelector("#riSave").onclick=async()=>{
     const name=modal.querySelector("#riName").value.trim();if(!name){toast("请填礼品名称");return;}
@@ -4976,7 +5103,7 @@ async function editTutorial(id){
   var url=t?t.url:"",cover=t?t.cover:"",videoFile="";
   modal.querySelector("#tuFile").onchange=async function(e){var f=e.target.files[0];if(!f)return;if(f.size>60*1024*1024){toast("视频超过60MB，建议压缩或用链接");return;}videoFile=await fileToDataURL(f);modal.querySelector("#tuFileN").textContent=f.name;modal.querySelector("#tuUrl").value="";};
   modal.querySelector("#tuUrl").oninput=function(){if(modal.querySelector("#tuUrl").value.trim()){videoFile="";modal.querySelector("#tuFileN").textContent="改用链接";}};
-  modal.querySelector("#tuCover").onchange=async function(e){var f=e.target.files[0];if(f){cover=await fileToCompressedDataURL(f,800,0.82);modal.querySelector("#tuCoverN").textContent=f.name;}};
+  modal.querySelector("#tuCover").onchange=async function(e){var f=e.target.files[0];if(!f)return;var r=await openCropper(f,{maxW:800,q:0.82});if(r==null){e.target.value="";return;}cover=r;modal.querySelector("#tuCoverN").textContent=f.name;};
   modal.querySelector("#tuUseProd").onclick=function(){var pid=modal.querySelector("#tuPid").value;var pr=STATE.products.find(function(x){return x.id===pid;});if(pr&&pr.images&&pr.images[0]){cover=pr.images[0];modal.querySelector("#tuCoverN").textContent="已用产品图";toast("已用关联产品首图");}else toast("请先选择有关联图的产品");};
   modal.querySelector("#tuCancel").onclick=function(){modal.remove();};
   modal.querySelector("#tuSave").onclick=async function(){
@@ -5263,7 +5390,8 @@ function openSheet(opt){
     inp.onchange=function(e){
       var file=e.target.files&&e.target.files[0];if(!file)return;
       pv.textContent="处理中…";
-      fileToCompressedDataURL(file,f.maxW||1200,f.q||0.85).then(function(d){
+      openCropper(file,{maxW:f.maxW||1200,q:f.q||0.85}).then(function(d){
+        if(d==null){pv.textContent="无图";inp.value="";return;}
         if(!d||d.length<200){pv.textContent="失败";toast("图片读取失败，请换一张");return;}
         imgVals[f.k]=d;pv.innerHTML='<img src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block">';
       },function(){pv.textContent="失败";toast("图片读取失败，请换一张");});
