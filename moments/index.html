@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恩子朋友圈排期台</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2430; --sub:#6b7280;
+    --line:#e6e8ec; --brand:#e8506e; --brand2:#ff8aa0;
+    --ok:#16a34a; --warn:#d97706; --blue:#2563eb;
+  }
+  body{ margin:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--ink); font-size:15px; line-height:1.5; }
+  header{ background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#fff;
+    padding:16px 18px; position:sticky; top:0; z-index:20; box-shadow:0 2px 10px rgba(0,0,0,.08);}
+  header h1{ margin:0; font-size:19px; font-weight:700; letter-spacing:.5px;}
+  header p{ margin:4px 0 0; font-size:12px; opacity:.92;}
+  .wrap{ max-width:920px; margin:0 auto; padding:14px;}
+  nav{ display:flex; gap:8px; overflow-x:auto; padding:10px 14px 4px; position:sticky; top:64px;
+    background:var(--bg); z-index:15; border-bottom:1px solid var(--line);}
+  nav button{ flex:0 0 auto; border:none; background:#fff; color:var(--sub); padding:9px 16px;
+    border-radius:20px; font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line);}
+  nav button.on{ background:var(--brand); color:#fff; border-color:var(--brand);}
+  .tab{ display:none; } .tab.on{ display:block; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(0,0,0,.03);}
+  .card h2{ margin:0 0 12px; font-size:16px;}
+  label{ display:block; font-size:13px; color:var(--sub); margin:10px 0 4px; font-weight:600;}
+  input[type=text],input[type=date],input[type=datetime-local],textarea,select{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px;
+    font-size:14px; font-family:inherit; background:#fafbfc; color:var(--ink);}
+  textarea{ resize:vertical; min-height:70px;}
+  .row{ display:flex; gap:10px; flex-wrap:wrap;}
+  .row > *{ flex:1; min-width:140px;}
+  .btn{ border:none; border-radius:10px; padding:11px 16px; font-size:14px; font-weight:700;
+    cursor:pointer; background:var(--brand); color:#fff; }
+  .btn.sec{ background:#fff; color:var(--brand); border:1px solid var(--brand);}
+  .btn.ghost{ background:#f0f1f3; color:var(--ink);}
+  .btn.sm{ padding:7px 12px; font-size:13px; border-radius:8px;}
+  .btn:active{ transform:scale(.98);}
+  .item{ border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px;
+    display:flex; gap:12px; align-items:flex-start;}
+  .item.sel{ border-color:var(--brand); background:#fff5f7;}
+  .item .chk{ width:20px; height:20px; margin-top:3px; flex:0 0 auto;}
+  .item .body{ flex:1; min-width:0;}
+  .item .txt{ white-space:pre-wrap; word-break:break-word; font-size:14px; max-height:90px; overflow:auto;}
+  .item .meta{ font-size:12px; color:var(--sub); margin-top:6px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .tag{ background:#fdeef1; color:var(--brand); padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700;}
+  .thumbs{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .thumbs img{ width:58px; height:58px; object-fit:cover; border-radius:8px; border:1px solid var(--line);}
+  .stat{ display:flex; gap:10px; flex-wrap:wrap;}
+  .stat .b{ flex:1; min-width:90px; background:#fafbfc; border:1px solid var(--line);
+    border-radius:12px; padding:12px; text-align:center;}
+  .stat .b b{ font-size:22px; display:block; color:var(--brand);}
+  .stat .b span{ font-size:12px; color:var(--sub);}
+  .toolbar{ position:sticky; bottom:0; background:#fff; border-top:1px solid var(--line);
+    padding:12px 14px; display:flex; gap:10px; align-items:center; z-index:15;}
+  .toolbar .info{ flex:1; font-size:13px; color:var(--sub);}
+  .due{ border-color:var(--warn)!important; background:#fffaf0!important;}
+  .due .meta{ color:var(--warn); font-weight:700;}
+  .pill{ display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700;}
+  .pill.p{ background:#fff3cd; color:var(--warn);}
+  .pill.s{ background:#dcfce7; color:var(--ok);}
+  .pill.k{ background:#f0f1f3; color:var(--sub);}
+  details{ margin-top:10px; font-size:13px; color:var(--sub);}
+  summary{ cursor:pointer; font-weight:700; color:var(--ink);}
+  details p,details li{ margin:6px 0;}
+  .note{ background:#fffaf0; border:1px solid #fde2b3; color:#8a5a00; border-radius:10px;
+    padding:10px 12px; font-size:13px; margin-bottom:12px;}
+  .empty{ text-align:center; color:var(--sub); padding:30px 10px; font-size:14px;}
+  .toast{ position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1f2430;
+    color:#fff; padding:10px 18px; border-radius:24px; font-size:14px; z-index:50; opacity:0;
+    transition:opacity .25s; pointer-events:none;}
+  .toast.show{ opacity:1;}
+  .countdown{ font-variant-numeric:tabular-nums; font-weight:700; color:var(--warn);}
+  .filebox{ border:1px dashed var(--line); border-radius:10px; padding:10px; font-size:13px; color:var(--sub);}
+</style>
+</head>
+<body>
+<header>
+  <h1>恩子朋友圈排期台</h1>
+  <p>本地工具 · 数据只存你电脑 · 安全半自动发圈（零封号风险）</p>
+</header>
+
+<nav>
+  <button data-tab="lib" class="on">📚 内容库</button>
+  <button data-tab="plan">🗓️ 排期</button>
+  <button data-tab="publish">📡 发布台</button>
+  <button data-tab="help">💡 怎么用</button>
+</nav>
+
+<!-- 内容库 -->
+<div class="wrap">
+<div id="tab-lib" class="tab on">
+  <div class="card">
+    <h2>➕ 添加一条内容</h2>
+    <label>文案</label>
+    <textarea id="add-text" placeholder="把你要发圈的文字贴这里…"></textarea>
+    <label>图片（多个网址用逗号分隔，可留空）</label>
+    <input type="text" id="add-img" placeholder="https://…jpg , https://…png">
+    <label>或本地选图（会变成体积较大的数据，少用）</label>
+    <div class="filebox"><input type="file" id="add-file" accept="image/*" multiple></div>
+    <label>来源</label>
+    <select id="add-src">
+      <option value="微脉相册">微脉相册</option>
+      <option value="水印相机">水印相机</option>
+      <option value="微商相机">微商相机</option>
+      <option value="自己朋友圈">自己朋友圈</option>
+      <option value="其他">其他</option>
+    </select>
+    <div style="margin-top:12px"><button class="btn" onclick="addItem()">保存到内容库</button></div>
+  </div>
+
+  <div class="card">
+    <h2>📥 批量导入（从那几个 App 导出后贴进来）</h2>
+    <p style="font-size:13px;color:var(--sub);margin:0 0 8px">每条内容之间用空行分隔；图片网址跟在文案下一行（也用逗号分隔）。来源统一选一个。</p>
+    <textarea id="bulk-text" placeholder="【示例】
+今天店里来了个姐姐，做了神仙草护理，皮肤亮了一个度✨
+https://a.jpg,https://b.jpg
+
+第二条文案放这里…
+https://c.jpg"></textarea>
+    <div class="row" style="margin-top:8px">
+      <div><label>这批来源</label>
+        <select id="bulk-src">
+          <option value="微脉相册">微脉相册</option>
+          <option value="水印相机">水印相机</option>
+          <option value="微商相机">微商相机</option>
+          <option value="自己朋友圈">自己朋友圈</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end"><button class="btn sec" onclick="bulkImport()">批量导入</button></div>
+    </div>
+    <p style="font-size:12px;color:var(--sub);margin:8px 0 0">也可以直接上传 .json / .csv 备份文件：</p>
+    <div class="filebox"><input type="file" id="bulk-file" accept=".json,.csv" onchange="importFile(event)"></div>
+  </div>
+
+  <div class="card">
+    <h2>🔎 内容库（点左边框选中）</h2>
+    <div class="row" style="margin-bottom:8px">
+      <div><select id="filter-src" onchange="renderLib()">
+        <option value="">全部来源</option>
+        <option value="微脉相册">微脉相册</option>
+        <option value="水印相机">水印相机</option>
+        <option value="微商相机">微商相机</option>
+        <option value="自己朋友圈">自己朋友圈</option>
+        <option value="其他">其他</option>
+      </select></div>
+      <div style="display:flex;gap:8px;align-items:flex-end">
+        <button class="btn ghost sm" onclick="selectAll(true)">全选</button>
+        <button class="btn ghost sm" onclick="selectAll(false)">取消</button>
+        <button class="btn ghost sm" onclick="delSelected()">删除选中</button>
+      </div>
+    </div>
+    <div id="lib-list"></div>
+  </div>
+</div>
+
+<!-- 排期 -->
+<div id="tab-plan" class="tab">
+  <div class="card">
+    <h2>🗓️ 把选中的内容排进时间表</h2>
+    <div class="note">在「内容库」里先勾选要发的条数（比如 10 条），再到这里设时间。</div>
+    <div class="row">
+      <div><label>发布日期</label><input type="date" id="plan-date"></div>
+      <div><label>铺排方式</label>
+        <select id="plan-mode">
+          <option value="even">均匀铺满（8:00–22:00 自动均分）</option>
+          <option value="hour">每小时 1 条</option>
+          <option value="manual">先生成，再手动改每条时间</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px"><button class="btn" onclick="makeSchedule()">把已选内容排进去</button>
+      <span id="plan-info" style="font-size:13px;color:var(--sub);margin-left:10px"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>📋 当前排期</h2>
+    <div id="plan-list"></div>
+  </div>
+</div>
+
+<!-- 发布台 -->
+<div id="tab-publish" class="tab">
+  <div class="card">
+    <h2>📡 发布台（到点提醒 · 半自动发）</h2>
+    <div class="note">⚠️ 安全说明：微信没有官方自动发圈接口，真·全自动会封号。这里用最稳的方式——<b>到点把文案和图备好，你点「复制文案」进微信粘贴、选图、发布</b>。零封号风险。</div>
+    <div id="publish-list"></div>
+  </div>
+</div>
+
+<!-- 怎么用 -->
+<div id="tab-help" class="tab">
+  <div class="card">
+    <h2>💡 怎么把那几个 App 的数据弄进来</h2>
+    <details open>
+      <summary>微脉相册 / 水印相机 / 微商相机（怎么导出）</summary>
+      <p>这三个都是手机 App，<b>没有公开接口</b>，工具没法直接登录抓取。最稳的办法：</p>
+      <ul>
+        <li><b>逐条复制</b>：在 App 里打开你发过的内容 → 长按复制文字 → 把图也「分享/复制链接」→ 回这个工具「添加一条」粘贴。</li>
+        <li><b>批量省事</b>：把多条文案按"空行分隔"贴在「批量导入」框，图网址跟在下面。一次导一堆。</li>
+        <li>如果 App 有「导出备份 / 生成网页」功能，导出成文件后，用本工具的「上传 .json / .csv」直接吃。</li>
+      </ul>
+      <p style="color:#b45">不碰逆向/破解接口——那违反平台规则、随时失效，还容易把号搞出问题。</p>
+    </details>
+    <details>
+      <summary>自己的朋友圈（以前发过的）</summary>
+      <p>个人微信朋友圈同样<b>没有官方抓取接口</b>。如果你之前用电脑版微信做过「聊天/朋友圈备份」，或手动存过文案，可以整理成文件导入。真要从微信里自动抓历史朋友圈，同样要走那条高风险协议路，东哥不建议拿主号试。</p>
+    </details>
+    <details>
+      <summary>一键全自动发圈（风险告知）</summary>
+      <p>市面上"自动发朋友圈"底层都是模拟微信协议（WeChaty / pad 协议），<b>微信风控很凶，封号概率高</b>，且多数要付费中转服务、随时可能被封。你这号是生意命脉，<b>默认用上面的半自动最稳</b>。真想上全自动，咱单独聊、且务必用小号先试。</p>
+    </details>
+  </div>
+  <div class="card">
+    <h2>📊 数据备份</h2>
+    <p style="font-size:13px;color:var(--sub)">所有数据存在你浏览器本地。换电脑/清缓存会丢，记得定期导出备份。</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn sec sm" onclick="exportData()">导出备份(JSON)</button>
+      <button class="btn ghost sm" onclick="importBackup()">导入备份</button>
+      <button class="btn ghost sm" onclick="clearAll()">清空全部</button>
+    </div>
+    <input type="file" id="backup-file" accept=".json" style="display:none" onchange="loadBackup(event)">
+  </div>
+</div>
+</div>
+
+<div class="toolbar" id="lib-toolbar" style="display:none">
+  <div class="info">已选 <b id="sel-count">0</b> 条</div>
+  <button class="btn sm" onclick="switchTab('plan')">去排期 →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS='enzi_moments_v1';
+let DB=load();
+let selected=new Set();
+
+function load(){ try{return JSON.parse(localStorage.getItem(LS))||{items:[],plans:[]}}catch(e){return{items:[],plans:[]}} }
+function save(){ localStorage.setItem(LS,JSON.stringify(DB)); }
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1600); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function switchTab(name){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  document.getElementById('lib-toolbar').style.display = name==='lib'?'flex':'none';
+  if(name==='lib') renderLib();
+  if(name==='plan') renderPlan();
+  if(name==='publish') renderPublish();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+/* ---------- 内容库 ---------- */
+function fileToB64(file){ return new Promise(r=>{ const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(file); }); }
+
+async function addItem(){
+  const text=document.getElementById('add-text').value.trim();
+  if(!text){ toast('文案不能为空'); return; }
+  let imgs=document.getElementById('add-img').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const files=document.getElementById('add-file').files;
+  for(const f of files){ imgs.push(await fileToB64(f)); }
+  DB.items.unshift({id:uid(),text,images:imgs,source:document.getElementById('add-src').value,createdAt:Date.now()});
+  save();
+  document.getElementById('add-text').value=''; document.getElementById('add-img').value='';
+  document.getElementById('add-file').value='';
+  toast('已保存到内容库'); renderLib();
+}
+
+function bulkImport(){
+  const raw=document.getElementById('bulk-text').value.trim();
+  if(!raw){ toast('先粘贴内容'); return; }
+  const blocks=raw.split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);
+  let n=0;
+  for(const b of blocks){
+    const lines=b.split('\n');
+    const text=lines[0].trim();
+    let imgs=[];
+    if(lines.length>1){ imgs=lines[1].split(',').map(s=>s.trim()).filter(Boolean); }
+    DB.items.unshift({id:uid(),text,images:imgs,source:document.getElementById('bulk-src').value,createdAt:Date.now()});
+    n++;
+  }
+  save(); document.getElementById('bulk-text').value='';
+  toast('导入 '+n+' 条'); renderLib();
+}
+
+function importFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      let arr=[];
+      if(f.name.endsWith('.json')){ const d=JSON.parse(r.result); arr=Array.isArray(d)?d:(d.items||[]); }
+      else { const lines=r.result.trim().split('\n'); const head=lines[0].split(',');
+        arr=lines.slice(1).map(l=>{ const c=l.split(','); return {text:c[0]||'',images:c[1]?c[1].split('|'):[],source:c[2]||'其他'}; }); }
+      let n=0;
+      for(const it of arr){ if(!it.text) continue;
+        DB.items.unshift({id:uid(),text:it.text,images:it.images||[],source:it.source||'其他',createdAt:Date.now()}); n++; }
+      save(); toast('导入 '+n+' 条'); renderLib();
+    }catch(err){ toast('文件格式不对'); }
+  };
+  r.readAsText(f);
+}
+
+function renderLib(){
+  const f=document.getElementById('filter-src').value;
+  const list=DB.items.filter(i=>!f||i.source===f);
+  const el=document.getElementById('lib-list');
+  if(!list.length){ el.innerHTML='<div class="empty">还没有内容，先添加或批量导入吧</div>'; updateSel(); return; }
+  el.innerHTML=list.map(i=>`
+      <div class="item ${selected.has(i.id)?'sel':''}" onclick="toggleSel('${i.id}')">
+      <input type="checkbox" class="chk" ${selected.has(i.id)?'checked':''} onclick="toggleSel('${i.id}');event.stopPropagation()">
+      <div class="body">
+        <div class="txt">${esc(i.text)}</div>
+        ${i.images&&i.images.length?`<div class="thumbs">${i.images.slice(0,6).map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('')}</div>`:''}
+        <div class="meta"><span class="tag">${i.source}</span><span>${fmtDate(i.createdAt)}</span></div>
+      </div>
+    </div>`).join('');
+  updateSel();
+}
+function toggleSel(id){ if(selected.has(id))selected.delete(id); else selected.add(id); renderLib(); }
+function updateSel(){ document.getElementById('sel-count').textContent=selected.size; }
+
+function selectAll(v){ const f=document.getElementById('filter-src').value;
+  DB.items.filter(i=>!f||i.source===f).forEach(i=> v?selected.add(i.id):selected.delete(i.id)); renderLib(); }
+function delSelected(){ if(!selected.size){toast('没选中的');return;}
+  DB.items=DB.items.filter(i=>!selected.has(i.id)); selected.clear(); save(); renderLib(); toast('已删除'); }
+
+/* ---------- 排期 ---------- */
+function makeSchedule(){
+  if(!selected.size){ toast('先在内容库勾选'); return; }
+  const date=document.getElementById('plan-date').value||new Date().toISOString().slice(0,10);
+  const mode=document.getElementById('plan-mode').value;
+  const ids=[...selected];
+  const n=ids.length;
+  let times=[];
+  if(mode==='even'){ const start=8*60,end=22*60; for(let k=0;k<n;k++){ const m=Math.round(start+(end-start)*k/(n||1)); times.push(hm(m)); } }
+  else if(mode==='hour'){ for(let k=0;k<n;k++){ times.push(hm(8*60+k*60)); } }
+  else { for(let k=0;k<n;k++){ times.push('12:00'); } }
+  // remove old pending plans for these ids
+  DB.plans=DB.plans.filter(p=>!ids.includes(p.itemId));
+  ids.forEach((id,k)=>{
+    DB.plans.push({id:uid(),itemId:id,datetime:date+'T'+times[k],status:'pending'});
+  });
+  save(); selected.clear(); renderLib();
+  document.getElementById('plan-info').textContent='已排 '+n+' 条到 '+date;
+  renderPlan(); switchTab('plan');
+}
+function hm(min){ const h=Math.floor(min/60),m=min%60; return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+
+function renderPlan(){
+  const el=document.getElementById('plan-list');
+  const list=[...DB.plans].sort((a,b)=>a.datetime.localeCompare(b.datetime));
+  if(!list.length){ el.innerHTML='<div class="empty">还没有排期，去内容库勾选后到这里排</div>'; return; }
+  el.innerHTML=list.map(p=>{ const it=DB.items.find(i=>i.id===p.itemId); if(!it)return'';
+    return `<div class="item ${p.status==='sent'?'':''}">
+      <div class="body">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <input type="datetime-local" value="${p.datetime}" onchange="chgTime('${p.id}',this.value)" style="flex:0 0 200px;width:200px">
+          <span class="pill ${p.status==='sent'?'s':p.status==='skipped'?'k':'p'}">${p.status==='sent'?'已发':p.status==='skipped'?'跳过':'待发'}</span>
+        </div>
+        <div class="txt">${esc(it.text)}</div>
+        ${it.images&&it.images.length?`<div class="thumbs">${it.images.slice(0,4).map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('')}</div>`:''}
+        <div class="meta"><span class="tag">${it.source}</span>
+          <button class="btn ghost sm" onclick="copyText('${it.id}')">复制文案</button>
+          <button class="btn ghost sm" onclick="setStatus('${p.id}','sent')">标记已发</button>
+          <button class="btn ghost sm" onclick="setStatus('${p.id}','skipped')">跳过</button>
+          <button class="btn ghost sm" onclick="delPlan('${p.id}')">删除</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+function chgTime(id,v){ const p=DB.plans.find(x=>x.id===id); if(p){p.datetime=v;save();} }
+function setStatus(id,s){ const p=DB.plans.find(x=>x.id===id); if(p){p.status=s;save();renderPlan();if(document.getElementById('tab-publish').classList.contains('on'))renderPublish();} }
+function delPlan(id){ DB.plans=DB.plans.filter(x=>x.id!==id); save(); renderPlan(); }
+
+/* ---------- 发布台 ---------- */
+function renderPublish(){
+  const el=document.getElementById('publish-list');
+  const now=Date.now();
+  const list=[...DB.plans].sort((a,b)=>a.datetime.localeCompare(b.datetime));
+  const pend=list.filter(p=>p.status==='pending');
+  if(!pend.length){ el.innerHTML='<div class="empty">当前没有待发的。去排期里排几条吧。</div>'; return; }
+  el.innerHTML=pend.map(p=>{ const it=DB.items.find(i=>i.id===p.itemId); if(!it)return'';
+    const t=new Date(p.datetime).getTime(); const due=t<=now;
+    const left=due?0:t-now;
+    return `<div class="item ${due?'due':''}">
+      <div class="body">
+        <div class="meta"><span class="tag">${it.source}</span>
+          <span>计划 ${p.datetime.replace('T',' ')}</span>
+          ${due?'<span class="countdown">⏰ 该发了！</span>':'<span class="countdown" data-left="'+left+'">'+fmtLeft(left)+'</span>'}
+        </div>
+        <div class="txt">${esc(it.text)}</div>
+        ${it.images&&it.images.length?`<div class="thumbs">${it.images.map(u=>`<img src="${esc(u)}" onerror="this.style.display='none'">`).join('')}</div>`:''}
+        <div class="meta">
+          <button class="btn sm" onclick="copyText('${it.id}')">📋 复制文案</button>
+          ${it.images&&it.images.length?`<button class="btn sec sm" onclick="openImgs('${it.id}')">打开图片</button>`:''}
+          <button class="btn ghost sm" onclick="setStatus('${p.id}','sent')">✅ 我已发完</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+function tick(){ if(!document.getElementById('tab-publish').classList.contains('on'))return;
+  document.querySelectorAll('.countdown[data-left]').forEach(c=>{ let l=+c.dataset.left-1000; if(l<0)l=0; c.dataset.left=l; c.textContent=fmtLeft(l);
+    if(l===0){ c.textContent='⏰ 该发了！'; c.closest('.item').classList.add('due'); } }); }
+setInterval(tick,1000);
+
+function copyText(id){ const it=DB.items.find(i=>i.id===id); if(!it)return;
+  navigator.clipboard?.writeText(it.text).then(()=>toast('文案已复制，去微信粘贴')).catch(()=>fallbackCopy(it.text)); }
+function fallbackCopy(t){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+  try{document.execCommand('copy');toast('文案已复制');}catch(e){toast('复制失败，请手动选');} document.body.removeChild(ta); }
+function openImgs(id){ const it=DB.items.find(i=>i.id===id); if(!it)return;
+  it.images.forEach(u=>{ if(u.startsWith('http')) window.open(u,'_blank'); }); toast('已在新标签打开图片'); }
+
+/* ---------- 备份 ---------- */
+function exportData(){ const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='恩子朋友圈备份.json'; a.click(); toast('已导出备份'); }
+function importBackup(){ document.getElementById('backup-file').click(); }
+function loadBackup(e){ const f=e.target.files[0]; if(!f)return; const r=new FileReader();
+  r.onload=()=>{ try{ const d=JSON.parse(r.result); DB={items:d.items||[],plans:d.plans||[]}; save(); toast('备份已导入'); renderLib(); }catch(err){toast('备份文件损坏');} }; r.readAsText(f); }
+function clearAll(){ if(confirm('确定清空全部内容和排期？建议先导出备份。')){ DB={items:[],plans:[]}; selected.clear(); save(); renderLib(); toast('已清空'); } }
+
+/* ---------- 工具 ---------- */
+function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtDate(ts){ const d=new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtLeft(ms){ const s=Math.floor(ms/1000); const h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+  if(h>0)return h+'小时'+m+'分'; if(m>0)return m+'分'+ss+'秒'; return ss+'秒'; }
+
+/* init */
+document.getElementById('plan-date').value=new Date().toISOString().slice(0,10);
+renderLib();
+</script>
+</body>
+</html>
