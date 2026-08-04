@@ -780,12 +780,17 @@
   .lcfg-row .lcfg-act { display: flex; gap: 4px; flex-shrink: 0; }
   /* —— 修点7：股东报表明细按钮加大 —— */
   .sh-detail-btn { font-size: 13px !important; padding: 6px 12px !important; background: #ede9fe !important; color: #6d28d9 !important; border: 1px solid #ddd6fe !important; font-weight: 600 !important; }
-  /* —— 修点6：案例 form「分类」行横向自适应（不再竖向换行）—— */
-  .case-cat-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
-  .case-cat-sel { flex: 0 1 auto; min-width: 80px; max-width: 140px; }
-  .case-cat-new { flex: 1 1 0; min-width: 0; }
-  .case-cat-add { flex: 0 0 auto; white-space: nowrap; }
+  /* —— 修点6：案例 form「分类」行横向按钮，不再竖向 —— */
+  /* 横向3列布局：[选择分类] [+新增分类输入框] [+新增] — 强制窄宽、自适应容器 */
+  .case-cat-row { display: flex !important; gap: 6px; align-items: center; flex-wrap: nowrap; width: 100%; box-sizing: border-box; }
+  .case-cat-row select.case-cat-sel,
+  .case-cat-row input.case-cat-new,
+  .case-cat-row button.case-cat-add { width: auto !important; margin: 0 !important; }
+  .case-cat-sel { flex: 0 1 auto; min-width: 70px; max-width: 130px; padding: 6px 8px !important; font-size: 13px !important; }
+  .case-cat-new { flex: 1 1 auto; min-width: 60px; padding: 6px 8px !important; font-size: 13px !important; }
+  .case-cat-add { flex: 0 0 auto; white-space: nowrap; padding: 6px 12px !important; font-size: 13px !important; line-height: 1.2 !important; }
   @media (max-width: 480px) {
+    /* 手机窄屏: select 占顶 (折叠), input + 按钮 还是一行 */
     .case-cat-row { flex-wrap: wrap; }
     .case-cat-sel { flex: 1 1 100%; max-width: 100%; }
   }
@@ -1895,7 +1900,7 @@ function productCategoryChecks(selectedIds) {
   if (!cats.length) return '<span style="color:#9ca3af;font-size:13px">暂无分类，可在下方新建</span>';
   return cats.map(c => {
     const checked = (selectedIds || []).includes(c.id) ? 'checked' : '';
-    return `<label data-pf-cat-id="${c.id}"><input type="checkbox" value="${c.id}" ${checked}><span>${esc(c.name)}</span><button type="button" class="pf-cat-x" title="删除该分类" onclick="event.preventDefault();event.stopPropagation();confirmDeleteProductCategory(this,'${c.id}')">×</button></label>`;
+    return `<label data-pf-cat-id="${c.id}" style="color:#1f2937"><input type="checkbox" value="${c.id}" ${checked}><span style="color:#1f2937">${esc(c.name)}</span><button type="button" class="pf-cat-x" title="删除该分类" onclick="event.preventDefault();event.stopPropagation();confirmDeleteProductCategory(this,'${c.id}')">×</button></label>`;
   }).join('');
 }
 function addProductCategory() {
@@ -3924,8 +3929,8 @@ function renderAcCatTree() {
   if (!tree) return;
   const cats = DB.getList('activity_card_categories');
   tree.innerHTML = cats.map(cat => `
-    <label>
-      <input type="checkbox" ${App.acCats.includes(cat.id) ? 'checked' : ''} onchange="toggleAcCat('${cat.id}')"> <span>${esc(cat.name)}</span>
+    <label style="color:#1f2937">
+      <input type="checkbox" ${App.acCats.includes(cat.id) ? 'checked' : ''} onchange="toggleAcCat('${cat.id}')"> <span style="color:#1f2937">${esc(cat.name)}</span>
       <button type="button" class="xbtn" title="删除分类" onclick="event.stopPropagation();deleteAcCategory('${cat.id}')">×</button>
     </label>`).join('') || '<div style="font-size:12px;color:#9ca3af">暂无分类，可在下方新建</div>';
 }
@@ -4024,7 +4029,7 @@ function openActivityCardForm(id, copyData) {
   const cats = DB.getList('activity_card_categories');
   const val = (k, d) => a ? (a[k] != null ? a[k] : (d === undefined ? '' : d)) : (d === undefined ? '' : d);
   App._acImgs = (a && a.images) ? a.images.slice() : [];
-  const catChecks = cats.map(c => `<label><input type="checkbox" value="${c.id}" ${(a && (a.category_ids || []).includes(c.id)) ? 'checked' : ''}><span>${esc(c.name)}</span></label>`).join('')
+  const catChecks = cats.map(c => `<label style="color:#1f2937"><input type="checkbox" value="${c.id}" ${(a && (a.category_ids || []).includes(c.id)) ? 'checked' : ''}><span style="color:#1f2937">${esc(c.name)}</span></label>`).join('')
     || '<span style="color:#9ca3af;font-size:13px">暂无分类，可在左侧新建</span>';
 
   const html = `
@@ -4499,8 +4504,8 @@ function renderKCatTree() {
   if (!el) return;
   const cats = DB.getList('knowledge_categories');
   el.innerHTML = cats.map(cat => `
-    <label>
-      <input type="checkbox" ${App.kCats.includes(cat.id) ? 'checked' : ''} onchange="toggleKCat('${cat.id}')"> <span>${esc(cat.name)}</span>
+    <label style="color:#1f2937">
+      <input type="checkbox" ${App.kCats.includes(cat.id) ? 'checked' : ''} onchange="toggleKCat('${cat.id}')"> <span style="color:#1f2937">${esc(cat.name)}</span>
       <button type="button" class="xbtn" title="删除分类" onclick="event.stopPropagation();deleteKCategory('${cat.id}')">×</button>
     </label>`).join('') || '<div style="font-size:12px;color:#9ca3af">暂无分类，可在下方新建</div>';
 }
