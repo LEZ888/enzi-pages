@@ -404,6 +404,38 @@
   .rec-flash { animation: recFieldFlash 1s ease-out 1; }
   @keyframes recFieldFlash { 0% { box-shadow: 0 0 0 0 rgba(124,58,237,.6); background: #faf5ff; } 100% { box-shadow: 0 0 0 6px rgba(124,58,237,0); background: transparent; } }
   @keyframes recOkPulse { 0% { transform: scale(1); } 30% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  /* ============================================================
+   * 统一列表项：横向紧凑行（桌面 / 手机通用，解决"竖向大块太占地方"）
+   * 结构：缩略图 | 信息(标题+单行meta) | 操作
+   * ============================================================ */
+  .mini-list { display: flex; flex-direction: column; }
+  .mini-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #eef0f4; border-radius: 10px; background: #fff; margin-bottom: 8px; }
+  .mini-row:hover { border-color: #d8d2f0; }
+  .mini-row .mr-thumb { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex: 0 0 auto; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 11px; overflow: hidden; }
+  .mini-row .mr-info { flex: 1 1 auto; min-width: 0; }
+  .mini-row .mr-title { font-weight: 600; font-size: 14px; color: #111827; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-row .mr-meta { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-row .mr-meta b { color: #374151; font-weight: 600; }
+  .mini-row .mr-meta .sep { color: #d1d5db; margin: 0 5px; }
+  .mini-row .mr-actions { flex: 0 0 auto; display: flex; gap: 6px; align-items: center; }
+  .mini-row .mr-actions .btn { padding: 6px 10px; font-size: 13px; }
+  .mini-row .mr-badge { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: #ede9fe; color: var(--brand); white-space: nowrap; }
+  .mini-row .mr-badge.ext { background: #dcfce7; color: #15803d; }
+  .mini-row .mr-badge.int { background: #e5e7eb; color: #6b7280; }
+  .mini-row .mr-badge.pin { background: #fef3c7; color: #b45309; }
+  .mini-row .mr-badge.hot { background: #fee2e2; color: #b91c1c; }
+  @media (max-width: 640px) {
+    .mini-row { gap: 8px; padding: 8px; }
+    .mini-row .mr-thumb { width: 44px; height: 44px; }
+    .mini-row .mr-meta .sep:nth-of-type(n+2) { display: none; }
+  }
+  .m-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .m-chip { font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; color: #374151; user-select: none; }
+  .m-chip:hover { border-color: var(--brand); }
+  .m-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .tag.near { background: #fff7ed; color: #c2410c; }
+  .tag.out { background: #fef2f2; color: #b91c1c; }
+  .tag.ample { background: #ecfdf5; color: #047857; }
 </style>
 </head>
 <body>
@@ -426,7 +458,9 @@ const DB = {
           employee_password: "8888",
           wechat_qr_url: "",
           brand_color: "#7c3aed",
-          logo_url: ""
+          logo_url: "",
+          stock_ample: 10,
+          stock_low: 1
         },
         employees: [],
         product_categories: [],
@@ -440,6 +474,7 @@ const DB = {
         cases: [],
         case_categories: [],
         supplies: [],
+        supply_categories: [],
         activity_cards: [],
         activity_card_categories: [],
         orders: [],
@@ -916,41 +951,34 @@ function renderProductTable() {
   const canDrag = !App.productSearch && !App.productCat && !App.productFastExpire;
 
   wrap.innerHTML = (canDrag ? '' : '<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">清除筛选后可拖拽排序</div>') + `
-    <table class="m-tbl">
-      <thead><tr>
-        <th data-th="拖动">拖动</th><th data-th="缩略图">缩略图</th><th data-th="名称">名称</th><th data-th="分类">分类</th><th data-th="零售价">零售价</th><th data-th="会员价">会员价</th><th data-th="库存">库存</th>
-        ${isOwner ? '<th data-th="保质期">保质期</th>' : ''}
-        <th data-th="排序">排序</th><th data-th="状态">状态</th><th data-th="操作">操作</th>
-      </tr></thead>
-      <tbody>
-        ${list.map(p => {
-          const st = shelfStatus(p);
-          const catNames = (p.category_ids || []).map(id => (cats.find(c => c.id === id) || {}).name).filter(Boolean).join('、');
-          const thumb = (p.images && p.images[0])
-            ? `<img src="${p.images[0]}" class="m-thumb">`
-            : '<div class="m-thumb m-thumb-empty">无图</div>';
-          return `<tr draggable="${canDrag}" data-id="${p.id}" ondragstart="pdragStart(event,'${p.id}')" ondragover="event.preventDefault()" ondrop="pdragDrop(event,'${p.id}')">
-            <td data-th="拖动" class="no-th m-drag">⋮⋮</td>
-            <td data-th="缩略图" class="no-th">${thumb}</td>
-            <td data-th="名称"><b>${esc(p.name || '(未命名)')}</b>${p.hot_badge ? ` <span class="tag">${esc(p.hot_badge)}</span>` : ''}</td>
-            <td data-th="分类">${esc(catNames) || '—'}</td>
-            <td data-th="零售价">${p.retail_price != null ? '¥' + money(p.retail_price) : '—'}</td>
-            <td data-th="会员价">${p.member_price != null ? '¥' + money(p.member_price) : '—'}</td>
-            <td data-th="库存">${esc(p.stock || 0)}</td>
-            ${isOwner ? `<td data-th="保质期">${st ? `<span class="tag ${st.cls}">${esc(st.text)}</span>` : '<span style="color:#9ca3af">—</span>'}</td>` : ''}
-            <td data-th="排序">${esc(p.sort_order || 0)}</td>
-            <td data-th="状态"><span class="tag ${p.status === 'published' ? 'green' : 'gray'}">${p.status === 'published' ? '已上架' : '草稿'}</span></td>
-            <td data-th="操作" class="action-cell">
-              <div class="row-act">
-                <button class="btn sm ghost" onclick="openProductForm('${p.id}')">编辑</button>
-                <button class="btn sm ${p.status === 'published' ? 'ghost' : 'secondary'}" onclick="toggleProductStatus('${p.id}')">${p.status === 'published' ? '下架' : '上架'}</button>
-                <button class="btn sm danger" onclick="deleteProduct('${p.id}')">删除</button>
-              </div>
-            </td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
+    <div class="mini-list">
+      ${list.map(p => {
+        const st = shelfStatus(p);
+        const catNames = (p.category_ids || []).map(id => (cats.find(c => c.id === id) || {}).name).filter(Boolean).join('、');
+        const thumb = (p.images && p.images[0])
+          ? `<img src="${p.images[0]}" class="mr-thumb">`
+          : '<div class="mr-thumb m-thumb-empty">无图</div>';
+        const meta = [];
+        if (catNames) meta.push(`分类 <b>${esc(catNames)}</b>`);
+        if (p.retail_price != null) meta.push(`零售 <b>¥${money(p.retail_price)}</b>`);
+        if (p.member_price != null) meta.push(`会员 <b>¥${money(p.member_price)}</b>`);
+        meta.push(`库存 <b>${esc(p.stock || 0)}</b>`);
+        if (isOwner && st) meta.push(`<span class="tag ${st.cls}">${esc(st.text)}</span>`);
+        return `<div class="mini-row" draggable="${canDrag}" data-id="${p.id}" ondragstart="pdragStart(event,'${p.id}')" ondragover="event.preventDefault()" ondrop="pdragDrop(event,'${p.id}')">
+          ${thumb}
+          <div class="mr-info">
+            <div class="mr-title">${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}${p.is_internal ? ` <span class="mr-badge int">对内</span>` : ''}</div>
+            <div class="mr-meta">${meta.join('<span class="sep">·</span>')}</div>
+          </div>
+          <div class="mr-actions">
+            <button class="btn sm ghost" onclick="previewProduct('${p.id}')">预览</button>
+            <button class="btn sm ghost" onclick="openProductForm('${p.id}')">编辑</button>
+            <button class="btn sm ${p.status === 'published' ? 'ghost' : 'secondary'}" onclick="toggleProductStatus('${p.id}')">${p.status === 'published' ? '下架' : '上架'}</button>
+            <button class="btn sm danger" onclick="deleteProduct('${p.id}')">删除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
     ${list.length === 0 ? '<div style="text-align:center;color:#9ca3af;padding:24px">暂无产品，点「新建产品」或「导入」</div>' : ''}`;
 }
 
@@ -959,7 +987,7 @@ function pdragStart(e, id) { _dragId = id; e.dataTransfer.effectAllowed = 'move'
 function pdragDrop(e, targetId) {
   e.preventDefault();
   if (!_dragId || _dragId === targetId) return;
-  const rows = Array.from(document.querySelectorAll('#pTableWrap tbody tr[data-id]'));
+  const rows = Array.from(document.querySelectorAll('#pTableWrap .mini-row[data-id]'));
   let ids = rows.map(r => r.dataset.id);
   const from = ids.indexOf(_dragId);
   ids.splice(from, 1);
@@ -984,6 +1012,33 @@ function deleteProduct(id) {
     DB.delete('products', id);
     renderProductTable();
   }, '删除产品');
+}
+
+/* 前台预览：模拟客户端看到的产品卡片（与前端展示一致） */
+function previewProduct(id) {
+  const p = DB.getList('products').find(x => x.id === id); if (!p) return;
+  const cats = DB.getList('product_categories');
+  const catNames = (p.category_ids || []).map(i => (cats.find(c => c.id === i) || {}).name).filter(Boolean).join('、');
+  const img = (p.images && p.images[0]) ? p.images[0] : '';
+  const html = `
+    <h3>前台预览 · ${esc(p.name || '(未命名)')}</h3>
+    <div style="max-width:380px;margin:0 auto;background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden">
+      ${img ? `<img src="${img}" style="width:100%;height:220px;object-fit:cover;display:block">` : `<div style="height:180px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af">无商品图</div>`}
+      <div style="padding:14px">
+        <div style="font-size:18px;font-weight:700;color:#111827">${esc(p.name || '(未命名)')} ${p.hot_badge ? `<span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}</div>
+        ${catNames ? `<div style="color:#6b7280;font-size:13px;margin:4px 0">${esc(catNames)}</div>` : ''}
+        ${p.intro ? `<div style="color:#374151;font-size:14px;margin:8px 0;line-height:1.6">${esc(p.intro)}</div>` : ''}
+        <div style="display:flex;align-items:baseline;gap:10px;margin:10px 0">
+          ${p.retail_price != null ? `<span style="color:#7c3aed;font-size:22px;font-weight:700">¥${money(p.retail_price)}</span>` : ''}
+          ${p.member_price != null ? `<span style="color:#059669;font-size:14px">会员 ¥${money(p.member_price)}</span>` : ''}
+        </div>
+        ${p.detail ? `<div style="border-top:1px solid #f0f0f0;padding-top:10px;color:#4b5563;font-size:14px;line-height:1.7">${p.detail}</div>` : ''}
+        ${p.video_url ? `<div style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" rel="noopener" style="color:#7c3aed;font-size:13px">▶ 查看产品视频</a></div>` : ''}
+        <div style="margin-top:8px;font-size:12px;color:#9ca3af">${p.is_internal ? '仅对内（前台客户不可见）' : '对外（前台客户可见）'}</div>
+      </div>
+    </div>
+    <div class="modal-act"><button class="btn" onclick="closeModal()">关闭</button></div>`;
+  openModal(html);
 }
 
 function openProductForm(id) {
@@ -1044,6 +1099,7 @@ function openProductForm(id) {
       <div class="field" style="flex:1"><label>状态</label><select id="pf_status"><option value="published" ${val('status', 'published') === 'published' ? 'selected' : ''}>已上架</option><option value="draft" ${val('status') === 'draft' ? 'selected' : ''}>草稿</option></select></div>
       <div class="field" style="flex:1"><label>排序值</label><input id="pf_sort" type="text" inputmode="numeric" value="${val('sort_order', '')}"></div>
     </div>
+    <div class="field"><label style="display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="pf_internal" ${val('is_internal') ? 'checked' : ''}> 仅对内（只后台可见，前台客户不可见）</label></div>
     <div class="field"><label>分类（多选）</label>
       <div id="pf_cats" style="margin-bottom:6px">${catChecks}</div>
       <div class="row"><input id="pf_newcat" placeholder="新建分类名" style="flex:1"><button type="button" class="btn sm ghost" onclick="addProductCategory()">+ 新增分类</button></div>
@@ -1507,6 +1563,7 @@ function saveProduct(id) {
     stock_warning: Number(document.getElementById('pf_warn').value || 0),
     status: document.getElementById('pf_status').value,
     sort_order: Number(document.getElementById('pf_sort').value || 0),
+    is_internal: document.getElementById('pf_internal').checked,
     category_ids: Array.from(document.querySelectorAll('#pf_cats input:checked')).map(c => c.value)
   };
   if (App.role === 'owner') {
@@ -1665,31 +1722,55 @@ function importProductsRows(rows) {
 /* ============================================================
  * 5.3 产品库存（仅 owner 可见）
  * ============================================================ */
+function stockClassify(stock, s) {
+  const ample = Number(s.stock_ample != null ? s.stock_ample : 10);
+  const low = Number(s.stock_low != null ? s.stock_low : 1);
+  const n = Number(stock || 0);
+  if (n >= ample) return { key: 'ample', label: '充足', cls: 'ample' };
+  if (n < low) return { key: 'out', label: '已缺货', cls: 'out' };
+  return { key: 'near', label: '快缺货', cls: 'near' };
+}
+
 function renderStock(c) {
   const products = DB.getList('products').slice().sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  const s = DB.getSettings();
+  const filter = App.stockFilter || 'all';
+  const filtered = products.filter(p => {
+    if (filter === 'all') return true;
+    return stockClassify(p.stock, s).key === filter;
+  });
+  const counts = { all: products.length, ample: 0, near: 0, out: 0 };
+  products.forEach(p => { counts[stockClassify(p.stock, s).key]++; });
+  const chips = [['all', '全部'], ['ample', '充足'], ['near', '快缺货'], ['out', '已缺货']]
+    .map(([k, t]) => `<span class="m-chip ${filter === k ? 'active' : ''}" onclick="setStockFilter('${k}')">${t} (${counts[k]})</span>`).join('');
   c.innerHTML = `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
         <h3 style="margin:0">产品库存</h3>
-        <span style="font-size:12px;color:#9ca3af">低于预警值标红 · 点击库存数可直接修改</span>
+        <span style="font-size:12px;color:#9ca3af">按数量自动分级 · 点击库存数可直接修改</span>
       </div>
-      <table>
-        <thead><tr><th>产品名</th><th>当前库存</th><th>预警阈值</th><th>状态</th></tr></thead>
-        <tbody>
-          ${products.map(p => {
-            const low = Number(p.stock_warning || 0) > 0 && Number(p.stock || 0) < Number(p.stock_warning);
-            return `<tr>
-              <td>${esc(p.name || '(未命名)')}</td>
-              <td><span class="stock-edit" data-id="${p.id}" style="cursor:pointer;${low ? 'color:#dc2626;font-weight:700' : ''}">${esc(p.stock || 0)}</span></td>
-              <td>${esc(p.stock_warning || 0)}</td>
-              <td>${low ? '<span class="tag red">预警</span>' : '<span class="tag green">充足</span>'}</td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      ${products.length === 0 ? '<div style="text-align:center;color:#9ca3af;padding:24px">暂无产品</div>' : ''}
+      <div class="m-chips">${chips}</div>
+      <div class="mini-list">
+        ${filtered.length === 0 ? '<div class="empty">该分类下暂无产品</div>' :
+        filtered.map(p => {
+          const sc = stockClassify(p.stock, s);
+          return `<div class="mini-row">
+            <div class="mr-info">
+              <div class="mr-title">${esc(p.name || '(未命名)')}</div>
+              <div class="mr-meta">当前库存 <span class="stock-edit" data-id="${p.id}" style="cursor:pointer;${sc.key === 'out' ? 'color:#dc2626;font-weight:700' : ''}">${esc(p.stock || 0)}</span><span class="sep">·</span>预警阈值 <b>${esc(p.stock_warning || 0)}</b></div>
+            </div>
+            <div class="mr-actions"><span class="tag ${sc.cls}">${sc.label}</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${products.length === 0 ? '<div style="text-align:center;color:#9ca3af;padding:24px">暂无产品，请先到「产品管理」添加</div>' : ''}
     </div>`;
   c.querySelectorAll('.stock-edit').forEach(el => el.addEventListener('click', () => editStockInline(el)));
+}
+
+function setStockFilter(k) {
+  App.stockFilter = k;
+  renderStock(document.getElementById('content'));
 }
 function editStockInline(el) {
   const id = el.dataset.id;
@@ -1706,18 +1787,23 @@ function editStockInline(el) {
  * 列表(名/分类/数量/预警/备注) + 搜索 + 新增/编辑/删除 + 数量行内改 + 低于预警标红
  * ============================================================ */
 function renderSupplies(c) {
-  const list = DB.getList('supplies').slice().sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-  const cats = DB.getList('product_categories');
+  const all = DB.getList('supplies');
+  const cats = DB.getList('supply_categories');
+  const kw = (App.supSearch || '').toLowerCase();
+  const cf = App.supCat || '';
+  const list = all.filter(s => {
+    const hitKw = !kw || (s.name || '').toLowerCase().includes(kw) || (s.note || '').toLowerCase().includes(kw);
+    const hitCat = !cf || s.category_id === cf;
+    return hitKw && hitCat;
+  }).sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+  const catChips = [['', '全部']].concat(cats.map(cat => [cat.id, cat.name])).map(([id, name]) =>
+    `<span class="m-chip ${cf === id ? 'active' : ''}" onclick="setSupCat('${id}')">${esc(name)}${id ? ` <button type="button" class="xbtn" style="padding:0 2px;font-size:12px" onclick="event.stopPropagation();deleteSupCategory('${id}')" title="删除分类">×</button>` : ''}</span>`
+  ).join('');
   c.innerHTML = `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <h3 style="margin:0">店内用品</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input id="supSearch" class="inp" placeholder="搜索名称/备注" style="width:180px" />
-          <select id="supCatFilter" class="inp" style="width:140px">
-            <option value="">全部分类</option>
-            ${cats.map(cat => `<option value="${cat.id}">${esc(cat.name)}</option>`).join('')}
-          </select>
+      <div class="page-head">
+        <h2>店内用品</h2>
+        <div class="m-exports">
           <span style="display:inline-flex;gap:6px">
             <button class="btn sm ghost" onclick="exportCurrent('supplies','csv')">CSV</button>
             <button class="btn sm ghost" onclick="exportCurrent('supplies','xlsx')">Excel</button>
@@ -1726,43 +1812,59 @@ function renderSupplies(c) {
           <button class="btn" onclick="openSupplyForm()">+ 新增用品</button>
         </div>
       </div>
-      <table>
-        <thead><tr><th>名称</th><th>分类</th><th>数量</th><th>预警阈值</th><th>备注</th><th>操作</th></tr></thead>
-        <tbody id="supTbody">
-          ${list.map(s => {
-            const low = Number(s.warning_threshold || 0) > 0 && Number(s.quantity || 0) < Number(s.warning_threshold);
-            const cat = cats.find(c => c.id === s.category_id);
-            return `<tr>
-              <td>${esc(s.name || '(未命名)')}</td>
-              <td>${cat ? esc(cat.name) : '<span style="color:#9ca3af">未分类</span>'}</td>
-              <td><span class="sup-edit" data-id="${s.id}" style="cursor:pointer;${low ? 'color:#dc2626;font-weight:700' : ''}">${esc(s.quantity || 0)}</span></td>
-              <td>${esc(s.warning_threshold || 0)}</td>
-              <td>${esc(s.note || '')}</td>
-              <td>
-                <button class="btn sm" onclick="openSupplyForm('${s.id}')">编辑</button>
-                <button class="btn sm red" onclick="deleteSupply('${s.id}')">删除</button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
-      ${list.length === 0 ? '<div style="text-align:center;color:#9ca3af;padding:24px">暂无店内用品，点右上角“新增用品”</div>' : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <input id="supSearch" class="inp" placeholder="搜索名称/备注" style="flex:1;min-width:160px" value="${esc(App.supSearch || '')}" />
+      </div>
+      <div class="m-chips">${catChips}</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+        <input id="supNewCat" class="inp" placeholder="新增独立分类名" style="flex:1;min-width:120px" />
+        <button class="btn sm" onclick="addSupCategory()">+ 分类</button>
+      </div>
+      <div class="mini-list" id="supList">
+        ${list.length === 0 ? '<div class="empty">暂无店内用品，点右上角“新增用品”</div>' :
+        list.map(s => {
+          const low = Number(s.warning_threshold || 0) > 0 && Number(s.quantity || 0) < Number(s.warning_threshold);
+          const cat = cats.find(c => c.id === s.category_id);
+          return `<div class="mini-row">
+            <div class="mr-info">
+              <div class="mr-title">${esc(s.name || '(未命名)')}${low ? ' <span class="tag red">预警</span>' : ''}</div>
+              <div class="mr-meta">分类 <b>${cat ? esc(cat.name) : '未分类'}</b><span class="sep">·</span>数量 <span class="sup-edit" data-id="${s.id}" style="cursor:pointer;${low ? 'color:#dc2626;font-weight:700' : ''}">${esc(s.quantity || 0)}</span><span class="sep">·</span>预警 <b>${esc(s.warning_threshold || 0)}</b>${s.note ? '<span class="sep">·</span>' + esc(s.note) : ''}</div>
+            </div>
+            <div class="mr-actions">
+              <button class="btn sm ghost" onclick="openSupplyForm('${s.id}')">编辑</button>
+              <button class="btn sm danger" onclick="deleteSupply('${s.id}')">删除</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
     </div>`;
-
-  const doFilter = () => {
-    const kw = document.getElementById('supSearch').value.trim().toLowerCase();
-    const cf = document.getElementById('supCatFilter').value;
-    const rows = c.querySelectorAll('#supTbody tr');
-    list.forEach((s, i) => {
-      const cat = cats.find(c => c.id === s.category_id);
-      const hit = (!kw || (s.name || '').toLowerCase().includes(kw) || (s.note || '').toLowerCase().includes(kw))
-        && (!cf || s.category_id === cf);
-      rows[i].style.display = hit ? '' : 'none';
-    });
-  };
-  document.getElementById('supSearch').addEventListener('input', doFilter);
-  document.getElementById('supCatFilter').addEventListener('change', doFilter);
+  const search = document.getElementById('supSearch');
+  if (search) search.oninput = e => { App.supSearch = e.target.value; renderSupplies(c); };
   c.querySelectorAll('.sup-edit').forEach(el => el.addEventListener('click', () => editSupplyInline(el)));
+}
+
+function setSupCat(id) {
+  App.supCat = (id === '' || id === undefined) ? '' : id;
+  renderSupplies(document.getElementById('content'));
+}
+function addSupCategory() {
+  const inp = document.getElementById('supNewCat');
+  const name = inp.value.trim(); if (!name) return;
+  if (!DB.getList('supply_categories').some(c => c.name === name)) DB.insert('supply_categories', { name });
+  inp.value = '';
+  renderSupplies(document.getElementById('content'));
+  toast('已添加分类');
+}
+function deleteSupCategory(id) {
+  const cat = DB.getList('supply_categories').find(c => c.id === id);
+  if (!cat) return;
+  confirmDialog('确定删除分类「' + cat.name + '」？\n引用该分类的用品会被置为「未分类」（用品本身不删）。', () => {
+    DB.getList('supplies').forEach(s => { if (s.category_id === id) DB.update('supplies', s.id, { category_id: null }); });
+    DB.delete('supply_categories', id);
+    if (App.supCat === id) App.supCat = '';
+    renderSupplies(document.getElementById('content'));
+    toast('已删除分类：' + cat.name);
+  }, '删除分类');
 }
 
 function editSupplyInline(el) {
@@ -1788,14 +1890,14 @@ function deleteSupply(id) {
 }
 
 function openSupplyForm(id) {
-  const cats = DB.getList('product_categories');
+  const cats = DB.getList('supply_categories');
   const s = id ? DB.getList('supplies').find(x => x.id === id) : null;
   openModal(`
     <h3>${s ? '编辑用品' : '新增用品'}</h3>
     <div class="form">
       <label>名称</label>
       <input id="sfName" class="inp" value="${s ? esc(s.name || '') : ''}" placeholder="如：毛巾 / 酒精棉片" />
-      <label>分类</label>
+      <label>分类（店内用品独立分类）</label>
       <select id="sfCat" class="inp">
         <option value="">未分类</option>
         ${cats.map(c => `<option value="${c.id}" ${s && s.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
@@ -2164,20 +2266,16 @@ function renderRecentOrders(c) {
   const filtered = orders.filter(o => !kw || (o.customer_name || '').toLowerCase().includes(kw));
   box.innerHTML = filtered.length === 0
     ? '<div style="color:#9ca3af;padding:16px;text-align:center">暂无开单记录</div>'
-    : `<table><thead><tr><th>日期</th><th>客户</th><th>主员工</th><th>笔数</th><th>实收合计</th><th>支付</th><th></th></tr></thead><tbody>
-        ${filtered.map(o => {
-          const total = (o.items || []).reduce((s, it) => s + (Number(it.actual_amount) || 0), 0);
-          return `<tr>
-            <td>${esc(o.order_date || '')}</td>
-            <td>${esc(o.customer_name || '')}</td>
-            <td>${esc(empName(o.employee_id))}</td>
-            <td>${o.items ? o.items.length : 0}</td>
-            <td>¥${total.toFixed(2)}</td>
-            <td>${PAY_LABEL[o.payment_channel] || o.payment_channel || ''}</td>
-            <td><button class="btn sm red" type="button" onclick="deleteOrder('${o.id}')">删</button></td>
-          </tr>`;
-        }).join('')}
-      </tbody></table>`;
+    : `<div class="mini-list">${filtered.map(o => {
+        const total = (o.items || []).reduce((s, it) => s + (Number(it.actual_amount) || 0), 0);
+        return `<div class="mini-row">
+          <div class="mr-info">
+            <div class="mr-title">${esc(o.customer_name || '')} <span class="sep" style="color:#9ca3af;font-weight:400">${esc(o.order_date || '')}</span></div>
+            <div class="mr-meta">主员工 <b>${esc(empName(o.employee_id))}</b><span class="sep">·</span>${o.items ? o.items.length : 0} 笔<span class="sep">·</span>${PAY_LABEL[o.payment_channel] || o.payment_channel || ''}<span class="sep">·</span>实收 <b>¥${total.toFixed(2)}</b></div>
+          </div>
+          <div class="mr-actions"><button class="btn sm danger" type="button" onclick="deleteOrder('${o.id}')">删</button></div>
+        </div>`;
+      }).join('')}</div>`;
 }
 function deleteOrder(id) {
   const o = DB.getList('orders').find(x => x.id === id);
@@ -2227,49 +2325,31 @@ function laborStepText(cfg) {
   return `无阶梯：每次=${f}（单价×次数）`;
 }
 function renderLaborConfig(c) {
-  const projects = DB.getList('projects').slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh'));
-  const byP = laborByProject();
-  const levels = ['A', 'B', 'C'];
-  let body = '';
-  if (!projects.length) {
-    body = `<div class="empty">还没有项目。点右上角「新增配置」创建第一个服务项目（如"补水护理"）。<br>搭配不同手工费请拆成不同项目名，例如「补水护理(单独)」「补水护理(搭配清洁)」。</div>`;
-  } else {
-    body = projects.map(p => {
-      const cfgMap = byP[p.id] || {};
-      const rows = levels.map(L => {
-        const cfg = cfgMap[L];
-        if (!cfg) {
-          return `<div class="lcfg-row missing">
-            <span class="lvl lvl-${L}">${L}</span>
-            <span class="lcfg-name">未配置</span>
-            <span class="lcfg-fee">—</span>
-            <span class="lcfg-add">—</span>
-            <span class="lcfg-act"><button class="btn sm ghost" onclick="openLaborForm('${p.id}','${L}')">添加</button></span>
-          </div>`;
-        }
-        const add = (cfg.additional_fee === null || cfg.additional_fee === undefined || cfg.additional_fee === '') ? '无阶梯' : ('加量 ' + cfg.additional_fee);
-        return `<div class="lcfg-row">
-          <span class="lvl lvl-${L}">${L}</span>
-          <span class="lcfg-name">首支 ${cfg.first_fee}</span>
-          <span class="lcfg-fee">${add}</span>
-          <span class="lcfg-step">${esc(laborStepText(cfg))}</span>
-          <span class="lcfg-act">
-            <button class="btn sm ghost" onclick="openLaborForm('${p.id}','${L}','${cfg.id}')">编辑</button>
-            <button class="btn sm ghost danger" onclick="deleteLabor('${cfg.id}')">删除</button>
-          </span>
-        </div>`;
-      }).join('');
-      const count = Object.keys(cfgMap).length;
-      return `<div class="card lcfg-card">
-        <div class="lcfg-head"><b>${esc(p.name)}</b><span class="muted">已配置 ${count}/3 等级</span></div>
-        <div class="lcfg-cols"><span class="lvl">等级</span><span>首支</span><span>加量</span><span>阶梯示例</span><span></span></div>
-        ${rows}
-      </div>`;
-    }).join('');
-  }
+  const configs = DB.getList('labor_configs');
+  const projects = DB.getList('projects');
+  const pname = id => { const p = projects.find(x => x.id === id); return p ? p.name : '（未知项目）'; };
+  const lvlColor = { A: '#7c3aed', B: '#0891b2', C: '#ca8a04' };
+  const list = configs.slice().sort((a, b) => {
+    const na = (pname(a.project_id) || '');
+    const nb = (pname(b.project_id) || '');
+    return na === nb ? String(a.level).localeCompare(String(b.level)) : na.localeCompare(nb, 'zh');
+  });
+  const body = list.length === 0
+    ? `<div class="empty">还没有手工费配置。点右上角「＋ 新增配置」创建第一个（如"补水护理 · A级"）。<br>搭配不同手工费请拆成不同项目名。</div>`
+    : `<div class="mini-list">${list.map(cfg => `
+        <div class="mini-row">
+          <div class="mr-info">
+            <div class="mr-title">${esc(pname(cfg.project_id))} <span class="mr-badge" style="background:${lvlColor[cfg.level] || '#7c3aed'}1a;color:${lvlColor[cfg.level] || '#7c3aed'}">${esc(cfg.level)}级</span></div>
+            <div class="mr-meta">首支 <b>${esc(cfg.first_fee)}</b><span class="sep">·</span>加量 <b>${cfg.additional_fee !== null && cfg.additional_fee !== undefined && cfg.additional_fee !== '' ? esc(cfg.additional_fee) : '无阶梯'}</b><span class="sep">·</span>${esc(laborStepText(cfg))}</div>
+          </div>
+          <div class="mr-actions">
+            <button class="btn sm ghost" onclick="openLaborForm('${cfg.project_id}','${cfg.level}','${cfg.id}')">编辑</button>
+            <button class="btn sm danger" onclick="deleteLabor('${cfg.id}')">删除</button>
+          </div>
+        </div>`).join('')}</div>`;
   c.innerHTML = `
     <div class="page-head">
-      <div><h2>手工费配置</h2><div class="sub">每个项目按 A/B/C 三个等级配置手工费；阶梯：首支 first_fee，加量 additional_fee。手工费=项目+等级，不看卡。</div></div>
+      <div><h2>手工费配置</h2><div class="sub">每个项目按等级配置手工费；阶梯：首支 first_fee，加量 additional_fee。手工费=项目+等级，不看卡。</div></div>
       <div class="row">
         <button class="btn sm" onclick="openLaborForm()">＋ 新增配置</button>
         <button class="btn sm ghost" onclick="downloadLaborTemplate()">下载模板</button>
@@ -2435,7 +2515,6 @@ function computeSalary(month) {
   const cfg = DB.getList('salary_config');
   const products = DB.getList('products');
   const laborConfigs = DB.getList('labor_configs');
-  const A = cfg.find(c => c.level === 'A'), B = cfg.find(c => c.level === 'B'), C = cfg.find(c => c.level === 'C');
 
   return emps.map(emp => {
     let cash = 0;
@@ -2462,11 +2541,10 @@ function computeSalary(month) {
       });
     });
 
-    // 2. 等级
-    let level = 'C';
-    if (cash >= A.performance_threshold) level = 'A';
-    else if (cash >= B.performance_threshold) level = 'B';
-    else level = 'C';
+    // 2. 等级（动态：按业绩门槛从高到低匹配，命中即定级；都不达则取最低档）
+    const sortedLevels = cfg.slice().sort((a, b) => Number(b.performance_threshold || 0) - Number(a.performance_threshold || 0));
+    let level = sortedLevels.length ? sortedLevels[sortedLevels.length - 1].level : 'C';
+    for (const lv of sortedLevels) { if (cash >= Number(lv.performance_threshold || 0)) { level = lv.level; break; } }
     const sc = cfg.find(c => c.level === level);
 
     // 3. 底薪
@@ -2735,32 +2813,21 @@ function renderShareholder(c) {
         </label>
         <span style="font-size:12px;color:#9ca3af">${selCount ? ('已选 ' + selCount + ' 单，将只导出所选') : '未勾选时导出全部当月订单'}</span>
       </div>
-      <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th></th><th>单号</th><th>开单日期</th><th>客户(脱敏)</th><th>主员工</th><th>服务·卡实收</th><th>支付渠道</th><th>备注</th><th>明细</th></tr></thead>
-        <tbody>
-          ${orders.map(o => {
-            const chk = shareholderState.selected[o.id] ? 'checked' : '';
-            const exp = shareholderState.expanded[o.id] ? 'open' : '';
-            const nonProd = (o.items || []).filter(it => shItemType(it) !== 'product');
-            return `
-            <tr>
-              <td><input type="checkbox" class="shChk" data-id="${o.id}" ${chk}></td>
-              <td style="font-size:12px;color:#6b7280">${esc((o.id || '').slice(-6))}</td>
-              <td>${esc(o.order_date || '')}</td>
-              <td>${esc(maskName(o.customer_name))}</td>
-              <td>${esc(en(o.employee_id))}</td>
-              <td>¥${f(shServiceCardTotal(o))}</td>
-              <td>${esc(PAY_LABEL[o.payment_channel] || o.payment_channel || '')}</td>
-              <td>${esc(o.note || '')}</td>
-              <td><button class="btn sm ghost" onclick="toggleShDetail('${o.id}')">${exp ? '收起' : '明细'}</button></td>
-            </tr>
-            ${exp ? `<tr><td colspan="9" style="background:#fafafa">
-              ${nonProd.length ? '<table style="width:100%;font-size:13px;border-collapse:collapse"><thead><tr style="color:#6b7280"><th style="text-align:left;padding:4px">类型</th><th style="text-align:left;padding:4px">名称</th><th style="text-align:left;padding:4px">数量</th><th style="text-align:left;padding:4px">实收</th></tr></thead><tbody>' + nonProd.map(it => `<tr><td style="padding:4px">${shItemType(it) === 'project' ? '项目' : '卡'}</td><td style="padding:4px">${esc(it.item_name || '')}</td><td style="padding:4px">${Number(it.quantity || 1)}</td><td style="padding:4px">¥${f(Number(it.actual_amount || 0))}</td></tr>`).join('') + '</tbody></table>' : '<div style="color:#9ca3af;font-size:13px;padding:6px">该订单无服务/卡明细（产品明细已按股东报表规则隐藏）</div>'}
-            </td></tr>` : ''}`;
-          }).join('')}
-        </tbody>
-      </table>
+      <div class="mini-list">
+        ${orders.map(o => {
+          const chk = shareholderState.selected[o.id] ? 'checked' : '';
+          return `
+          <div class="mini-row">
+            <input type="checkbox" class="shChk" data-id="${o.id}" style="flex:0 0 auto" ${chk}>
+            <div class="mr-info">
+              <div class="mr-title">${esc(maskName(o.customer_name))} <span class="sep" style="color:#9ca3af;font-weight:400">#${esc((o.id || '').slice(-6))}</span></div>
+              <div class="mr-meta">${esc(o.order_date || '')}<span class="sep">·</span>主员工 <b>${esc(en(o.employee_id))}</b><span class="sep">·</span>${esc(PAY_LABEL[o.payment_channel] || o.payment_channel || '')}<span class="sep">·</span>实收 <b>¥${f(shServiceCardTotal(o))}</b></div>
+            </div>
+            <div class="mr-actions">
+              <button class="btn sm ghost" onclick="previewShareholderOrder('${o.id}')">明细</button>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     </div>`}
   `;
@@ -2774,9 +2841,22 @@ function renderShareholder(c) {
   });
   c.querySelectorAll('.shChk').forEach(ch => ch.addEventListener('change', () => { shareholderState.selected[ch.dataset.id] = ch.checked; }));
 }
-function toggleShDetail(id) {
-  shareholderState.expanded[id] = !shareholderState.expanded[id];
-  renderShareholder(document.getElementById('content'));
+function previewShareholderOrder(id) {
+  const o = DB.getList('orders').find(x => x.id === id);
+  if (!o) return;
+  const emps = DB.getList('employees');
+  const en = eid => { const e = emps.find(x => x.id === eid); return e ? e.name : '—'; };
+  const nonProd = (o.items || []).filter(it => shItemType(it) !== 'product');
+  const rows = nonProd.length
+    ? nonProd.map(it => `<tr style="border-top:1px solid #f0f0f0"><td style="padding:6px 4px">${shItemType(it) === 'project' ? '项目' : '卡'}</td><td style="padding:6px 4px">${esc(it.item_name || '')}</td><td style="padding:6px 4px">${Number(it.quantity || 1)}</td><td style="padding:6px 4px">¥${f(Number(it.actual_amount || 0))}</td></tr>`).join('')
+    : '<tr><td colspan="4" style="padding:8px;color:#9ca3af">该订单无服务/卡明细（产品零售明细按股东报表规则不展示）</td></tr>';
+  openModal(`
+    <div style="max-width:420px;margin:0 auto">
+      <h3 style="margin:0 0 8px">订单明细 #${esc((o.id || '').slice(-6))}</h3>
+      <div style="font-size:13px;color:#6b7280;margin-bottom:10px">客户：${esc(maskName(o.customer_name))} · ${esc(o.order_date || '')} · 主员工 ${esc(en(o.employee_id))} · ${esc(PAY_LABEL[o.payment_channel] || o.payment_channel || '')}${o.note ? ' · 备注：' + esc(o.note) : ''}</div>
+      <table style="width:100%;font-size:13px;border-collapse:collapse"><thead><tr style="color:#6b7280;text-align:left"><th style="padding:4px">类型</th><th style="padding:4px">名称</th><th style="padding:4px">数量</th><th style="padding:4px">实收</th></tr></thead><tbody>${rows}</tbody></table>
+      <div style="margin-top:10px;font-size:15px;font-weight:700;color:#047857">服务·卡实收合计：¥${f(shServiceCardTotal(o))}</div>
+    </div>`);
 }
 function exportShareholder(format) {
   const month = shareholderState.month;
@@ -2818,6 +2898,16 @@ function renderSettings(c) {
           <div class="field"><label>微信二维码链接（可选）</label><input id="set_wechat_qr_url" type="text" value="${esc(s.wechat_qr_url || '')}" placeholder="https://..."></div>
         </div>
         <button class="btn" onclick="saveStoreSettings()">保存店铺信息</button>
+      </section>
+
+      <section class="set-sec">
+        <h3>库存分级阈值</h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px">用于「产品库存」页的 充足 / 快缺货 / 已缺货 自动分级（按库存数量判断）。</p>
+        <div class="grid2">
+          <div class="field"><label>充足线（≥ 此数为充足）</label><input id="set_stock_ample" type="text" inputmode="numeric" value="${esc(s.stock_ample != null ? s.stock_ample : 10)}" placeholder="如：10"></div>
+          <div class="field"><label>缺货线（＜ 此数为已缺货）</label><input id="set_stock_low" type="text" inputmode="numeric" value="${esc(s.stock_low != null ? s.stock_low : 1)}" placeholder="如：1"></div>
+        </div>
+        <button class="btn" onclick="saveStockThreshold()">保存分级阈值</button>
       </section>
 
       <section class="set-sec">
@@ -2870,6 +2960,16 @@ function saveStoreSettings() {
   toast('店铺信息已保存');
 }
 
+function saveStockThreshold() {
+  const ample = Number(document.getElementById('set_stock_ample').value || 0);
+  let low = Number(document.getElementById('set_stock_low').value || 0);
+  if (ample < 0 || low < 0) { toast('阈值不能为负'); return; }
+  if (low > ample) { toast('缺货线不能大于充足线'); return; }
+  DB.saveSettings({ stock_ample: ample, stock_low: low });
+  toast('分级阈值已保存');
+  renderStock(document.getElementById('content'));
+}
+
 function savePwdSettings() {
   const store_password = document.getElementById('set_store_pwd').value;
   const employee_password = document.getElementById('set_emp_pwd').value;
@@ -2913,49 +3013,84 @@ function resetAllData() {
   }, '重置确认');
 }
 
+const SALARY_FIELDS = [
+  ['performance_threshold', '业绩门槛'],
+  ['base_salary', '底薪全'],
+  ['target', '目标业绩'],
+  ['lesley_pct', 'LESLEY%'],
+  ['non_series_pct', '非系列%'],
+  ['skin_treatment_pct', '皮肤治疗%'],
+  ['basic_pct', '基础%'],
+  ['recharge_pct', '充值年卡%']
+];
+
+function collectSalaryFromDOM() {
+  const cards = Array.from(document.querySelectorAll('#salaryList .sc-card'));
+  return cards.map(card => {
+    const level = card.getAttribute('data-level');
+    const row = { level };
+    SALARY_FIELDS.forEach(([k]) => {
+      const el = document.getElementById('sc_' + level + '_' + k);
+      const v = el ? Number(el.value) : 0;
+      row[k] = isNaN(v) ? 0 : Math.round(v * 100) / 100;
+    });
+    return row;
+  });
+}
+
 function renderSalaryConfig(c) {
   const cfg = DB.getSalaryConfig();
-  const fields = [
-    ['performance_threshold', '业绩门槛'],
-    ['base_salary', '底薪全'],
-    ['target', '目标业绩'],
-    ['lesley_pct', 'LESLEY%'],
-    ['non_series_pct', '非系列%'],
-    ['skin_treatment_pct', '皮肤治疗%'],
-    ['basic_pct', '基础%'],
-    ['recharge_pct', '充值年卡%']
-  ];
   const rows = cfg.map(sc => {
-    const inputs = fields.map(([k, label]) =>
+    const inputs = SALARY_FIELDS.map(([k, label]) =>
       `<div class="field"><label>${label}</label><input class="inp sc-inp" id="sc_${sc.level}_${k}" type="text" inputmode="decimal" value="${Number(sc[k] != null ? sc[k] : 0)}"></div>`
     ).join('');
-    return `<div class="card sc-card">
-      <div class="sc-head"><span class="lvl lvl-${sc.level}">${sc.level} 级</span></div>
+    return `<div class="card sc-card" data-level="${esc(sc.level)}">
+      <div class="sc-head"><span class="lvl lvl-${sc.level}">${sc.level} 级</span>
+        ${cfg.length > 1 ? `<button class="btn sm danger" onclick="removeSalaryLevel('${sc.level}')">删除该级别</button>` : ''}
+      </div>
       <div class="sc-grid">${inputs}</div>
     </div>`;
   }).join('');
   c.innerHTML = `
     <div class="page-head">
-      <div><h2>薪资参数配置</h2><div class="sub">编辑 A/B/C 三档的门槛、底薪、目标与各品类提成比例。保存后立即影响后续工资计算。</div></div>
-      <div class="row"><button class="btn sm" onclick="saveSalaryCfg()">保存</button></div>
+      <div><h2>薪资参数配置</h2><div class="sub">编辑各档的门槛、底薪、目标与各品类提成比例。可自由增加 / 删除级别。保存后立即影响后续工资计算。</div></div>
+      <div class="row">
+        <button class="btn sm" onclick="saveSalaryCfg()">保存</button>
+        <button class="btn sm ghost" onclick="addSalaryLevel()">＋ 增加级别</button>
+      </div>
     </div>
-    ${rows}`;
+    <div id="salaryList">${rows}</div>`;
 }
 
 function saveSalaryCfg() {
-  const levels = ['A', 'B', 'C'];
-  const fields = ['performance_threshold', 'base_salary', 'target', 'lesley_pct', 'non_series_pct', 'skin_treatment_pct', 'basic_pct', 'recharge_pct'];
-  const cfg = levels.map(L => {
-    const row = { level: L };
-    fields.forEach(k => {
-      const v = Number(document.getElementById('sc_' + L + '_' + k).value);
-      row[k] = isNaN(v) ? 0 : Math.round(v * 100) / 100;
-    });
-    return row;
-  });
-  DB.saveSalaryConfig(cfg);
+  DB.saveSalaryConfig(collectSalaryFromDOM());
   toast('薪资参数已保存');
   renderSalaryConfig(document.getElementById('content'));
+}
+
+function addSalaryLevel() {
+  const cfg = collectSalaryFromDOM();
+  const used = cfg.map(c => String(c.level).toUpperCase());
+  let next = 'D';
+  for (let i = 0; i < 26; i++) {
+    const cand = String.fromCharCode(65 + i);
+    if (!used.includes(cand)) { next = cand; break; }
+  }
+  const blank = { level: next };
+  SALARY_FIELDS.forEach(([k]) => blank[k] = 0);
+  cfg.push(blank);
+  DB.saveSalaryConfig(cfg);
+  renderSalaryConfig(document.getElementById('content'));
+  toast('已增加 ' + next + ' 级');
+}
+
+function removeSalaryLevel(level) {
+  const cfg = collectSalaryFromDOM();
+  confirmDialog('确定删除「' + level + ' 级」薪资配置？删除后不可恢复。', () => {
+    DB.saveSalaryConfig(cfg.filter(x => x.level !== level));
+    renderSalaryConfig(document.getElementById('content'));
+    toast('已删除 ' + level + ' 级');
+  }, '删除级别');
 }
 
 /* ============================================================
@@ -3180,10 +3315,11 @@ function renderAcGrid() {
       : '<div class="ac-thumb" style="background:#f3f4f6;color:#9ca3af;display:flex;align-items:center;justify-content:center;font-size:11px">无图</div>';
     return `<div class="ac-card">
       <div class="ac-thumbwrap">${thumb}</div>
-      <div class="ac-title">${esc(a.title || '(未命名)')}</div>
+      <div class="ac-title">${esc(a.title || '(未命名)')}${a.is_internal ? ' <span class="mr-badge int">对内</span>' : ''}</div>
       <div class="ac-price">${a.price != null && a.price !== '' ? '¥' + money(a.price) : '价格未填'}</div>
       <div class="ac-cats">${esc(catNames) || '<span style="color:#9ca3af">无分类</span>'}</div>
       <div class="row-act">
+        <button class="btn sm ghost" onclick="previewActivityCard('${a.id}')">预览</button>
         <button class="btn sm ghost" onclick="openActivityCardForm('${a.id}')">编辑</button>
         <button class="btn sm ghost" onclick="copyActivityCard('${a.id}')">复制</button>
         <button class="btn sm ghost" onclick="deleteActivityCard('${a.id}')">删除</button>
@@ -3240,6 +3376,31 @@ function previewImage(src) {
   openModal(`<div style="text-align:center"><img src="${url}" style="max-width:100%;max-height:72vh;border-radius:8px"></div>`);
 }
 
+function previewActivityCard(id) {
+  const a = DB.getList('activity_cards').find(x => x.id === id);
+  if (!a) return;
+  const cats = DB.getList('activity_card_categories');
+  const catNames = (a.category_ids || []).map(id => (cats.find(c => c.id === id) || {}).name).filter(Boolean).join('、');
+  const cover = (a.images && a.images[0]) ? `<img src="${a.images[0]}" style="width:100%;height:200px;object-fit:cover">` : '<div style="width:100%;height:200px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;color:#9ca3af">无封面图</div>';
+  const moreImgs = (a.images || []).slice(1).map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="previewImage('${encodeURIComponent(u)}')">`).join('');
+  openModal(`
+    <div style="max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      ${cover}
+      <div style="padding:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:18px;font-weight:700;color:#111827">${esc(a.title || '(未命名)')}</div>
+          ${a.price != null && a.price !== '' ? `<div style="margin-left:auto;font-size:18px;font-weight:700;color:#e11d48">¥${money(a.price)}</div>` : ''}
+        </div>
+        ${catNames ? `<div style="margin-top:6px"><span style="font-size:12px;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:999px">${esc(catNames)}</span></div>` : ''}
+        ${a.audience ? `<div style="margin-top:8px;font-size:13px;color:#6b7280">适用人群：${esc(a.audience)}</div>` : ''}
+        ${a.method ? `<div style="margin-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">销售方法 / 话术</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(a.method)}</div></div>` : ''}
+        ${a.detail ? `<div style="margin-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">卡详情</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(a.detail)}</div></div>` : ''}
+        ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
+        <div style="margin-top:12px;font-size:12px;color:#9ca3af;border-top:1px solid #f0f0f0;padding-top:8px">${a.is_internal ? '仅对内（前台客户不可见）' : '对外（前台客户可见）'}</div>
+      </div>
+    </div>`);
+}
+
 App._acImgs = [];
 function renderAcImgPreview() {
   const box = document.getElementById('ac_imgs'); if (!box) return;
@@ -3278,6 +3439,7 @@ function openActivityCardForm(id, copyData) {
   const html = `
     <h3>${isCopy ? '复制新建活动卡' : (id ? '编辑活动卡' : '新建活动卡')}</h3>
     <div class="field"><label>标题（选填）</label><input id="ac_title" value="${esc(val('title'))}" placeholder="如：新客体验卡"></div>
+    <div class="field"><label style="display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="ac_internal" ${val('is_internal') ? 'checked' : ''}> 仅对内（只后台可见，前台客户不可见）</label></div>
     <div class="field"><label>价格（选填，直接手填）</label><input id="ac_price" type="text" inputmode="decimal" value="${val('price') != null ? val('price') : ''}" placeholder="如：199"></div>
     <div class="field"><label>图片（选填，可多张）</label>
       <div id="ac_imgs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
@@ -3313,13 +3475,14 @@ function saveActivityCard(id) {
   const detail = document.getElementById('ac_detail').value;
   const audience = document.getElementById('ac_audience').value;
   const note = document.getElementById('ac_note').value;
+  const is_internal = document.getElementById('ac_internal').checked;
   const category_ids = Array.from(document.querySelectorAll('#ac_cats input:checked')).map(c => c.value);
   const images = App._acImgs.slice();
   if (id) {
-    DB.update('activity_cards', id, { title, price, method, detail, audience, internal_note: note, category_ids, images });
+    DB.update('activity_cards', id, { title, price, method, detail, audience, internal_note: note, is_internal, category_ids, images });
     toast('已保存');
   } else {
-    DB.insert('activity_cards', { title, price, method, detail, audience, internal_note: note, category_ids, images, created_at: todayStr() });
+    DB.insert('activity_cards', { title, price, method, detail, audience, internal_note: note, is_internal, category_ids, images, created_at: todayStr() });
     toast('已新建');
   }
   closeModal();
@@ -3342,30 +3505,71 @@ function deleteActivityCard(id) {
  * 供开单「项目」下拉(itemPool)与对外页面调用
  * ============================================================ */
 function renderProjects(c) {
-  const list = DB.getList('projects').slice().sort((a, b) => (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0));
+  const list = DB.getList('projects').slice().sort((a, b) => {
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;
+    return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0);
+  });
   c.innerHTML = `
     <div class="card">
       <div class="page-head">
         <h2>项目管理</h2>
         <div><button class="btn" onclick="openProjectForm(null)">+ 新增项目</button></div>
       </div>
-      <p class="muted" style="margin-top:-6px">前台展示版服务项目（图片 / 视频 / 详情 / 抖音团购链接），供开单「项目」下拉与对外页面调用。</p>
-      ${list.length === 0 ? '<div class="empty">还没有项目，点击右上角新增。</div>' :
-        `<table><thead><tr><th>名称</th><th>分类</th><th>状态</th><th>排序</th><th>图片</th><th>操作</th></tr></thead><tbody>
-        ${list.map(p => `
-          <tr>
-            <td>${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="tag">${esc(p.hot_badge)}</span>` : ''}</td>
-            <td>${esc((p.category_ids || []).join('、') || '—')}</td>
-            <td>${p.status === 'draft' ? '<span class="tag gray">草稿</span>' : '<span class="tag green">已上架</span>'}</td>
-            <td>${Number(p.sort_order) || 0}</td>
-            <td>${(p.images || []).length} 张</td>
-            <td><div class="row-act">
-              <button class="btn sm" onclick="openProjectForm('${p.id}')">编辑</button>
-              <button class="btn sm red" onclick="deleteProject('${p.id}')">删除</button>
-            </div></td>
-          </tr>`).join('')}
-        </tbody></table>`}
+      <p class="muted" style="margin-top:-6px">前台展示版服务项目（图片 / 视频 / 详情 / 抖音团购链接），供开单「项目」下拉与对外页面调用。置顶项在前台也优先展示。</p>
+      <div class="mini-list">
+        ${list.length === 0 ? '<div class="empty">还没有项目，点击右上角新增。</div>' :
+        list.map(p => `
+          <div class="mini-row">
+            <div class="mr-info">
+              <div class="mr-title">${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}${p.pinned ? ' <span class="mr-badge pin">置顶</span>' : ''}<span class="mr-badge ${p.status === 'draft' ? 'int' : 'ext'}">${p.status === 'draft' ? '草稿' : '已上架'}</span></div>
+              <div class="mr-meta">分类 <b>${esc((p.category_ids || []).join('、') || '—')}</b><span class="sep">·</span>${(p.images || []).length} 图<span class="sep">·</span>排序 <b>${Number(p.sort_order) || 0}</b></div>
+            </div>
+            <div class="mr-actions">
+              <button class="btn sm ghost" onclick="previewProject('${p.id}')">预览</button>
+              <button class="btn sm ghost" onclick="togglePin('projects','${p.id}')">${p.pinned ? '取消置顶' : '置顶'}</button>
+              <button class="btn sm ghost" onclick="openProjectForm('${p.id}')">编辑</button>
+              <button class="btn sm danger" onclick="deleteProject('${p.id}')">删除</button>
+            </div>
+          </div>`).join('')}
+      </div>
     </div>`;
+}
+
+function togglePin(collection, id) {
+  const item = DB.getList(collection).find(x => x.id === id);
+  if (!item) return;
+  DB.update(collection, id, { pinned: !item.pinned });
+  if (collection === 'projects') renderProjects(document.getElementById('content'));
+  else if (collection === 'knowledge_articles') renderKGrid();
+  else if (collection === 'cases') renderCaseGrid();
+  toast(item.pinned ? '已取消置顶' : '已置顶（前台将优先展示）');
+}
+
+function previewProject(id) {
+  const p = DB.getList('projects').find(x => x.id === id);
+  if (!p) return;
+  const cover = (p.images && p.images[0]) ? `<img src="${p.images[0]}" style="width:100%;height:200px;object-fit:cover">` : '<div style="width:100%;height:200px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px">项目封面</div>';
+  const moreImgs = (p.images || []).slice(1).map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="previewImage('${encodeURIComponent(u)}')">`).join('');
+  openModal(`
+    <div style="max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      ${cover}
+      <div style="padding:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:18px;font-weight:700;color:#111827">${esc(p.name || '(未命名)')}</div>
+          ${p.hot_badge ? `<span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:1px 8px;border-radius:999px">${esc(p.hot_badge)}</span>` : ''}
+          ${p.pinned ? `<span style="font-size:11px;background:#fef3c7;color:#b45309;padding:1px 8px;border-radius:999px">置顶</span>` : ''}
+          <span style="font-size:11px;background:${p.status === 'draft' ? '#e5e7eb' : '#dcfce7'};color:${p.status === 'draft' ? '#6b7280' : '#15803d'};padding:1px 8px;border-radius:999px">${p.status === 'draft' ? '草稿' : '已上架'}</span>
+        </div>
+        ${p.category_ids && p.category_ids.length ? `<div style="margin-top:6px;font-size:13px;color:#6b7280">分类：${esc(p.category_ids.join('、'))}</div>` : ''}
+        ${p.intro ? `<div style="margin-top:10px;font-size:13px;color:#4b5563;white-space:pre-wrap">${esc(p.intro)}</div>` : ''}
+        ${p.detail ? `<div style="margin-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">详情</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(p.detail)}</div></div>` : ''}
+        ${p.suggested_cycle ? `<div style="margin-top:8px;font-size:13px;color:#6b7280">建议周期：${esc(p.suggested_cycle)}</div>` : ''}
+        ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
+        ${p.video_url ? `<div style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
+        ${p.douyin_link ? `<div style="margin-top:6px"><a href="${esc(p.douyin_link)}" target="_blank" style="color:#7c3aed;font-size:13px">📕 抖音团购链接</a></div>` : ''}
+      </div>
+    </div>`);
 }
 
 function openProjectForm(id) {
@@ -3437,29 +3641,36 @@ function deleteProject(id) {
  * 卡集合已被开单「卡」下拉(itemPool)与工资卖卡提成读取
  * ============================================================ */
 function renderCards(c) {
-  const list = DB.getList('cards');
+  const all = DB.getList('cards');
+  const q = (App.cardSearch || '').toLowerCase();
+  const list = q ? all.filter(k => (k.name || '').toLowerCase().includes(q) || (k.external_name || '').toLowerCase().includes(q)) : all;
   c.innerHTML = `
     <div class="card">
       <div class="page-head">
         <h2>卡管理</h2>
-        <div><button class="btn" onclick="openCardForm(null)">+ 新增卡</button></div>
+        <div class="m-exports">
+          <input id="cardSearch" placeholder="搜索卡名/对外名" style="max-width:180px">
+          <button class="btn" onclick="openCardForm(null)">+ 新增卡</button>
+        </div>
       </div>
       <p class="muted" style="margin-top:-6px">会员 / 疗程卡定义。佣金方式用于工资计算卖卡提成；对外名用于股东报表脱敏展示。</p>
-      ${list.length === 0 ? '<div class="empty">还没有卡，点击右上角新增。</div>' :
-        `<table><thead><tr><th>卡名称</th><th>佣金方式</th><th>佣金值</th><th>股东报表对外名</th><th>操作</th></tr></thead><tbody>
-        ${list.map(k => `
-          <tr>
-            <td>${esc(k.name || '(未命名)')}</td>
-            <td>${k.commission_type === 'fixed' ? '<span class="tag">固定金额</span>' : '<span class="tag">按比例</span>'}</td>
-            <td>${k.commission_type === 'fixed' ? '¥' + Number(k.commission_value || 0).toFixed(2) : (Number(k.commission_value || 0)) + '%'}</td>
-            <td>${esc(k.external_name || '—')}</td>
-            <td><div class="row-act">
-              <button class="btn sm" onclick="openCardForm('${k.id}')">编辑</button>
-              <button class="btn sm red" onclick="deleteCard('${k.id}')">删除</button>
-            </div></td>
-          </tr>`).join('')}
-        </tbody></table>`}
+      <div class="mini-list">
+        ${list.length === 0 ? '<div class="empty">还没有卡，点击右上角新增。</div>' :
+        list.map(k => `
+          <div class="mini-row">
+            <div class="mr-info">
+              <div class="mr-title">${esc(k.name || '(未命名)')}</div>
+              <div class="mr-meta">${k.commission_type === 'fixed' ? '<span class="tag">固定</span>' : '<span class="tag">比例</span>'} 佣金 <b>${k.commission_type === 'fixed' ? '¥' + Number(k.commission_value || 0).toFixed(2) : (Number(k.commission_value || 0)) + '%'}</b>${k.external_name ? '<span class="sep">·</span>对外名 <b>' + esc(k.external_name) + '</b>' : ''}</div>
+            </div>
+            <div class="mr-actions">
+              <button class="btn sm ghost" onclick="openCardForm('${k.id}')">编辑</button>
+              <button class="btn sm danger" onclick="deleteCard('${k.id}')">删除</button>
+            </div>
+          </div>`).join('')}
+      </div>
     </div>`;
+  const s = document.getElementById('cardSearch');
+  if (s) { s.value = App.cardSearch || ''; s.oninput = e => { App.cardSearch = e.target.value; renderCards(c); }; }
 }
 
 function openCardForm(id) {
@@ -3511,30 +3722,63 @@ function deleteCard(id) {
  * 供对外页面调用（价格 / 时间 / 抖音链接 / 虚拟成交数等）
  * ============================================================ */
 function renderActivities(c) {
-  const list = DB.getList('activities');
   const tplLabel = { group: '团购', seckill: '秒杀', special: '特价', gift: '赠礼', trial: '体验', custom: '自定义' };
+  const q = (App.activitySearch || '').toLowerCase();
+  const all = DB.getList('activities');
+  const list = q ? all.filter(a => (a.title || '').toLowerCase().includes(q) || (a.detail || '').toLowerCase().includes(q)) : all;
   c.innerHTML = `
     <div class="card">
       <div class="page-head">
         <h2>活动 / 团购</h2>
-        <div><button class="btn" onclick="openActivityForm(null)">+ 新增活动</button></div>
+        <div class="m-exports">
+          <input id="activitySearch" class="inp" placeholder="搜索标题/详情" style="max-width:200px" value="${esc(App.activitySearch || '')}" />
+          <button class="btn" onclick="openActivityForm(null)">+ 新增活动</button>
+        </div>
       </div>
       <p class="muted" style="margin-top:-6px">前台营销活动 / 团购配置，供对外页面调用（价格、时间、抖音链接、虚拟成交数等）。</p>
-      ${list.length === 0 ? '<div class="empty">还没有活动，点击右上角新增。</div>' :
-        `<table><thead><tr><th>标题</th><th>类型</th><th>价格</th><th>时间</th><th>操作</th></tr></thead><tbody>
-        ${list.map(a => `
-          <tr>
-            <td>${esc(a.title || '(未命名)')}${a.hot_badge ? ` <span class="tag">${esc(a.hot_badge)}</span>` : ''}${a.price_visible ? '' : ' <span class="tag gray">价隐藏</span>'}</td>
-            <td><span class="tag">${tplLabel[a.template] || a.template || '自定义'}</span></td>
-            <td>${a.price != null ? '¥' + Number(a.price).toFixed(2) : '—'}</td>
-            <td>${esc((a.start_date || '') + (a.end_date ? ' ~ ' + a.end_date : '')) || '—'}</td>
-            <td><div class="row-act">
-              <button class="btn sm" onclick="openActivityForm('${a.id}')">编辑</button>
-              <button class="btn sm red" onclick="deleteActivity('${a.id}')">删除</button>
-            </div></td>
-          </tr>`).join('')}
-        </tbody></table>`}
+      <div class="mini-list">
+        ${list.length === 0 ? '<div class="empty">还没有活动，点击右上角新增。</div>' :
+        list.map(a => `
+          <div class="mini-row">
+            <div class="mr-info">
+              <div class="mr-title">${esc(a.title || '(未命名)')}${a.hot_badge ? ` <span class="mr-badge hot">${esc(a.hot_badge)}</span>` : ''}${a.price_visible ? '' : ' <span class="mr-badge int">价隐藏</span>'}</div>
+              <div class="mr-meta"><span class="tag">${tplLabel[a.template] || a.template || '自定义'}</span><span class="sep">·</span>价格 <b>${a.price != null ? '¥' + Number(a.price).toFixed(2) : '—'}</b><span class="sep">·</span>${esc((a.start_date || '') + (a.end_date ? ' ~ ' + a.end_date : '')) || '无时间'}</div>
+            </div>
+            <div class="mr-actions">
+              <button class="btn sm ghost" onclick="previewActivity('${a.id}')">预览</button>
+              <button class="btn sm ghost" onclick="openActivityForm('${a.id}')">编辑</button>
+              <button class="btn sm danger" onclick="deleteActivity('${a.id}')">删除</button>
+            </div>
+          </div>`).join('')}
+      </div>
     </div>`;
+  const s = document.getElementById('activitySearch');
+  if (s) s.oninput = e => { App.activitySearch = e.target.value; renderActivities(c); };
+}
+
+function previewActivity(id) {
+  const a = DB.getList('activities').find(x => x.id === id);
+  if (!a) return;
+  const tplLabel = { group: '团购', seckill: '秒杀', special: '特价', gift: '赠礼', trial: '体验', custom: '自定义' };
+  const header = a.header_image ? `<img src="${a.header_image}" style="width:100%;height:200px;object-fit:cover">` : '<div style="width:100%;height:200px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px">活动头图</div>';
+  const time = (a.start_date || '') + (a.end_date ? ' ~ ' + a.end_date : '') || '未设置时间';
+  openModal(`
+    <div style="max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      ${header}
+      <div style="padding:14px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:18px;font-weight:700;color:#111827">${esc(a.title || '(未命名)')}</div>
+          ${a.hot_badge ? `<span style="font-size:11px;background:#fee2e2;color:#b91c1c;padding:1px 8px;border-radius:999px">${esc(a.hot_badge)}</span>` : ''}
+        </div>
+        <div style="margin-top:6px"><span style="font-size:12px;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:999px">${tplLabel[a.template] || a.template || '自定义'}</span></div>
+        ${a.price != null ? `<div style="margin-top:10px;font-size:22px;font-weight:700;color:#e11d48">${a.price_visible ? '¥' + Number(a.price).toFixed(2) : '价格未公开'}</div>` : ''}
+        <div style="margin-top:8px;font-size:13px;color:#6b7280">活动时间：${esc(time)}</div>
+        ${a.detail ? `<div style="margin-top:10px;font-size:13px;color:#4b5563;white-space:pre-wrap">${esc(a.detail)}</div>` : ''}
+        ${a.video_url ? `<div style="margin-top:10px"><a href="${esc(a.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
+        ${a.douyin_link ? `<div style="margin-top:6px"><a href="${esc(a.douyin_link)}" target="_blank" style="color:#7c3aed;font-size:13px">📕 抖音团购链接</a></div>` : ''}
+        ${(Number(a.fake_sold) || 0) || (Number(a.fake_joined) || 0) ? `<div style="margin-top:8px;font-size:12px;color:#9ca3af">已有 ${Number(a.fake_sold)||0} 人成交 · ${Number(a.fake_joined)||0} 人参与</div>` : ''}
+      </div>
+    </div>`);
 }
 
 function openActivityForm(id) {
@@ -3751,7 +3995,11 @@ function renderKGrid() {
   const el = document.getElementById('kGrid');
   if (!el) return;
   const kw = (App.kSearch || '').toLowerCase();
-  let list = DB.getList('knowledge_articles');
+  let list = DB.getList('knowledge_articles').slice().sort((a, b) => {
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;
+    return (b.created_at || '').localeCompare(a.created_at || '');
+  });
   if ((App.kCats || []).length) list = list.filter(a => App.kCats.includes(a.category_id));
   if (kw) list = list.filter(a => (a.title || '').toLowerCase().includes(kw) || (a.content || '').toLowerCase().includes(kw));
   if (!list.length) { el.innerHTML = '<div class="empty">暂无知识，点右上角「+ 新建知识」</div>'; return; }
@@ -3762,20 +4010,45 @@ function renderKGrid() {
       <div class="kg-card">
         ${a.cover ? `<img src="${a.cover}" style="width:100%;height:120px;object-fit:cover" onclick="previewImg('${a.cover.replace(/'/g, "\\'")}')">` : ''}
         <div style="padding:10px">
-          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
             <span class="tag ${a.type === 'external' ? 'green' : 'gray'}">${a.type === 'external' ? '对外' : '对内'}</span>
             ${cat ? `<span class="tag">${esc(cat.name)}</span>` : ''}
+            ${a.pinned ? '<span class="mr-badge pin">置顶</span>' : ''}
           </div>
           <div style="font-weight:600;font-size:14px;margin-bottom:4px">${esc(a.title || '(无标题)')}</div>
           <div class="muted" style="font-size:12px;max-height:40px;overflow:hidden">${esc(stripHtml(a.content || '')).slice(0, 40)}</div>
           ${exp ? `<div class="muted" style="font-size:12px;margin-top:6px">模板：${esc(exp.title)}</div>` : ''}
           <div class="row-act">
+            <button class="btn sm ghost" onclick="previewKnowledge('${a.id}')">预览</button>
+            <button class="btn sm ghost" onclick="togglePin('knowledge_articles','${a.id}')">${a.pinned ? '取消置顶' : '置顶'}</button>
             <button class="btn sm ghost" onclick="openKnowledgeForm('${a.id}')">编辑</button>
             <button class="btn sm ghost" onclick="deleteKnowledge('${a.id}')">删除</button>
           </div>
         </div>
       </div>`;
   }).join('') + `</div>`;
+}
+
+function previewKnowledge(id) {
+  const a = DB.getList('knowledge_articles').find(x => x.id === id);
+  if (!a) return;
+  const cat = DB.getList('knowledge_categories').find(c => c.id === a.category_id);
+  const exp = DB.getList('expert_profiles').find(e => e.id === a.expert_profile_id);
+  const cover = a.cover ? `<img src="${a.cover}" style="width:100%;max-height:220px;object-fit:cover">` : '';
+  openModal(`
+    <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      ${cover}
+      <div style="padding:16px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          <span class="tag ${a.type === 'external' ? 'green' : 'gray'}">${a.type === 'external' ? '对外' : '对内'}</span>
+          ${cat ? `<span class="tag" style="background:#ede9fe;color:#7c3aed">${esc(cat.name)}</span>` : ''}
+          ${a.pinned ? '<span style="font-size:11px;background:#fef3c7;color:#b45309;padding:1px 8px;border-radius:999px">置顶</span>' : ''}
+        </div>
+        <div style="font-size:20px;font-weight:700;color:#111827">${esc(a.title || '(无标题)')}</div>
+        <div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:10px;line-height:1.7">${esc(stripHtml(a.content || ''))}</div>
+        ${exp ? `<div style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">专家简介模板</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(exp.content || '')}</div></div>` : ''}
+      </div>
+    </div>`);
 }
 
 function openKnowledgeForm(id) {
@@ -3920,26 +4193,53 @@ function setCaseCat(id) {
 
 function renderCaseGrid() {
   const grid = document.getElementById('caseGrid'); if (!grid) return;
-  let list = DB.getList('cases');
+  let list = DB.getList('cases').slice().sort((a, b) => {
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if (pa !== pb) return pb - pa;
+    return (b.created_at || '').localeCompare(a.created_at || '');
+  });
   if (App.caseCats) list = list.filter(x => x.category_id === App.caseCats);
   const kw = (App.caseSearch || '').trim().toLowerCase();
   if (kw) list = list.filter(x => (x.title || '').toLowerCase().includes(kw) || (x.content || '').toLowerCase().includes(kw));
-  list.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
   if (!list.length) { grid.innerHTML = '<div style="color:#9ca3af;font-size:13px;padding:20px">暂无案例</div>'; return; }
   grid.innerHTML = list.map(x => {
     const cat = DB.getList('case_categories').find(c => c.id === x.category_id);
     const cover = (x.images && x.images.length) ? x.images[0] : null;
     return `<div class="case-card">
       ${cover ? `<div class="case-thumb" onclick="previewImg('${cover}')"><img src="${cover}" style="width:100%;height:100%;object-fit:cover"></div>` : `<div class="case-thumb">无图</div>`}
-      <div class="case-title">${esc(x.title || '未命名案例')}</div>
+      <div class="case-title">${esc(x.title || '未命名案例')}${x.pinned ? ' <span class="mr-badge pin">置顶</span>' : ''}</div>
       <div style="font-size:12px;color:#6b7280;margin-bottom:6px">${cat ? esc(cat.name) : '未分类'}${x.images && x.images.length > 1 ? ' · ' + x.images.length + '图' : ''}${x.video_url ? ' · 含视频' : ''}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn sm ghost" onclick="previewCase('${x.id}')">预览</button>
+        <button class="btn sm ghost" onclick="togglePin('cases','${x.id}')">${x.pinned ? '取消置顶' : '置顶'}</button>
         <button class="btn sm ghost" onclick="copyCase('${x.id}')">复制</button>
         <button class="btn sm" onclick="openCaseForm('${x.id}')">编辑</button>
         <button class="btn sm ghost" onclick="deleteCase('${x.id}')">删除</button>
       </div>
     </div>`;
   }).join('');
+}
+
+function previewCase(id) {
+  const x = DB.getList('cases').find(c => c.id === id);
+  if (!x) return;
+  const cat = DB.getList('case_categories').find(c => c.id === x.category_id);
+  const cover = (x.images && x.images[0]) ? `<img src="${x.images[0]}" style="width:100%;max-height:220px;object-fit:cover">` : '';
+  const moreImgs = (x.images || []).slice(1).map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="previewImg('${u}')">`).join('');
+  openModal(`
+    <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      ${cover}
+      <div style="padding:16px">
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+          ${cat ? `<span class="tag" style="background:#ede9fe;color:#7c3aed">${esc(cat.name)}</span>` : ''}
+          ${x.pinned ? '<span style="font-size:11px;background:#fef3c7;color:#b45309;padding:1px 8px;border-radius:999px">置顶</span>' : ''}
+        </div>
+        <div style="font-size:20px;font-weight:700;color:#111827">${esc(x.title || '未命名案例')}</div>
+        <div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:10px;line-height:1.7">${esc(stripHtml(x.content || ''))}</div>
+        ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
+        ${x.video_url ? `<div style="margin-top:10px"><a href="${esc(x.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
+      </div>
+    </div>`);
 }
 
 function addCaseCategory() {
