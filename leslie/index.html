@@ -402,98 +402,102 @@
   <div class="btn-row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="chgPwdCancel">取消</button><button class="btn primary" id="chgPwdOk">更新密码</button></div>
 </div></div>
 
-<div class="modal hidden" id="formModal"><div class="box" style="max-width:560px">
-  <h3 id="formTitle">新增产品</h3>
-  <!-- 顶部操作栏 -->
-  <div class="btn-row" id="formActionBar" style="margin-bottom:10px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm primary" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别填框</button></div>
-  <div id="pasteHint" style="font-size:12px;color:var(--c-sub);text-align:center;margin-bottom:8px"></div>
+<div class="modal hidden" id="formModal"><div class="box" style="max-width:580px">
+  <h3 id="formTitle" style="margin-bottom:4px">新建产品</h3>
+  <div style="font-size:12px;color:var(--c-sub);margin-bottom:10px">⚡ 一键识别（粘贴商品信息，自动填充下方字段）</div>
 
-  <!-- ===== 基本信息 ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">基本信息</legend>
-  <div class="field" style="margin-bottom:8px"><label>产品标题 *</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
-  <div class="field btn-row" style="gap:10px">
-    <div style="flex:1"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
-    <div style="flex:1"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
+  <!-- 统一粘贴区 -->
+  <textarea id="pasteArea" rows="3" style="width:100%;box-sizing:border-box;font-size:14px;padding:10px 12px;border:1px solid var(--c-line);border-radius:8px;background:#fafafa;resize:vertical;outline:none;line-height:1.6;margin-bottom:8px" placeholder="把商品信息粘贴到这里，系统自动识别填入对应框，例如：&#10;①标签式：产品名称：兰蔻菁纯面霜 / 零售价：1280 / 会员价：1080 / 库存：5 / 保质期：36个月 / 产品简介…&#10;②自由文本：直接粘贴商品描述，系统智能提取名称、品牌、价格、功效等"></textarea>
+  <div class="btn-row" id="formActionBar" style="margin-bottom:14px;gap:8px">
+    <button class="btn sm primary" id="pasteFillBtn" type="button" style="flex:1;padding:8px 0;font-size:14px;border-radius:8px">⚡ 一键识别</button>
+    <button class="btn sm" id="pasteOnlyBtn" type="button" style="flex:1;padding:8px 0;font-size:14px;border-radius:8px;border:1px solid var(--c-line);background:#fff">📋 粘贴</button>
+    <button class="btn sm" id="clearFormBtn" type="button" style="padding:8px 14px;font-size:14px;border-radius:8px;border:1px solid var(--c-line);background:#fff">清空表单</button>
   </div>
-  <div class="field btn-row" style="gap:10px">
-    <div style="flex:1"><label>系列</label><select id="f_series"><option value="">不选择</option></select></div>
-    <div style="flex:1"><label>库存数量</label><input id="f_stock" type="number" placeholder="留空=不限"></div>
-  </div>
-  <div class="field btn-row" style="gap:10px">
-    <div style="flex:1"><label>原价 / 划线价（选填）</label><input id="f_origprice" type="number" step="0.01" placeholder="如：399"></div>
-    <div style="flex:1"><label>容量 / 规格（选填）</label><input id="f_spec" placeholder="如：30ml / 50g"></div>
-  </div>
-  </fieldset>
+  <div id="pasteHint" style="font-size:12px;color:var(--c-sub);margin-bottom:10px"></div>
 
-  <!-- ===== 标签与活动 ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">标签与活动</legend>
-  <div class="field" style="margin-bottom:8px"><label>功效标签（逗号分隔）</label><input id="f_tags" placeholder="美白, 补水, 提亮"></div>
-  <div class="field" style="margin-bottom:0">
-    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px" onclick="const p=this.nextElementSibling;p.style.display=p.style.display==='block'?'none':'block';this.querySelector('span').textContent=p.style.display==='block'?'▾':'▸'">活动标签<span>▸</span><span style="font-weight:400;color:var(--c-sub);margin-left:4px;font-size:11px">(选填，折叠)</span></label>
-    <div id="f_act_fold" style="display:none;margin-top:6px">
-      <div id="f_act_chips" class="chips" style="margin-bottom:4px"></div>
-      <input id="f_act_custom" class="hidden" style="width:100%;box-sizing:border-box;font-size:14px;padding:7px 9px;border:1px solid var(--c-line);border-radius:6px" placeholder="自定义标签文字">
+  <!-- 基本信息（两列网格） -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px">
+    <div style="grid-column:1/-1"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">名称 <span style="color:var(--c-primary)">*</span></label><input id="f_name" placeholder="如：烟酰胺光感精华" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">角标文字 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(选填，如"热销")</span></label><input id="f_tags_badge" placeholder="热销" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">品牌</label><input id="f_brand" placeholder="如：LESLEY" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">分类</label><select id="f_cat" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"><option value="">不选择</option></select></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">系列</label><select id="f_series" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"><option value="">不选择</option></select></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">库存数量</label><input id="f_stock" type="number" placeholder="留空=不限" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">原价 / 划线价 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(选填)</span></label><input id="f_origprice" type="number" step="0.01" placeholder="如：399" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">容量 / 规格 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(选填)</span></label><input id="f_spec" placeholder="如：30ml / 50g" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+  </div>
+
+  <!-- 标签与活动 -->
+  <div style="margin-bottom:10px">
+    <label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">功效标签 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(逗号分隔)</span></label>
+    <input id="f_tags" placeholder="美白, 补水, 提亮, 修复" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none">
+    <div id="f_act_fold" style="margin-top:6px">
+      <div style="font-size:12px;color:var(--c-sub);margin-bottom:3px;cursor:pointer" onclick="const p=this.nextElementSibling;p.style.display=p.style.display==='block'?'none':'block';this.querySelector('span').textContent=p.style.display==='block'?'▾':'▸'">活动标签<span>▸</span> <span style="color:var(--c-sub)">(选填)</span></div>
+      <div style="display:none;margin-top:4px">
+        <div id="f_act_chips" class="chips" style="margin-bottom:4px"></div>
+        <input id="f_act_custom" style="width:100%;box-sizing:border-box;font-size:14px;padding:7px 9px;border:1px solid var(--c-line);border-radius:6px" placeholder="自定义标签文字">
+      </div>
     </div>
   </div>
-  </fieldset>
 
-  <!-- ===== 媒体文件 ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">媒体文件</legend>
-  <div class="field" style="margin-bottom:8px"><label>产品图片（多张，第一张为主图）</label><input id="f_imgs" type="file" accept="image/*" multiple><div class="thumbs" id="f_thumbs"></div></div>
-  <div class="field btn-row" style="gap:10px">
-    <div style="flex:1"><label>产品视频（可选）</label><input id="f_video" type="file" accept="video/*"><div id="f_video_name" style="font-size:11px;color:var(--c-sub);margin-top:2px"></div></div>
-    <div style="flex:1"><label>详情长图（可选）</label><input id="f_long" type="file" accept="image/*"><div id="f_long_name" style="font-size:11px;color:var(--c-sub);margin-top:2px"></div></div>
+  <!-- 媒体文件（两列） -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px">
+    <div style="grid-column:1/-1"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">图片 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(最多9张，选填)</span></label>
+      <div style="display:flex;align-items:center;gap:8px"><button class="btn sm" type="button" onclick="document.getElementById('f_imgs').click()" style="padding:6px 12px;font-size:13px;border:1px solid var(--c-line);border-radius:6px;background:#fff">选取文件</button><span id="f_img_label" style="font-size:12px;color:var(--c-sub)">未选择文件</span></div>
+      <input id="f_imgs" type="file" accept="image/*" multiple style="display:none"><div class="thumbs" id="f_thumbs" style="margin-top:6px"></div></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">产品视频 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(选填)</span></label>
+      <div style="display:flex;align-items:center;gap:8px"><button class="btn sm" type="button" onclick="document.getElementById('f_video').click()" style="padding:6px 12px;font-size:13px;border:1px solid var(--c-line);border-radius:6px;background:#fff">选取文件</button><span id="f_video_name" style="font-size:12px;color:var(--c-sub)">未选择文件</span></div>
+      <input id="f_video" type="file" accept="video/*" style="display:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">详情长图 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(可选)</span></label>
+      <div style="display:flex;align-items:center;gap:8px"><button class="btn sm" type="button" onclick="document.getElementById('f_long').click()" style="padding:6px 12px;font-size:13px;border:1px solid var(--c-line);border-radius:6px;background:#fff">选取文件</button><span id="f_long_name" style="font-size:12px;color:var(--c-sub)">未选择文件</span></div>
+      <input id="f_long" type="file" accept="image/*" style="display:none"></div>
   </div>
-  </fieldset>
 
-  <!-- ===== 产品描述（内嵌富文本编辑器） ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">产品描述（可选）</legend>
-  <div class="rte-bar" id="formRteBar" style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#f5f5f5;border:1px solid var(--c-line);border-radius:6px">
-    <button data-c="bold" style="font-weight:700;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">B</button>
-    <button data-c="italic" style="font-style:italic;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">I</button>
-    <button data-c="underline" style="text-decoration:underline;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">U</button>
-    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
-    <button data-c="foreColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">A<font color="red">色</font></button>
-    <button data-c="hiliteColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">底色</button>
-    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
-    <button data-c="justifyLeft" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬅</button>
-    <button data-c="justifyCenter" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬌</button>
-    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
-    <button data-c="insertUnorderedList" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">•≣</button>
-    <button data-c="createLink" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🔗</button>
-    <button data-c="insertImage" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🖼</button>
-    <input type="color" id="formRteColor" value="#e4393c" style="width:26px;height:26px;padding:0;border:none;vertical-align:middle">
+  <!-- 产品描述（内嵌富文本） -->
+  <div style="margin-bottom:10px">
+    <label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">产品描述 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(可选)</span></label>
+    <div class="rte-bar" id="formRteBar" style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#f5f5f5;border:1px solid var(--c-line);border-radius:6px">
+      <button data-c="bold" style="font-weight:700;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">B</button>
+      <button data-c="italic" style="font-style:italic;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">I</button>
+      <button data-c="underline" style="text-decoration:underline;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">U</button>
+      <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+      <button data-c="foreColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">A<font color="red">色</font></button>
+      <button data-c="hiliteColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">底色</button>
+      <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+      <button data-c="justifyLeft" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬅</button>
+      <button data-c="justifyCenter" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬌</button>
+      <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+      <button data-c="insertUnorderedList" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">•≣</button>
+      <button data-c="createLink" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🔗</button>
+      <button data-c="insertImage" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🖼</button>
+      <input type="color" id="formRteColor" value="#e4393c" style="width:26px;height:26px;padding:0;border:none;vertical-align:middle">
+    </div>
+    <div id="formRte" contenteditable="true" style="min-height:90px;max-height:180px;overflow-y:auto;padding:10px;border:1px solid var(--c-line);border-radius:6px;background:#fff;font-size:15px;line-height:1.7;outline:none" data-ph="在此输入产品描述…"></div>
+    <div id="f_desc_preview" style="font-size:11px;color:var(--c-sub);margin-top:3px"></div>
   </div>
-  <div id="formRte" contenteditable="true" style="min-height:100px;max-height:200px;overflow-y:auto;padding:10px;border:1px solid var(--c-line);border-radius:6px;background:#fff;font-size:15px;line-height:1.7;outline:none" data-ph="在此输入产品描述…"></div>
-  <div id="f_desc_preview" style="font-size:11px;color:var(--c-sub);margin-top:4px"></div>
-  </fieldset>
 
-  <!-- ===== 购买与分享 ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">购买与分享</legend>
-  <div class="field btn-row" style="gap:10px">
-    <div style="flex:1"><label>购买按钮文字</label><input id="f_buytxt" placeholder="去购买"></div>
-    <div style="flex:1"><label>购买链接</label><input id="f_buylink" placeholder="https://…"></div>
+  <!-- 购买与分享（两列） -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:10px">
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">购买按钮文字</label><input id="f_buytxt" placeholder="去购买" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">购买链接</label><input id="f_buylink" placeholder="https://…" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
+    <div style="grid-column:1/-1"><label style="font-size:13px;font-weight:500;display:block;margin-bottom:3px">活动结束时间 <span style="font-weight:400;color:var(--c-sub);font-size:11px">(倒计时，可选)</span></label><input id="f_end" type="datetime-local" style="width:100%;box-sizing:border-box;font-size:14px;padding:9px 10px;border:1px solid var(--c-line);border-radius:6px;outline:none"></div>
   </div>
-  <div class="field" style="margin-bottom:8px"><label>活动结束时间（倒计时）</label><input id="f_end" type="datetime-local"></div>
-  <details style="margin-top:4px"><summary style="font-size:13px;cursor:pointer;color:var(--c-sub)">单品分享卡片（可选，展开填写）</summary>
-    <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">
+  <details style="margin-bottom:10px"><summary style="font-size:13px;cursor:pointer;color:var(--c-sub);font-weight:500">单品分享卡片（可选，展开填写）</summary>
+    <div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <input id="f_sharetitle" placeholder="分享标题" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
       <input id="f_sharedesc" placeholder="分享描述" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
-      <input id="f_sharethumb" placeholder="缩略图URL（留空用主图）" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
+      <input id="f_sharethumb" placeholder="缩略图URL（留空用主图）" style="grid-column:1/-1;font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
     </div>
   </details>
-  </fieldset>
 
-  <!-- ===== 其他设置 ===== -->
-  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">其他设置</legend>
-  <div class="field btn-row" style="gap:10px">
-    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="f_shelf" checked style="width:auto"> 上架显示</label>
-    <div style="flex:1"><label>排序</label><input id="f_order" type="number" value="0" style="width:70px"></div>
+  <!-- 其他设置（一行搞定） -->
+  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px;font-size:13px">
+    <label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="f_shelf" checked style="width:auto"> 上架显示</label>
+    <div style="display:flex;align-items:center;gap:4px"><label style="white-space:nowrap">排序</label><input id="f_order" type="number" value="0" style="width:60px;padding:6px 8px;border:1px solid var(--c-line);border-radius:6px;font-size:14px;outline:none"></div>
   </div>
-  </fieldset>
 
   <div id="draftTip" class="help hidden"></div>
-  <div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="formCancel">取消</button><button class="btn" id="formPreview">📱 预览前台效果</button><button class="btn primary" id="formSave">保存</button></div>
+  <div class="btn-row" style="justify-content:flex-end;margin-top:12px;gap:8px"><button class="btn" id="formCancel" style="padding:9px 18px">取消</button><button class="btn" id="formPreview" style="padding:9px 18px">📱 预览前台效果</button><button class="btn primary" id="formSave" style="padding:9px 24px">保存</button></div>
 </div></div>
 
 <div class="mask hidden" id="mask"></div>
@@ -1119,7 +1123,10 @@ let FORM={id:null,images:[],video:null,longImage:null,desc:""};
 function openForm(p){
   FORM={id:p?p.id:null,images:(p&&p.images)?p.images.slice():[],video:(p&&p.video)||null,longImage:(p&&p.longImage)||null,desc:(p&&p.desc)||""};
   document.getElementById("formTitle").textContent=p?"编辑产品":"新增产品";
+  var _pa=document.getElementById("pasteArea");if(_pa)_pa.value="";
+  var _ph=document.getElementById("pasteHint");if(_ph)_ph.textContent="";
   fill("f_name",p?p.name:"");fill("f_brand",p?p.brand:"");fill("f_tags",p?(p.tags||[]).join(","):"");
+  fill("f_tags_badge",p?(p.badge||p.tagsBadge||""):"");
   fill("f_stock",(p&&p.stock!==undefined&&p.stock!==null)?p.stock:"");
   fill("f_origprice",(p&&p.origPrice!==undefined&&p.origPrice!==null)?p.origPrice:"");
   fill("f_spec",p?p.spec:"");
@@ -1212,7 +1219,7 @@ document.getElementById("formSave").onclick=async()=>{
   const rteEl=document.getElementById("formRte");
   const descHtml=rteEl?rteEl.innerHTML.trim():"";
   const obj={name:name||"未命名产品",brand:val("f_brand").trim(),cat:val("f_cat")||"",series:val("f_series")||"",
-    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),activity:act||"",desc:descHtml,
+    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),badge:val("f_tags_badge").trim()||undefined,activity:act||"",desc:descHtml,
     images:FORM.images,video:FORM.video,longImage:FORM.longImage,
     stock:(stockRaw===""?null:parseInt(stockRaw)),endTime:val("f_end")||"",origPrice:(val("f_origprice").trim()===""?null:parseFloat(val("f_origprice"))),spec:val("f_spec").trim(),
     buyText:val("f_buytxt").trim()||"去购买",buyLink:val("f_buylink").trim(),
@@ -1230,7 +1237,7 @@ function previewProduct(){
   const obj={
     name:val("f_name").trim()||"未命名产品",brand:val("f_brand").trim(),
     cat:val("f_cat")||"",series:val("f_series")||"",
-    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),
+    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),badge:val("f_tags_badge").trim()||undefined,
     activity:getActValue(),desc:rteEl?rteEl.innerHTML.trim():"",images:FORM.images,video:FORM.video,longImage:FORM.longImage,
     stock:(val("f_stock").trim()===""?null:parseInt(val("f_stock"))),endTime:val("f_end")||"",origPrice:(val("f_origprice").trim()===""?null:parseFloat(val("f_origprice"))),spec:val("f_spec").trim(),
     buyText:val("f_buytxt").trim()||"去购买",buyLink:val("f_buylink").trim(),onShelf:document.getElementById("f_shelf").checked
@@ -1391,6 +1398,7 @@ function parseProductText(text){
 function applyParsed(r){
   const filled=[];
   if(r.name){fill('f_name',r.name);filled.push('标题');}
+  if(r.badge||r.tagsBadge){fill('f_tags_badge',r.badge||r.tagsBadge||'');filled.push('角标');}
   if(r.brand){fill('f_brand',r.brand);filled.push('品牌');}
   if(r.cat){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(c){return c.name&&(c.name===r.cat||c.name.indexOf(r.cat)>=0||r.cat.indexOf(c.name)>=0);});if(c){fc.value=c.id;filled.push('分类');}}
   if(r.series){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(s){return s.name&&(s.name===r.series||s.name.indexOf(r.series)>=0||r.series.indexOf(s.name)>=0);});if(s){fs.value=s.id;filled.push('系列');}}
@@ -1407,30 +1415,64 @@ function applyParsed(r){
   if(r.desc){const rte=document.getElementById('formRte');if(rte)rte.innerHTML=r.desc.replace(/\n/g,'<br>');const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(r.desc).slice(0,40)+(r.desc.length>40?'…':'');filled.push('描述');}
   return filled;
 }
-async function doPasteFill(){
-  const modal=document.getElementById('formModal');
-  if(modal.classList.contains('hidden')){openForm(null);}
-  else if(val('f_name').trim()){if(!confirm('将用粘贴内容覆盖当前表单已填内容，继续？'))return;}
-  let text=null;
-  try{if(navigator.clipboard&&navigator.clipboard.readText)text=await navigator.clipboard.readText();}catch(e){text=null;}
-  if(!text||!text.trim()){openPasteModal();return;}
-  // 链接抓取功能已移除：纯链接也按文案解析（自动提取其中可识别的字段，如购买链接）
-  const filled=applyParsed(parseProductText(text));
-  const hint=document.getElementById('pasteHint');
-  if(filled.length){toast('已自动填入：'+filled.join('、'));if(hint)hint.textContent='已识别 '+filled.length+' 项';}
-  else{toast('未识别到可填充字段，请检查粘贴内容');if(hint)hint.textContent='未识别到字段';}
-}
-function openPasteModal(){
-  const m=document.createElement('div');m.className='modal';
-  m.innerHTML='<div class="box" style="max-width:520px"><h3>粘贴产品信息</h3><div class="help">浏览器未授权自动读取剪贴板，请在此 Ctrl+V 粘贴，再点「识别填入」。</div><textarea id="pmText" style="width:100%;height:200px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.6;resize:vertical;white-space:pre-wrap;word-break:break-word" placeholder="在此粘贴产品文案，例如：\n产品名称：烟酰胺光感精华\n品牌：LESLEY\n功效：美白, 补水, 提亮\n描述：主打..."></textarea><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pmCancel">取消</button><button class="btn primary" id="pmOk">识别填入</button></div></div>';
-  document.body.appendChild(m);
-  const ta=m.querySelector('#pmText');
-  ta.addEventListener('paste',function(){setTimeout(function(){ta.focus();},30);},false);
-  setTimeout(function(){ta.focus();},100);
-  m.querySelector('#pmCancel').onclick=function(){m.remove();};
-  m.querySelector('#pmOk').onclick=function(){const txt=ta.value;m.remove();const filled=applyParsed(parseProductText(txt));toast(filled.length?('已自动填入：'+filled.join('、')):'未识别到字段');};
-}
-document.getElementById('pasteFillBtn').onclick=doPasteFill;
+/* ---- 新品表单：统一粘贴区逻辑 ---- */
+  var pasteArea=document.getElementById("pasteArea");
+  document.getElementById("pasteFillBtn").onclick=function(){
+    var t=(pasteArea&&pasteArea.value)||"";
+    if(t.trim()){runParse(t);return;}
+    // 粘贴区为空 → 尝试剪贴板（保留「复制后直接点」的便利）
+    if(navigator.clipboard&&navigator.clipboard.readText){
+      navigator.clipboard.readText().then(function(ct){
+        if(ct&&ct.trim()){if(pasteArea)pasteArea.value=ct;runParse(ct);}
+        else{focusPasteHint("剪贴板为空，请粘贴产品信息到上方输入框，再点 ⚡ 一键识别");}
+      }).catch(function(){focusPasteHint("无法读取剪贴板，请粘贴产品信息到上方输入框，再点 ⚡ 一键识别");});
+    }else{
+      focusPasteHint("请粘贴产品信息到上方输入框，再点 ⚡ 一键识别");
+    }
+  };
+  function runParse(t){
+    var r=parseProductText(t);
+    if(Object.keys(r).length<=1&&!r.name){toast("未能识别有效信息，请检查格式");return;}
+    applyParsed(r);
+    toast("已识别 "+Object.keys(r).length+" 项并填入对应字段");
+  }
+  function focusPasteHint(msg){
+    if(pasteArea)pasteArea.focus();
+    var hint=document.getElementById("pasteHint");
+    if(hint)hint.textContent=msg;
+    toast(msg);
+  }
+  document.getElementById("pasteOnlyBtn").onclick=function(){
+    var t=(pasteArea&&pasteArea.value)||"";
+    if(!t.trim()){toast("请先在上方粘贴区输入内容");return;}
+    var rte=document.getElementById("formRte");
+    if(rte){rte.innerHTML=t.replace(/\n/g,'<br>');var pv=document.getElementById("f_desc_preview");if(pv)pv.textContent=t.slice(0,50)+(t.length>50?'…':'');}
+    toast("已粘贴到产品描述");
+  };
+  document.getElementById("clearFormBtn").onclick=function(){
+    if(!confirm("确定清空所有已填内容？"))return;
+    var ids=["f_name","f_brand","f_cat","f_series","f_stock","f_origprice","f_spec","f_tags","f_tags_badge","f_buytxt","f_buylink","f_end","f_sharetitle","f_sharedesc","f_sharethumb","f_order"];
+    for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el){if(el.tagName==="SELECT"||el.type==="select-one")el.value="";else el.value="";}}
+    var rte=document.getElementById("formRte");if(rte)rte.innerHTML="";
+    var pv=document.getElementById("f_desc_preview");if(pv)pv.textContent="";
+    var th=document.getElementById("f_thumbs");if(th)th.innerHTML="";
+    FORM.images=[];
+    document.getElementById("f_shelf").checked=true;
+    if(pasteArea)pasteArea.value="";
+    toast("表单已清空");
+  };
+  document.getElementById("f_imgs").addEventListener("change",function(){
+    var lbl=document.getElementById("f_img_label");
+    if(lbl)lbl.textContent=this.files&&this.files.length?this.files.length+" 张图片":"未选择文件";
+  });
+  document.getElementById("f_video").addEventListener("change",function(){
+    var nm=document.getElementById("f_video_name");
+    if(nm)nm.textContent=this.files&&this.files[0]?this.files[0].name:"未选择文件";
+  });
+  document.getElementById("f_long").addEventListener("change",function(){
+    var nm=document.getElementById("f_long_name");
+    if(nm)nm.textContent=this.files&&this.files[0]?this.files[0].name:"未选择文件";
+  });
 
 
 /* --- 富文本编辑器 --- */
