@@ -286,9 +286,17 @@
    * 股东报表 / 产品表 / 案例表：在 tr 第一格注入 data-th（js 自动注入），
    * data-th=列名 即可让卡片化生效
    * ============================================================ */
-  .page-head .m-exports { display: flex; gap: 6px; flex-wrap: wrap; }
+  .page-head .m-exports { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   @media (max-width: 640px) {
-    .page-head .m-exports .btn { flex: 1 1 0; }
+    /* 工具栏按钮自然排，不强制均分；新建按钮单独一行突出 */
+    .page-head .m-exports { gap: 5px; }
+    .page-head .m-exports .btn { flex: 0 0 auto !important; padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+    .page-head .m-exports > .btn:last-child { width: 100%; margin-top: 4px; padding: 10px 12px; font-size: 14px; }
+    /* 搜索框+分类下拉：行内紧凑、各占剩余 */
+    .page-head #pSearch { flex: 1 1 0; min-width: 0; }
+    .page-head #pCat { flex: 1 1 0; min-width: 0; max-width: none !important; }
+    /* 搜索行：mobile 不让 search & 下拉换行 */
+    .page-head > div > div:first-child { flex-wrap: nowrap; }
   }
   /* —— 库存/产品表格的标签在手机上可读 —— */
   .m-tagwrap { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
@@ -424,10 +432,24 @@
   .mini-row .mr-badge.int { background: #e5e7eb; color: #6b7280; }
   .mini-row .mr-badge.pin { background: #fef3c7; color: #b45309; }
   .mini-row .mr-badge.hot { background: #fee2e2; color: #b91c1c; }
+  /* 产品卡 meta 项标记（mobile 用 .mi-* 选择性隐藏） */
+  .mi { display: inline; }
+  .mr-meta-status { display: none; }
   @media (max-width: 640px) {
     .mini-row { gap: 8px; padding: 8px; }
     .mini-row .mr-thumb { width: 44px; height: 44px; }
-    .mini-row .mr-meta .sep:nth-of-type(n+2) { display: none; }
+    .mini-row .mr-meta { font-size: 11.5px; max-width: 100%; }
+    /* mobile 只显示 分类 + 库存，其他挤掉避免换行 */
+    .mini-row .mr-meta .mi-retail,
+    .mini-row .mr-meta .mi-member,
+    .mini-row .mr-meta .mi-badge { display: none; }
+    /* mobile 把状态徽章放独立行（保证可见） */
+    .mini-row .mr-meta-status { display: block; margin-top: 3px; }
+    .mini-row .mr-meta-status .tag { display: inline-block; font-size: 11px; padding: 1px 8px; }
+    /* actions 紧凑，4 个按钮单行不换 */
+    .mini-row .mr-actions { flex-wrap: nowrap; gap: 4px; }
+    .mini-row .mr-actions .btn { padding: 4px 8px; font-size: 12px; white-space: nowrap; }
+    .mini-row .mr-actions .btn.danger { padding: 4px 8px; }
   }
   .m-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .m-chip { font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; color: #374151; user-select: none; }
@@ -1220,16 +1242,20 @@ function renderProductTable() {
           ? `<img src="${p.images[0]}" class="mr-thumb">`
           : '<div class="mr-thumb m-thumb-empty">无图</div>';
         const meta = [];
-        if (catNames) meta.push(`分类 <b>${esc(catNames)}</b>`);
-        if (p.retail_price != null) meta.push(`零售 <b>¥${money(p.retail_price)}</b>`);
-        if (p.member_price != null) meta.push(`会员 <b>¥${money(p.member_price)}</b>`);
-        meta.push(`库存 <b>${esc(p.stock || 0)}</b>`);
-        if (isOwner && st) meta.push(`<span class="tag ${st.cls}">${esc(st.text)}</span>`);
+        if (catNames) meta.push(`<span class="mi mi-cat">分类 <b>${esc(catNames)}</b></span>`);
+        if (p.retail_price != null) meta.push(`<span class="mi mi-retail">零售 <b>¥${money(p.retail_price)}</b></span>`);
+        if (p.member_price != null) meta.push(`<span class="mi mi-member">会员 <b>¥${money(p.member_price)}</b></span>`);
+        meta.push(`<span class="mi mi-stock">库存 <b>${esc(p.stock || 0)}</b></span>`);
+        const statusBadge = (isOwner && st) ? `<span class="tag ${st.cls} mi mi-badge">${esc(st.text)}</span>` : '';
+        // mobile 显示独立状态行（不被裁掉），desktop 隐藏——badge 仍在 meta 内（顺序：分类>零售>会员>库存>badge）
+        const mobileStatus = statusBadge ? `<div class="mr-meta-status">${statusBadge}</div>` : '';
+        // mobile 隐藏 meta 里的 badge & 零售/会员；desktop 隐藏独立状态行（避免重复）
         return `<div class="mini-row" draggable="${canDrag}" data-id="${p.id}" ondragstart="pdragStart(event,'${p.id}')" ondragover="event.preventDefault()" ondrop="pdragDrop(event,'${p.id}')">
           ${thumb}
           <div class="mr-info">
             <div class="mr-title">${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}${p.is_internal ? ` <span class="mr-badge int">对内</span>` : ''}</div>
-            <div class="mr-meta">${meta.join('<span class="sep">·</span>')}</div>
+            <div class="mr-meta">${meta.join('<span class="sep">·</span>')}${statusBadge ? '<span class="sep">·</span>' + statusBadge : ''}</div>
+            ${mobileStatus}
           </div>
           <div class="mr-actions">
             <button class="btn sm ghost" onclick="previewProduct('${p.id}')">预览</button>
