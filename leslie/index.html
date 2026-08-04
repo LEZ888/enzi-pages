@@ -511,7 +511,7 @@ const DEFAULT_SETTINGS={
   adminPassword:DEFAULT_PWD,
   loginMinutes:120,
   switches:{search:true,category:true,activityTag:true,video:true,collections:true,browseHistory:true,points:true,longImage:true,buyButton:true,bottomNav:true,banner:true,series:true,moments:true,mall:true,scripts:true,welcome:true,consult:true,compare:true,activityCountdown:true,tutorial:true,shareCard:true,guide:true,imgEdit:true,videoEdit:true},
-  supabase:{url:"",key:"",enabled:false},
+  supabase:{url:"https://bykjhibldnrtzsxqukgd.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5a2poaWJsZG5ydHpzeHF1a2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODk5NzEsImV4cCI6MjEwMTE2NTk3MX0.bMh1dhJdY1vCLLTUhnmehitnVawTL83KLBvgIjN0lBc",enabled:true},
   shop:{name:"LESLEY",subtitle:"",logo:"",theme:"light",colors:{primary:"#e4393c",bg:"#f5f5f7",text:"#222",btn:"#e4393c"},fontScale:1,radius:4,spacing:12,bgImage:null,contact:{wechat:"",phone:""}},
   nav:{style:"bottom",barColor:"#ffffff",activeColor:"#e4393c",inactiveColor:"#888888",items:[
     {id:"home",name:"产品展示",icon:"🛍️",type:"home"},
@@ -549,9 +549,10 @@ let STATE={products:[],settings:null,identity:null,isAdmin:false,view:"home",cur
 const Store={
   sb:null,
   async init(){const s=STATE.settings;if(s.supabase&&s.supabase.enabled&&s.supabase.url&&s.supabase.key&&window.supabase){try{this.sb=window.supabase.createClient(s.supabase.url,s.supabase.key);}catch(e){this.sb=null;}}else this.sb=null;},
+  preInit(sup){if(sup&&sup.enabled&&sup.url&&sup.key&&window.supabase){try{this.sb=window.supabase.createClient(sup.url,sup.key);}catch(e){this.sb=null;}}else this.sb=null;},
   _g(){try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return{};}},
   _s(d){localStorage.setItem(LS_KEY,JSON.stringify(d));},
-  async loadAll(){if(this.sb){try{const{data,error}=await this.sb.from("app_state").select("id,value").in("id",["products","settings"]);if(!error&&data){const m={};data.forEach(r=>m[r.id]=r.value);return{products:m.products||[],settings:m.settings||null};}}catch(e){}}const d=this._g();return{products:d.products||[],settings:d.settings||null};},
+  async loadAll(){if(this.sb){try{const{data,error}=await this.sb.from("app_state").select("id,value").in("id",["products","settings"]);if(!error&&data){const m={};data.forEach(r=>m[r.id]=r.value);let products=m.products||[];let settings=m.settings||null;const local=this._g();if((!products||!products.length)&&(local.products||[]).length){try{await this.sb.from("app_state").upsert({id:"products",value:local.products});}catch(e){}products=local.products;}if(!settings&&local.settings){try{await this.sb.from("app_state").upsert({id:"settings",value:local.settings});}catch(e){}settings=local.settings;}return{products,settings};}}catch(e){}}const d=this._g();return{products:d.products||[],settings:d.settings||null};},
   async saveAll(){if(this.sb){try{await this.sb.from("app_state").upsert({id:"products",value:STATE.products});await this.sb.from("app_state").upsert({id:"settings",value:STATE.settings});return true;}catch(e){toast("云端保存失败，已回退本地");}}const d=this._g();d.products=STATE.products;d.settings=STATE.settings;this._s(d);return true;},
   async loadIdentities(){if(this.sb){try{const{data}=await this.sb.from("app_state").select("value").eq("id","identities");return(data&&data[0]&&data[0].value)||{};}catch(e){}}return this._g().identities||{};},
   async saveIdentities(o){if(this.sb){try{await this.sb.from("app_state").upsert({id:"identities",value:o});return;}catch(e){}}const d=this._g();d.identities=o;this._s(d);}
@@ -1719,7 +1720,7 @@ function renderSysTab(b){
   b.querySelector("#setPwdBtn").onclick=async()=>{const v=b.querySelector("#set_pwd").value;if(!v){toast("密码不能为空");return;}s.adminPassword=v;await Store.saveAll();toast("密码已更新");b.querySelector("#set_pwd").value="";};
   b.querySelector("#set_login_min").value=String(s.loginMinutes||0);
   b.querySelector("#set_login_min").onchange=async()=>{s.loginMinutes=parseInt(b.querySelector("#set_login_min").value)||0;await Store.saveAll();if(s.loginMinutes>0)setAdminLogin();toast("免验证时长已设置");};
-  b.querySelector("#sbToggle").onclick=async()=>{cloud.enabled=!cloud.enabled;cloud.url=b.querySelector("#sb_url").value;cloud.key=b.querySelector("#sb_key").value;if(cloud.enabled&&(!cloud.url||!cloud.key)){toast("请先填写 URL 和 Key");cloud.enabled=false;renderPanel();return;}await Store.saveAll();await Store.init();updateModeTag();renderPanel();renderHome();toast(cloud.enabled?"已切换云端":"已切回本地");};
+  b.querySelector("#sbToggle").onclick=async()=>{cloud.enabled=!cloud.enabled;cloud.url=b.querySelector("#sb_url").value;cloud.key=b.querySelector("#sb_key").value;if(cloud.enabled&&(!cloud.url||!cloud.key)){toast("请先填写 URL 和 Key");cloud.enabled=false;renderPanel();return;}await Store.saveAll();await Store.init();if(cloud.enabled){await Store.saveAll();}updateModeTag();renderPanel();renderHome();toast(cloud.enabled?"已切换云端":"已切回本地");};
   b.querySelector("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(STATE.products,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="products.json";a.click();toast("已导出");};
 }
 
@@ -1744,10 +1745,12 @@ document.getElementById("searchInput").addEventListener("input",e=>{STATE.search
 
 /* ============ 初始化 ============ */
 async function init(){
+  /* 先连云端再加载：否则 loadAll 早于 init，永远只读本地 */
+  try{const _ld=Store._g();const _ls=(_ld.settings)||{};Store.preInit(Object.assign({},DEFAULT_SETTINGS.supabase,_ls.supabase||{}));}catch(e){}
   const d=await Store.loadAll();
   STATE.settings=Object.assign({},DEFAULT_SETTINGS,d.settings||{});
   STATE.settings.switches=Object.assign({},DEFAULT_SETTINGS.switches,d.settings&&d.settings.switches||{});
-  STATE.settings.supabase=Object.assign({},DEFAULT_SETTINGS.supabase,d.settings&&d.settings.supabase||{});
+  STATE.settings.supabase=Object.assign({},d.settings&&d.settings.supabase||{},DEFAULT_SETTINGS.supabase);
   STATE.settings.shop=Object.assign({},DEFAULT_SETTINGS.shop,d.settings&&d.settings.shop||{});
   STATE.settings.shop.colors=Object.assign({},DEFAULT_SETTINGS.shop.colors,STATE.settings.shop.colors||{});
   STATE.settings.shop.contact=Object.assign({},DEFAULT_SETTINGS.shop.contact,STATE.settings.shop.contact||{});
