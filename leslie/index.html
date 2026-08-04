@@ -182,30 +182,52 @@
   .modal{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px}
   .modal .box{background:#fff;width:100%;max-width:460px;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);max-height:92vh;overflow-y:auto}
   .modal .box h3{margin:0 0 14px;font-size:16px}
-  /* 导入弹窗（链接抓取/粘贴）样式与移动端适配 */
-  .imf-input{width:100%;height:140px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box}
-  /* 确保弹窗/表单内的输入框在手机上可正常选中与粘贴 */
+  /* ===== 导入弹窗（链接抓取/粘贴识别）分步式UI ===== */
   .modal input,.modal textarea,.modal select,.modal [contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-  .imf-rows{margin-top:12px}
-  .imf-row{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--c-line,#eee);border-radius:8px;padding:10px;margin-bottom:8px;background:var(--c-card,#fff);box-sizing:border-box}
-  .imf-cb{width:22px;height:22px;margin-top:2px;flex:none;accent-color:var(--c-primary)}
-  .imf-mid{flex:1;min-width:0}
-  .imf-lab{width:100%;font-size:15px;color:var(--c-sub,#888);border:1px solid var(--c-line,#ddd);border-radius:6px;padding:6px 8px;margin-bottom:6px;box-sizing:border-box}
-  .imf-val{width:100%;font-size:16px;border:1px solid var(--c-line,#ddd);border-radius:6px;padding:9px;resize:vertical;box-sizing:border-box;min-height:48px;white-space:pre-wrap;word-break:break-word;line-height:1.6}
-  .imf-right{display:flex;flex-direction:row;gap:6px;align-items:center;flex:none}
-  .imf-sel{font-size:16px;max-width:170px;min-height:40px;box-sizing:border-box}
-  .imf-del{padding:8px 14px;flex:none}
+  /* 步骤1：输入区 */
+  .imf-input{width:100%;height:140px;border:1px solid var(--c-line,#ddd);border-radius:8px;padding:10px;font-size:16px;line-height:1.5;resize:vertical;box-sizing:border-box;background:#fafafa}
+  .imf-step1-btns{display:flex;gap:8px;margin-top:10px}
+  .imf-step1-btns .btn{flex:1;padding:11px 0;font-size:15px;border-radius:8px}
+  /* 步骤分隔线 */
+  .imf-divider{height:1px;background:var(--c-line);margin:14px 0}
+  /* 步骤2：结果区 */
+  .imf-rows{margin-top:0}
+  .imf-result-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .imf-result-head span{font-size:13px;color:var(--c-sub)}
+  .imf-result-head button{font-size:12px;color:var(--c-primary);background:none;border:none;padding:4px 8px}
+  /* 字段行——清晰的三段式布局 */
+  .imf-row{display:flex;gap:8px;align-items:flex-start;border:1px solid #e8e8e8;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;box-sizing:border-box;transition:border-color .15s}
+  .imf-row:hover{border-color:#ccc}
+  .imf-cb{width:24px;height:24px;margin-top:1px;flex:none;accent-color:var(--c-primary)}
+  .imf-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .imf-lab{font-size:13px;font-weight:600;color:var(--c-text);border:none;background:transparent;padding:0;margin:0}
+  .imf-val{width:100%;font-size:14px;border:1px solid #eee;border-radius:6px;padding:8px 10px;resize:vertical;box-sizing:border-box;min-height:52px;white-space:pre-wrap;word-break:break-word;line-height:1.65;background:#fafafa}
+  .imf-right{display:flex;flex-direction:row;gap:6px;align-items:flex-end;flex:none;padding-bottom:2px}
+  .imf-sel{font-size:14px;max-width:150px;min-height:38px;border-radius:6px}
+  .imf-del{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:16px;background:#fef0f0;color:var(--c-primary);border:1px solid #fbc4c4}
+  .imf-del:active{background:var(--c-primary);color:#fff}
+  /* 底部操作栏 */
+  .imf-actions{display:flex;gap:8px;margin-top:14px}
+  .imf-actions .btn{flex:1;padding:11px 0;font-size:15px;border-radius:8px}
+  .imf-actions .btn.primary{font-weight:700}
+  /* 折叠后的输入区 */
+  .imf-input-collapsed{display:none}
+  .imf-input-collapsed.show{display:block;margin-top:10px}
+
   @media(max-width:560px){
-    .modal .box{padding:16px}
+    .modal .box{padding:14px;max-width:100%;border-radius:12px}
     #importModal .box{max-width:100%}
-    .imf-row{flex-direction:column;gap:8px}
+    .imf-row{flex-direction:column;gap:10px;padding:12px 10px}
     .imf-cb{margin-top:0}
-    .imf-right{width:100%;justify-content:space-between}
-    .imf-sel{max-width:none;flex:1}
-    .modal .box>.btn-row{flex-direction:column;align-items:stretch}
-    .modal .box>.btn-row>.btn{width:100%}
-    .modal .box>.btn-row>div{display:flex;flex-direction:column;gap:8px}
-    .modal .box>.btn-row>div>.btn{width:100%}
+    .imf-right{width:100%;justify-content:stretch;align-items:stretch;gap:8px;padding-bottom:0}
+    .imf-sel{max-width:none;flex:1;min-height:42px}
+    .imf-del{width:40px;height:40px;flex:none;align-self:center}
+    .imf-step1-btns,.imf-actions{flex-direction:column;gap:8px}
+    .imf-step1-btns .btn,.imf-actions .btn{width:100%}
+    .imf-input{height:120px;font-size:16px}
+    .imf-val{min-height:60px;font-size:15px}
+    #formActionBar{flex-direction:column;padding:10px 8px}
+    #formActionBar .btn{width:100%}
   }
   .help{font-size:12px;color:var(--c-sub);line-height:1.6;background:#fafafa;border:1px solid var(--c-line);border-radius:var(--radius);padding:10px;margin-top:8px}
   .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:14px;z-index:90;opacity:0;transition:.25s;pointer-events:none}
@@ -373,7 +395,8 @@
 
 <div class="modal hidden" id="formModal"><div class="box">
   <h3 id="formTitle">新增产品</h3>
-  <div class="btn-row" style="margin-bottom:10px"><button class="btn sm" id="pasteFillBtn" type="button">📋 一键粘贴识别</button><button class="btn sm" id="importBtn" type="button">🔗 从链接抓取</button><span id="pasteHint" style="font-size:12px;color:var(--c-sub);align-self:center"></span></div>
+  <div class="btn-row" id="formActionBar" style="margin-bottom:12px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别</button><button class="btn sm" id="importBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">🔗 链接抓取</button></div>
+  <div id="pasteHint" style="font-size:12px;color:var(--c-sub);text-align:center;margin-bottom:10px"></div>
   <div class="field"><label>产品标题 *（也建议填，但不强制）</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
   <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
   <div class="field"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
@@ -1078,33 +1101,72 @@ setInterval(()=>{if(!document.getElementById("formModal").classList.contains("hi
 /* --- 一键粘贴识别产品信息 --- */
 function parseDateTime(s){try{let t=String(s).replace(/[年月]/g,'-').replace(/[日]/g,' ').replace(/[./]/g,'-');const m=t.match(/(\d{4})-(\d{1,2})-(\d{1,2})(?:[\sT]+(\d{1,2}):(\d{2}))?/);if(m){const y=m[1],mo=String(m[2]).padStart(2,'0'),d=String(m[3]).padStart(2,'0');const hh=m[4]?String(m[4]).padStart(2,'0'):'00';const mm=m[5]||'00';return y+'-'+mo+'-'+d+'T'+hh+':'+mm;}}catch(e){}return null;}
 function parseProductText(text){
-  const lines=String(text||'').split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
+  const raw=String(text||'');
+  const lines=raw.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
   if(!lines.length)return {};
   const esc=function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');};
   const get=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
+  const cleanName=function(s){if(!s)return s;let n=s.replace(/^([【\[(「][^】\]\)」]*[】\]\)」]\s*)/,'')/* 去掉【xxx】【xxx】前缀 */.replace(/^[🔥✨💰💯❤️🌟⭐🎉🛒📢📣]+\s*/,'') /* 去掉开头emoji */.replace(/\s*(【[^】]*】)\s*$/g,'') /* 去掉尾部【标签】*/.trim();return n||s;};
+
   const r={};
+  /* ---- 名称提取（更智能） ---- */
   let name=get(['产品名称','商品名称','商品名','品名','名称','标题','名字','产品名']);
-  if(!name){const first=lines.find(function(l){return !/^https?:\/\//i.test(l);});if(first)name=first;}
-  if(name)r.name=name;
+  if(!name){/* 取第一个非链接、非纯数字、非极短行作为名称 */
+    const first=lines.find(function(l){return !/^https?:\/\//i.test(l)&&l.length>=2&&!/^\d+$/.test(l);});
+    if(first)name=cleanName(first);
+  }
+  if(name)r.name=cleanName(name);
+
+  /* ---- 基础字段 ---- */
   const brand=get(['品牌','牌子','商标']);if(brand)r.brand=brand;
   const cat=get(['分类','类别','品类']);if(cat)r.cat=cat;
   const series=get(['系列','产品线']);if(series)r.series=series;
-  const tagsRaw=get(['核心功效','主要功效','功效标签','功效','卖点','标签','特点','特色']);
-  if(tagsRaw){const t=tagsRaw.split(/[,，、;；\s]+/).map(function(s){return s.trim();}).filter(Boolean);if(t.length)r.tags=t;}
-  const actRaw=get(['活动标签','活动类型','活动','促销']);if(actRaw)r.activity=actRaw;
+
+  /* ---- 功效/标签（支持更多格式） ---- */
+  const tagsRaw=get(['核心功效','主要功效','功效标签','功效','卖点','标签','特点','特色','成分','成分功效']);
+  if(tagsRaw){const t=tagsRaw.split(/[,，、;；|｜\s]+/).map(function(s){return s.trim();}).filter(Boolean).filter(function(s){return s.length>=2&&s.length<=20;});if(t.length)r.tags=t;}
+
+  /* ---- 活动 ---- */
+  const actRaw=get(['活动标签','活动类型','活动','促销','优惠']);if(actRaw)r.activity=actRaw;
+
+  /* ---- 库存/时间 ---- */
   const stockRaw=get(['库存数量','库存','存货','现货']);if(stockRaw){const m=stockRaw.match(/\d+/);if(m)r.stock=m[0];}
   const endRaw=get(['活动结束时间','结束时间','活动截止','有效期至','截止','到期']);if(endRaw){const dt=parseDateTime(endRaw);if(dt)r.endTime=dt;}
-  const buyText=get(['按钮文字','购买文字','按钮']);if(buyText)r.buyText=buyText;
+
+  /* ---- 购买相关 ---- */
+  const buyText=get(['按钮文字','购买文字','按钮','立即购买','去购买','去抢购']);if(buyText)r.buyText=buyText;
   const buyLinkRaw=get(['购买链接','下单链接','商品链接','链接','购买','下单']);
   if(buyLinkRaw){const m=buyLinkRaw.match(/https?:\/\/\S+/i);if(m)r.buyLink=m[0];else if(/^https?:\/\//i.test(buyLinkRaw.trim()))r.buyLink=buyLinkRaw.trim();}
-  if(!r.buyLink){const all=lines.join('\n').match(/https?:\/\/\S+/i);if(all)r.buyLink=all[0];}
+  if(!r.buyLink){const all=raw.match(/https?:\/\/[^\s"'<>]*/i);if(all)r.buyLink=all[0];}
+
+  /* ---- 价格（新增） ---- */
+  const priceMatch=raw.match(/[￥¥]\s*(\d+\.?\d*)\s*元?|[价格售价]\s*[:：]\s*(\d+\.?\d*)|(\d+)\s*元\s*(?:\/)?/);
+  if(priceMatch){const p=priceMatch[1]||priceMatch[2]||priceMatch[3];if(p)r.price=p;}
+
+  /* ---- 分享信息 ---- */
   const shareTitle=get(['分享标题','分享']);if(shareTitle)r.shareTitle=shareTitle;
   const shareDesc=get(['分享描述','分享说明']);if(shareDesc)r.shareDesc=shareDesc;
-  const LAB=/^(产品名称|商品名称|商品名|品名|名称|标题|品牌|牌子|商标|分类|类别|品类|系列|产品线|功效|卖点|标签|特点|特色|活动|促销|库存|存货|结束时间|有效期至|截止|到期|按钮文字|购买文字|购买链接|链接|下单|分享|描述|详情|介绍|说明|文案|正文)[:：]/;
-  const dkeys=['产品描述','产品介绍','描述','详情','介绍','说明','文案','正文'];
+
+  /* ---- 描述提取（大幅增强） ---- */
+  const LAB=/^(产品名称|商品名称|商品名|品名|名称|标题|品牌|牌子|商标|分类|类别|品类|系列|产品线|核心功效|主要功效|功效标签|功效|卖点|标签|特点|特色|成分|活动标签|活动类型|活动|促销|优惠|库存数量|库存|存货|现货|活动结束时间|结束时间|活动截止|有效期至|截止|到期|按钮文字|购买文字|按钮|购买链接|下单链接|商品链接|链接|购买|下单|分享标题|分享|分享描述|分享说明|价格|售价)[:：]/;
+  const dkeys=['产品描述','产品介绍','详细描述','描述','详情','介绍','说明','文案','正文','产品详情'];
   let desc=null;
+  /* 1. 带标签的描述 */
   for(let i=0;i<lines.length;i++){for(const k of dkeys){const m=lines[i].match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.*)$'));if(m){const inline=m[1].trim();const out=[];if(inline)out.push(inline);for(let j=i+1;j<lines.length;j++){if(LAB.test(lines[j]))break;out.push(lines[j]);}if(out.length){const joined=out.join('\n').trim();if(!desc||joined.length>desc.length)desc=joined;}}}}
-  if(!desc){const left=lines.filter(function(ln){return ln!==name&&!/^https?:\/\//i.test(ln)&&!LAB.test(ln);});if(left.length)desc=left.join('\n').trim();}
+  /* 2. 无标签兜底：收集所有"剩余行"作为描述（排除已用字段行、链接、短于4字的碎片行） */
+  if(!desc){
+    const used=new Set([name,r.brand,r.cat,r.series,tagsRaw,actRaw,buyText,shareTitle,shareDesc].filter(Boolean));
+    const left=lines.filter(function(ln){
+      if(ln===name||used.has(ln))return false;
+      if(/^https?:\/\//i.test(ln))return false;
+      if(LAB.test(ln))return false;
+      if(ln.length<5)return false;/* 太短的碎片行不纳入描述 */
+      return true;
+    });
+    if(left.length)desc=left.join('\n').trim();
+  }
+  /* 3. 如果描述太长（>2000字），截取前面部分 */
+  if(desc&&desc.length>2000)desc=desc.slice(0,2000)+'\n…（内容过长，已截取前2000字）';
   if(desc)r.desc=desc;
   return r;
 }
@@ -1178,6 +1240,7 @@ function defaultTarget(label){
   if(/分享标题/.test(label))return 'f_sharetitle';
   if(/分享描述|分享说明/.test(label))return 'f_sharedesc';
   if(/标题|名称|品名/.test(label))return 'f_name';
+  if(/价格|售价/.test(label))return '';
   if(/品牌/.test(label))return 'f_brand';
   if(/分类/.test(label))return 'f_cat';
   if(/系列/.test(label))return 'f_series';
@@ -1193,7 +1256,7 @@ function defaultTarget(label){
   return '';
 }
 function objectToFields(r){
-  const map=[['name','标题'],['brand','品牌'],['cat','分类'],['series','系列'],['tags','功效标签'],['activity','活动标签'],['stock','库存'],['endTime','结束时间'],['buyText','购买按钮文字'],['buyLink','购买链接'],['shareTitle','分享标题'],['shareDesc','分享描述'],['desc','产品描述']];
+  const map=[['name','标题'],['price','价格'],['brand','品牌'],['cat','分类'],['series','系列'],['tags','功效标签'],['activity','活动标签'],['stock','库存'],['endTime','结束时间'],['buyText','购买按钮文字'],['buyLink','购买链接'],['shareTitle','分享标题'],['shareDesc','分享描述'],['desc','产品描述']];
   const out=[];
   map.forEach(function(kv){let v=r[kv[0]];if(v===undefined||v===null||v==='')return;if(Array.isArray(v))v=v.join(', ');out.push({label:kv[1],value:String(v),target:defaultTarget(kv[1])});});
   return out;
@@ -1245,72 +1308,149 @@ let _importModal=null;
 function openImportModal(){
   if(_importModal)_importModal.remove();
   const m=document.createElement('div');m.className='modal';m.id='importModal';
-  m.innerHTML='<div class="box" style="max-width:640px"><h3>🔗 从链接抓取 / 粘贴产品</h3>'+
-    '<div class="help" id="imfStatus">把<b>淘宝/天猫/1688/拼多多</b>等任意平台商品链接粘贴到下方，点「识别」即可自动抓取。若平台反爬拦截抓取，会自动提示你改为粘贴商品文案。</div>'+
-    '<textarea id="imfInput" class="imf-input" placeholder="粘贴商品链接（淘宝/天猫/1688/拼多多等），或直接粘贴商品文案：\n产品名称：xxx\n品牌：xxx\n..."></textarea>'+
-    '<div class="btn-row" style="margin-top:8px"><button class="btn" id="imfCancel">取消</button><button class="btn primary" id="imfRecognize">识别</button></div>'+
-    '<div id="imfRows" class="imf-rows"></div>'+
-    '<div class="btn-row" style="margin-top:10px;justify-content:space-between"><button class="btn sm" id="imfAdd">+ 添加字段</button><div class="imf-bottom"><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">确认导入选中</button></div></div></div>';
+  m.innerHTML='<div class="box" style="max-width:560px">'+
+    '<h3 style="margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:8px">🔗 <span>智能识别产品信息</span></h3>'+
+    '<div class="help" id="imfStatus" style="margin-bottom:10px">粘贴<b>商品链接</b>或<b>商品文案</b>，点击「开始识别」自动提取字段。</div>'+
+    /* 步骤1：输入区 */
+    '<textarea id="imfInput" class="imf-input" placeholder="支持以下任意格式：&#10;&#10;① 商品链接（淘宝/天猫/1688/拼多多等）&#10;② 带标签的文案：&#10;   产品名称：xxx&#10;   品牌：xxx&#10;   描述：...&#10;③ 任意商品文字（自动智能识别）"></textarea>'+
+    '<div class="imf-step1-btns"><button class="btn" id="imfCancel">取消</button><button class="btn primary" id="imfRecognize">🔍 开始识别</button></div>'+
+    /* 步骤分隔（识别后显示） */
+    '<div id="imfDivider" class="imf-divider hidden"></div>'+
+    /* 步骤2：结果区（识别后显示） */
+    '<div id="imfResultArea" class="hidden">'+
+      '<div class="imf-result-head"><span id="imfResultCount">已识别 0 项字段</span><button id="imfToggleInput">✏️ 修改输入</button></div>'+
+      '<div id="imfRows" class="imf-rows"></div>'+
+      '<div style="margin-top:8px;text-align:right"><button class="btn sm" id="imfAdd" style="font-size:13px">+ 添加自定义字段</button></div>'+
+      /* 底部操作栏 */
+      '<div class="imf-actions"><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">✅ 确认导入勾选项</button></div>'+
+    '</div>'+
+    /* 折叠的输入区（点"修改输入"展开） */
+    '<div id="imfCollapsedInput" class="imf-input-collapsed"></div>'+
+  '</div>';
   document.body.appendChild(m);_importModal=m;
   const ta=m.querySelector('#imfInput');
-  // 手机端粘贴防御：确保 paste 事件能正常写入（部分手机浏览器对动态创建的 textarea 粘贴支持差）
-  ta.addEventListener('paste',function(e){setTimeout(function(){const s=ta.querySelector('#imfStatus');if(s&&!ta.value.trim())s.textContent='已粘贴内容，请点「识别」继续。';},50);},false);
-  // 增强焦点：延迟更长 + 点击空白区域也能聚焦
-  setTimeout(function(){ta.focus();},100);
+  ta.addEventListener('paste',function(){setTimeout(function(){const s=m.querySelector('#imfStatus');if(s&&!ta.value.trim())s.textContent='✅ 已粘贴内容，请点击「开始识别」';},50);},false);
+  setTimeout(function(){ta.focus();},150);
   ta.addEventListener('click',function(){ta.focus();},false);
+  /* 按钮：取消 */
   m.querySelector('#imfCancel').onclick=function(){m.remove();_importModal=null;};
-  m.querySelector('#imfClose').onclick=function(){m.remove();_importModal=null;};
+  /* 按钮：开始识别 */
   m.querySelector('#imfRecognize').onclick=function(){runRecognition(m);};
-  m.querySelector('#imfAdd').onclick=function(){m.querySelector('#imfRows').appendChild(makeRow({label:'自定义字段',value:'',target:''}));};
+  /* 按钮：关闭（结果区） */
+  m.querySelector('#imfClose').onclick=function(){m.remove();_importModal=null;};
+  /* 按钮：添加字段 */
+  m.querySelector('#imfAdd').onclick=function(){
+    const box=m.querySelector('#imfRows');
+    box.appendChild(makeRow({label:'自定义字段',value:'',target:''}));
+    updateResultCount(m);
+  };
+  /* 按钮：确认导入 */
   m.querySelector('#imfImport').onclick=function(){gatherAndImport(m);};
+  /* 按钮：切换展开/折叠输入区 */
+  m.querySelector('#imfToggleInput').onclick=function(){
+    const ci=m.querySelector('#imfCollapsedInput');
+    const ta2=m.querySelector('#imfInput');
+    if(ci.classList.contains('show')){ci.classList.remove('show');ci.innerHTML='';this.textContent='✏️ 修改输入';}
+    else{ci.classList.add('show');ci.innerHTML=ta2.outerHTML;this.textContent='▲ 收起输入';const nta=ci.querySelector('textarea');if(nta)nta.focus();}
+  };
   return m;
+}
+/* 更新识别结果计数 */
+function updateResultCount(m){
+  const rows=m.querySelectorAll('.imf-row');
+  const checked=m.querySelectorAll('.imf-row .imf-cb:checked');
+  const cntEl=m.querySelector('#imfResultCount');
+  if(cntEl)cntEl.textContent='已识别 '+rows.length+' 项字段（已勾选 '+checked.length+' 项）';
 }
 async function runRecognition(m){
   const ta=m.querySelector('#imfInput');const text=ta.value.trim();
   const status=m.querySelector('#imfStatus');
-  if(!text){status.textContent='请先粘贴链接或商品文案再点识别。';return;}
-  const url=firstUrl(text);
-  // 去掉链接后是否还包含“像描述”的文字（多行 / 含常见商品字段 / 剩余字数较多）
-  const stripped=text.replace(url||'','').replace(/\s+/g,'');
-  const looksDesc=text.split(/\r?\n/).length>=2||/价格|￥|¥|标题|名称|品牌|功效|卖点|描述|详情|规格|库存|券|促销|参数|材质|产地|颜色|尺寸|重量|店铺/i.test(text)||stripped.length>15;
-  if(url&&!looksDesc&&!looksStructured(text)){
-    const isPd=/yangkeduo\.com|pinduoduo\.com/i.test(url);
-    const kind=isPd?'拼多多':(isProductUrl(url)?'电商':'链接');
-    status.textContent='正在通过代理抓取页面，请稍候…（'+kind+'）';
-    const html=await fetchProductPage(url);
-    if(html){
-      const fields=parseProductHtml(html,url);
-      if(fields.length){renderImportRows(m,fields);status.textContent='已从'+kind+'链接识别 '+fields.length+' 项，请勾选并选择要导入的字段：';return;}
+  const recBtn=m.querySelector('#imfRecognize');
+  if(!text){status.innerHTML='⚠️ <b>请先粘贴</b>商品链接或文案，再点「开始识别」。';ta.focus();return;}
+  /* 重置按钮状态（支持重试） */
+  recBtn.disabled=false;recBtn.style.display='';recBtn.textContent='⏳ 识别中…';
+  status.innerHTML='🔍 正在分析内容，请稍候…';
+  try{
+    const url=firstUrl(text);
+    const stripped=text.replace(url||'','').replace(/\s+/g,'');
+    const looksDesc=text.split(/\r?\n/).length>=2||/价格|￥|¥|标题|名称|品牌|功效|卖点|描述|详情|规格|库存|券|促销|参数|材质|产地|颜色|尺寸|重量|店铺/i.test(text)||stripped.length>15;
+    let fields=[];
+    /* 尝试链接抓取 */
+    if(url&&!looksDesc&&!looksStructured(text)){
+      const isPd=/yangkeduo\.com|pinduoduo\.com/i.test(url);
+      const kind=isPd?'拼多多':(isProductUrl(url)?'电商':'链接');
+      status.textContent='正在抓取 '+kind+' 页面…';
+      const html=await fetchProductPage(url);
+      if(html){
+        const pf=parseProductHtml(html,url);
+        if(pf.length){fields=pf;status.textContent='✅ 从 '+kind+' 链接抓取成功';}
+      }
+      if(!fields.length)status.textContent='⚠️ 链接抓取失败，已自动切换为文案解析模式';
     }
-    status.textContent='链接抓取未取到内容，已自动改用「粘贴文案解析」处理你输入的内容…';
+    /* 文案解析（兜底或首选） */
+    if(!fields.length){
+      status.textContent='📝 正在解析文案字段…';
+      const r=parseProductText(text);fields=objectToFields(r);
+      /* 排除纯链接被当成标题的无效情况 */
+      const onlyUrlTitle=fields.length===1&&fields[0].target==='f_name'&&/^https?:\/\//i.test(fields[0].value);
+      if(!fields.length||onlyUrlTitle){
+        status.innerHTML='❌ <b>未识别到有效字段</b><br><br>建议：① 复制商品页面的<b>文字介绍</b>（非链接）<br>② 或使用带标签格式：<code>产品名称：xxx</code><br>③ 也可点下方「+添加自定义字段」手动填写';
+        recBtn.disabled=false;recBtn.textContent='🔍 开始识别';recBtn.style.display='';return;
+      }
+      status.textContent='✅ 文案解析完成，已识别 '+fields.length+' 个字段';
+    }
+    /* 显示结果区（步骤2） */
+    showStep2(m,fields);
+  }catch(e){
+    status.innerHTML='❌ 识别过程出错：'+(e.message||'未知错误')+'，请重试';
+    recBtn.disabled=false;recBtn.textContent='🔍 开始识别';
   }
-  const r=parseProductText(text);const fields=objectToFields(r);
-  // 排除“纯链接被当成标题”的无效情况
-  const onlyUrlTitle=fields.length===1&&fields[0].target==='f_name'&&/^https?:\/\//i.test(fields[0].value);
-  if(!fields.length||onlyUrlTitle){
-    status.innerHTML='未识别到可导入字段。若粘贴的是商品<strong>链接</strong>且平台反爬抓不到，请改为复制商品页的<strong>文字信息</strong>粘贴进来，或直接点「+ 添加字段」手动补。';
-    return;
-  }
+}
+/* 显示步骤2：结果区 */
+function showStep2(m,fields){
+  const divider=m.querySelector('#imfDivider');
+  const resultArea=m.querySelector('#imfResultArea');
+  const recBtn=m.querySelector('#imfRecognize');
+  const cancelBtn=m.querySelector('#imfCancel');
+  /* 隐藏步骤1按钮，显示分隔和结果区 */
+  if(recBtn){recBtn.style.display='none';}
+  if(cancelBtn){cancelBtn.style.display='none';}
+  divider.classList.remove('hidden');
+  resultArea.classList.remove('hidden');
+  /* 渲染行 */
   renderImportRows(m,fields);
-  status.textContent='已识别 '+fields.length+' 项，请勾选并选择要导入的字段：';
+  updateResultCount(m);
 }
 function renderImportRows(m,fields){
   const box=m.querySelector('#imfRows');box.innerHTML='';
-  if(!fields.length){box.innerHTML='<div class="help">没有可导入的字段。</div>';return;}
+  if(!fields.length){box.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--c-sub);font-size:14px">📭 没有可导入的字段</div>';return;}
   fields.forEach(function(f){box.appendChild(makeRow(f));});
 }
 function makeRow(f){
   const row=document.createElement('div');row.className='imf-row';
+  /* 左侧勾选框 */
   const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.className='imf-cb';
+  cb.addEventListener('change',function(){updateResultCount(row.closest('.modal'));});
+  /* 中间：标签(只读显示) + 值(可编辑) */
   const mid=document.createElement('div');mid.className='imf-mid';
-  const lab=document.createElement('input');lab.value=f.label||'字段';lab.className='imf-lab';
+  const lab=document.createElement('div');lab.className='imf-lab';lab.textContent=f.label||'字段';
   const val=document.createElement('textarea');val.value=f.value||'';val.className='imf-val';
-  // 按内容行数自动撑高：至少3行，中文约18字符折一行，英文约40字符，上限25行
-  const txt=f.value||'';const nl=txt.split('\n').length;const cjk=(txt.match(/[\u4e00-\u9fa5]/g)||[]).length;const nonCjk=txt.length-cjk;const est=Math.max(3,Math.min(25,nl,Math.ceil(cjk/18)+Math.ceil(nonCjk/40)));val.rows=est;
+  val.placeholder='在此编辑字段内容…';
+  /* 按内容自动撑高 */
+  const txt=f.value||'';const nl=txt.split('\n').length;
+  const cjk=(txt.match(/[\u4e00-\u9fa5]/g)||[]).length;const nonCjk=txt.length-cjk;
+  const est=Math.max(2,Math.min(20,nl,Math.ceil(cjk/18)+Math.ceil(nonCjk/40)));
+  val.rows=est;
   mid.appendChild(lab);mid.appendChild(val);
+  /* 右侧：目标下拉 + 删除 */
   const right=document.createElement('div');right.className='imf-right';
-  const sel=document.createElement('select');IMPORT_TARGETS.forEach(function(t){const o=document.createElement('option');o.value=t.v;o.textContent=t.t;if(t.v===(f.target||''))o.selected=true;sel.appendChild(o);});sel.className='imf-sel';
-  const del=document.createElement('button');del.textContent='✕';del.type='button';del.className='btn sm imf-del';del.onclick=function(){row.remove();};
+  const sel=document.createElement('select');
+  IMPORT_TARGETS.forEach(function(t){const o=document.createElement('option');o.value=t.v;o.textContent=t.t;if(t.v===(f.target||''))o.selected=true;sel.appendChild(o);});
+  sel.className='imf-sel';
+  sel.addEventListener('change',function(){updateResultCount(row.closest('.modal'));});
+  const del=document.createElement('button');del.textContent='✕';del.type='button';del.className='btn sm imf-del';
+  del.title='删除此字段';
+  del.onclick=function(){row.remove();updateResultCount(row.closest('.modal'));};
   right.appendChild(sel);right.appendChild(del);
   row.appendChild(cb);row.appendChild(mid);row.appendChild(right);
   row._data={cb:cb,val:val,sel:sel};
@@ -1321,7 +1461,7 @@ function gatherAndImport(m){
   let n=0;
   rows.forEach(function(row){const d=row._data;if(!d.cb.checked)return;const target=d.sel.value;if(!target)return;importByTarget(target,d.val.value);n++;});
   m.remove();_importModal=null;
-  toast('已导入 '+n+' 个字段到表单');
+  toast('✅ 已导入 '+n+' 个字段到表单');
   const hint=document.getElementById('pasteHint');if(hint)hint.textContent='已导入 '+n+' 项';
 }
 function openImportFromForm(){const fm=document.getElementById('formModal');if(fm.classList.contains('hidden'))openForm(null);openImportModal();}
