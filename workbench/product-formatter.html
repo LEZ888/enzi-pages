@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#c8794f">
-<title>恩子内容工具 · 排版+洗稿</title>
+<title>恩子内容工具 · 排版+洗稿+链接解析</title>
 <link rel="icon" type="image/png" sizes="192x192" href="product-formatter-icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="product-formatter-icon-512.png">
 <link rel="apple-touch-icon" href="product-formatter-apple-touch-icon.png">
@@ -79,6 +79,12 @@
   .switch input{width:16px;height:16px;accent-color:var(--accent)}
   .rw-out .field label{font-size:12px;color:var(--sub)}
   .rw-out textarea{min-height:90px}
+  /* link parse module */
+  .lk-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
+  .lk-img{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+  .lk-img img{width:100%;height:120px;object-fit:cover;display:block;background:#f1ece4}
+  .lk-save{display:block;text-align:center;font-size:12px;color:var(--brand);padding:6px;border-top:1px solid var(--line);text-decoration:none}
+  .lk-cap{font-size:10px;color:var(--sub);padding:4px 6px;word-break:break-all;line-height:1.3}
   @media(max-width:560px){.field-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -88,11 +94,12 @@
     <div class="logo">恩</div>
     <h1>恩子内容工具</h1>
   </header>
-  <p class="tag">① 产品排版：粘贴内容→拆字段→多风格重排　|　② 小红书洗稿：复制文案→重写→防搬运</p>
+  <p class="tag">① 产品排版：粘贴内容→拆字段→多风格重排　|　② 小红书洗稿：复制文案→重写→防搬运　|　③ 链接解析：贴抖音/小红书/淘宝链接→提取文案+图片→送洗稿</p>
 
   <div class="tabs">
     <div class="tab active" id="tabPf" data-view="pf">📦 产品排版</div>
     <div class="tab" id="tabRw" data-view="rw">✍️ 小红书洗稿</div>
+    <div class="tab" id="tabLk" data-view="lk">🔗 链接解析</div>
   </div>
 
   <!-- 共用设置 -->
@@ -242,6 +249,40 @@
       <div class="note" id="rwNote"></div>
     </div>
   </div>
+
+  <!-- ============ 链接解析 ============ -->
+  <div id="linkView" class="hidden">
+    <div class="card">
+      <p class="sec-title"><span class="dot"></span>第一步：贴链接或文字</p>
+      <textarea id="lkInput" placeholder="把抖音 / 小红书 / 淘宝 的分享链接粘进来（电脑端自动抓页面文字+图片；手机端请直接粘贴页面文字）。
+也可以直接粘贴已复制的文案。
+
+粘贴后点「解析链接」，自动提取标题/正文/文案 + 页面里能拿到的图片。"></textarea>
+      <div class="row">
+        <button class="btn" id="lkBtn">⚡ 解析链接</button>
+        <button class="btn ghost" id="lkClear">清空</button>
+      </div>
+      <div class="status" id="lkStatus"></div>
+      <div class="note">📌 说明：① 抖音「口播」是视频里说的话，请先用抖音自带「自动字幕 / 复制文案」转成文字再粘进来，本页抓不到音频。② 小红书/抖音原图无水印请用「轻抖」等 App 先处理，本页只显示链接里公开能拿到的图（可能带水印）。</div>
+    </div>
+
+    <div class="card hidden" id="lkResult">
+      <p class="sec-title"><span class="dot"></span>解析结果（可直接改）</p>
+      <div class="field full" style="margin-bottom:10px">
+        <label>标题（自动识别，可改）</label>
+        <input id="lkTitle">
+      </div>
+      <div class="field full" style="margin-bottom:10px">
+        <label>正文 / 文案（自动识别，可改）</label>
+        <textarea id="lkText"></textarea>
+      </div>
+      <div id="lkImages" class="lk-images"></div>
+      <div class="copy-row">
+        <button class="btn" id="lkCopy">📋 复制文案</button>
+        <button class="btn ghost" id="lkToRw">✍️ 送去洗稿</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -276,6 +317,7 @@
       var v=tab.getAttribute("data-view");
       $("pfView").classList.toggle("hidden",v!=="pf");
       $("rwView").classList.toggle("hidden",v!=="rw");
+      $("linkView").classList.toggle("hidden",v!=="lk");
     });
   });
 
@@ -286,8 +328,8 @@
         var ctrl;var tid;
         if(window.AbortController){ctrl=new AbortController();tid=setTimeout(function(){ctrl.abort();},8000);}
         fetch("http://localhost:8787/fetch?url="+encodeURIComponent(url),{signal:ctrl?ctrl.signal:undefined})
-          .then(function(r){if(tid)clearTimeout(tid);return r.ok?r.text():null;})
-          .then(function(t){resolve(t&&t.length>50?t:null);})
+          .then(function(r){if(tid)clearTimeout(tid);return r.ok?r.json():null;})
+          .then(function(j){resolve(j&&j.ok&&j.text&&j.text.length>50?j:null);})
           .catch(function(){if(tid)clearTimeout(tid);resolve(null);});
       }catch(e){resolve(null);}
     });
@@ -443,9 +485,9 @@
     if(isUrl(raw)){
       setStatus("检测到链接，尝试电脑端抓取…");
       tryFetchUrl(raw).then(function(txt){
-        if(txt&&txt.length>50){
+        if(txt&&txt.text&&txt.text.length>50){
           setStatus("链接抓取成功，开始识别字段…","ok");
-          runExtract(txt).then(done,done);
+          runExtract(txt.text).then(done,done);
         }else{
           setStatus("链接抓取失败：手机端请复制页面文字粘进来；电脑端请先启动「抓取后端」。","err");
           toast("复制页面文字粘进来更快～");
@@ -598,6 +640,73 @@
     md+=b;
     if(g)md+="\n\n"+g;
     copy(md.trim(),"Markdown");
+  });
+
+  // ===== 链接解析 =====
+  function renderLinkResult(res){
+    $("lkTitle").value=res.title||"";
+    $("lkText").value=res.text||"";
+    var box=$("lkImages");box.innerHTML="";
+    (res.images||[]).forEach(function(u){
+      var fig=document.createElement("div");fig.className="lk-img";
+      var img=document.createElement("img");img.src=u;img.alt="";img.loading="lazy";
+      img.onerror=function(){fig.style.display="none";};
+      var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";
+      a.className="lk-save";a.textContent="💾 打开/保存";a.setAttribute("download","");
+      var cap=document.createElement("div");cap.className="lk-cap";cap.textContent=u.length>60?u.slice(0,57)+"…":u;
+      fig.appendChild(img);fig.appendChild(a);fig.appendChild(cap);
+      box.appendChild(fig);
+    });
+    $("lkResult").classList.remove("hidden");
+  }
+
+  $("lkBtn").addEventListener("click",function(){
+    var raw=$("lkInput").value.trim();
+    if(!raw){toast("先粘贴链接或文字");return;}
+    var btn=this;btn.disabled=true;
+    function done(){btn.disabled=false;}
+    if(isUrl(raw)){
+      setStatus("检测到链接，电脑端抓取中…","","lkStatus");
+      tryFetchUrl(raw).then(function(res){
+        if(res&&res.text){
+          setStatus("解析成功 ✅ 文案已提取，图见下方。","ok","lkStatus");
+          renderLinkResult(res);
+        }else{
+          setStatus("链接抓取失败：手机端请直接复制页面文字粘进来；电脑端请先启动「抓取后端」。","err","lkStatus");
+          toast("复制页面文字粘进来更快～");
+        }
+        done();
+      });
+    }else{
+      setStatus("已作为文案载入 ✅","ok","lkStatus");
+      renderLinkResult({title:"",text:raw,images:[]});
+      done();
+    }
+  });
+
+  $("lkClear").addEventListener("click",function(){
+    $("lkInput").value="";$("lkResult").classList.add("hidden");setStatus("","","lkStatus");
+  });
+
+  $("lkCopy").addEventListener("click",function(){
+    var t="";
+    if($("lkTitle").value.trim())t+=$("lkTitle").value.trim()+"\n\n";
+    t+=$("lkText").value.trim();
+    if(t.trim())copy(t.trim(),"文案");else toast("没有可复制的内容");
+  });
+
+  $("lkToRw").addEventListener("click",function(){
+    var t="";
+    if($("lkTitle").value.trim())t+=$("lkTitle").value.trim()+"\n\n";
+    t+=$("lkText").value.trim();
+    if(!t.trim()){toast("先解析出文案");return;}
+    $("rwInput").value=t.trim();
+    document.querySelectorAll(".tab").forEach(function(tb){tb.classList.remove("active");});
+    $("tabRw").classList.add("active");
+    $("pfView").classList.add("hidden");$("linkView").classList.add("hidden");
+    $("rwView").classList.remove("hidden");
+    toast("已送到洗稿，选方向开洗 →");
+    setStatus("","","lkStatus");
   });
 })();
 </script>
