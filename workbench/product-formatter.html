@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#c8794f">
-<title>产品排版工具 · 恩子聊美业</title>
+<title>恩子内容工具 · 排版+洗稿</title>
 <link rel="icon" type="image/png" sizes="192x192" href="product-formatter-icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="product-formatter-icon-512.png">
 <link rel="apple-touch-icon" href="product-formatter-apple-touch-icon.png">
@@ -63,6 +63,22 @@
   .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#2b2b2b;color:#fff;
     padding:10px 18px;border-radius:22px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
   .toast.show{opacity:1}
+  /* tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:14px}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 18px;font-size:14px;font-weight:600;
+    cursor:pointer;color:var(--sub)}
+  .tab.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+  /* rewrite module */
+  .opt-group{margin:12px 0}
+  .opt-group .gl{font-size:12px;color:var(--sub);margin-bottom:5px;display:block;font-weight:600}
+  .opt-row{display:flex;gap:8px;flex-wrap:wrap}
+  .opt{border:1px solid var(--line);background:#fff;border-radius:18px;padding:7px 13px;font-size:13px;cursor:pointer;
+    color:var(--ink);user-select:none}
+  .opt.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .switch{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin:8px 0;cursor:pointer}
+  .switch input{width:16px;height:16px;accent-color:var(--accent)}
+  .rw-out .field label{font-size:12px;color:var(--sub)}
+  .rw-out textarea{min-height:90px}
   @media(max-width:560px){.field-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -70,27 +86,19 @@
 <div class="wrap">
   <header class="top">
     <div class="logo">恩</div>
-    <h1>产品排版工具</h1>
+    <h1>恩子内容工具</h1>
   </header>
-  <p class="tag">粘贴豆包/元宝生成的内容 · 或淘宝/抖音/1688 页面文字 · 一键拆字段 → 多风格重排 → 复制发布</p>
+  <p class="tag">① 产品排版：粘贴内容→拆字段→多风格重排　|　② 小红书洗稿：复制文案→重写→防搬运</p>
 
+  <div class="tabs">
+    <div class="tab active" id="tabPf" data-view="pf">📦 产品排版</div>
+    <div class="tab" id="tabRw" data-view="rw">✍️ 小红书洗稿</div>
+  </div>
+
+  <!-- 共用设置 -->
   <div class="card">
-    <p class="sec-title"><span class="dot"></span>第一步：丢内容进来</p>
-    <textarea id="input" placeholder="把下面任意一种粘进来：
-① 豆包/元宝 帮你生成的产品详情文案
-② 淘宝 / 抖音 / 1688 商品页复制的文字（全选→复制→粘贴）
-③ 直接粘贴商品链接（电脑端可自动抓，手机端请复制文字）
-
-粘贴后点「一键识别提取」，自动拆成结构化字段。"></textarea>
-    <div class="row">
-      <button class="btn" id="extractBtn">⚡ 一键识别提取</button>
-      <button class="btn soft" id="demoBtn">👀 看示例效果</button>
-      <button class="btn ghost" id="clearBtn">清空</button>
-    </div>
-    <div class="status" id="status"></div>
-
     <details class="settings">
-      <summary>⚙️ DeepSeek 设置（首次用填一次，自动记住）</summary>
+      <summary>⚙️ DeepSeek 设置（首次用填一次，自动记住 · 两个功能共用）</summary>
       <div class="field-grid" style="margin-top:10px">
         <div class="field full">
           <label>DeepSeek API Key（浏览器直连，手机电脑通用）</label>
@@ -105,39 +113,134 @@
     </details>
   </div>
 
-  <div class="card hidden" id="editorCard">
-    <p class="sec-title"><span class="dot"></span>第二步：核对 / 修改字段（可随手改）</p>
-    <div class="field-grid">
-      <div class="field"><label>产品名</label><input id="f_name"></div>
-      <div class="field"><label>品牌</label><input id="f_brand"></div>
-      <div class="field"><label>分类</label><input id="f_category"></div>
-      <div class="field"><label>价格</label><input id="f_price" placeholder="如 ¥199"></div>
-      <div class="field"><label>原价（可选）</label><input id="f_originalPrice"></div>
-      <div class="field"><label>容量 / 规格</label><input id="f_capacity" placeholder="如 30ml / 500g"></div>
-      <div class="field"><label>库存</label><input id="f_stock" placeholder="如 有货 / 仅剩3件"></div>
-      <div class="field"><label>适合人群（可选）</label><input id="f_suitableFor"></div>
-      <div class="field full"><label>卖点（每行一条）</label><textarea id="f_highlights"></textarea></div>
-      <div class="field full"><label>产品详情 / 说明</label><textarea id="f_description"></textarea></div>
-      <div class="field full"><label>使用说明</label><textarea id="f_usage"></textarea></div>
-      <div class="field full"><label>标签（每行一个，用于 #话题）</label><textarea id="f_tags"></textarea></div>
+  <!-- ============ 产品排版 ============ -->
+  <div id="pfView">
+    <div class="card">
+      <p class="sec-title"><span class="dot"></span>第一步：丢内容进来</p>
+      <textarea id="input" placeholder="把下面任意一种粘进来：
+① 豆包/元宝 帮你生成的产品详情文案
+② 淘宝 / 抖音 / 1688 商品页复制的文字（全选→复制→粘贴）
+③ 直接粘贴商品链接（电脑端可自动抓，手机端请复制文字）
+
+粘贴后点「一键识别提取」，自动拆成结构化字段。"></textarea>
+      <div class="row">
+        <button class="btn" id="extractBtn">⚡ 一键识别提取</button>
+        <button class="btn soft" id="demoBtn">👀 看示例效果</button>
+        <button class="btn ghost" id="clearBtn">清空</button>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="card hidden" id="editorCard">
+      <p class="sec-title"><span class="dot"></span>第二步：核对 / 修改字段（可随手改）</p>
+      <div class="field-grid">
+        <div class="field"><label>产品名</label><input id="f_name"></div>
+        <div class="field"><label>品牌</label><input id="f_brand"></div>
+        <div class="field"><label>分类</label><input id="f_category"></div>
+        <div class="field"><label>价格</label><input id="f_price" placeholder="如 ¥199"></div>
+        <div class="field"><label>原价（可选）</label><input id="f_originalPrice"></div>
+        <div class="field"><label>容量 / 规格</label><input id="f_capacity" placeholder="如 30ml / 500g"></div>
+        <div class="field"><label>库存</label><input id="f_stock" placeholder="如 有货 / 仅剩3件"></div>
+        <div class="field"><label>适合人群（可选）</label><input id="f_suitableFor"></div>
+        <div class="field full"><label>卖点（每行一条）</label><textarea id="f_highlights"></textarea></div>
+        <div class="field full"><label>产品详情 / 说明</label><textarea id="f_description"></textarea></div>
+        <div class="field full"><label>使用说明</label><textarea id="f_usage"></textarea></div>
+        <div class="field full"><label>标签（每行一个，用于 #话题）</label><textarea id="f_tags"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="styleCard">
+      <p class="sec-title"><span class="dot"></span>第三步：选风格，一键复制</p>
+      <div class="styles" id="styles">
+        <div class="style-tab active" data-style="xhs">📕 小红书风</div>
+        <div class="style-tab" data-style="taobao">🛒 淘宝/抖音上架风</div>
+        <div class="style-tab" data-style="moments">💬 朋友圈/微信群风</div>
+        <div class="style-tab" data-style="official">🏢 品牌官网/专业风</div>
+      </div>
+      <div class="preview" id="preview" style="margin-top:12px"></div>
+      <div class="copy-row">
+        <button class="btn" id="copyText">📋 复制文本</button>
+        <button class="btn ghost" id="copyMd">复制 Markdown</button>
+        <button class="btn ghost" id="copyHtml">复制 HTML</button>
+      </div>
+      <div class="note" id="styleNote"></div>
     </div>
   </div>
 
-  <div class="card hidden" id="styleCard">
-    <p class="sec-title"><span class="dot"></span>第三步：选风格，一键复制</p>
-    <div class="styles" id="styles">
-      <div class="style-tab active" data-style="xhs">📕 小红书风</div>
-      <div class="style-tab" data-style="taobao">🛒 淘宝/抖音上架风</div>
-      <div class="style-tab" data-style="moments">💬 朋友圈/微信群风</div>
-      <div class="style-tab" data-style="official">🏢 品牌官网/专业风</div>
+  <!-- ============ 小红书洗稿 ============ -->
+  <div id="rwView" class="hidden">
+    <div class="card">
+      <p class="sec-title"><span class="dot"></span>第一步：把原文粘进来</p>
+      <textarea id="rwInput" placeholder="把要洗稿的内容粘进来：
+· 你自己写的小红书笔记（想做多版本/换角度重发）
+· 豆包/元宝生成的文案
+· 想参考重组的文案（仅改写你有权使用的内容）
+
+粘贴后点「开始洗稿」，会按你选的方向重写成原创度更高的新内容。"></textarea>
+      <div class="row">
+        <button class="btn" id="rwBtn">⚡ 开始洗稿</button>
+        <button class="btn soft" id="rwClear">清空</button>
+      </div>
+      <div class="status" id="rwStatus"></div>
+      <div class="note">⚠️ 只改写你<b>有权使用</b>的内容（自己写的 / 获授权的）。直接搬运他人原创当自己发属侵权，本工具不鼓励。洗稿能大幅降低「明显复制」风险，但平台还会看图片、账号行为等，无法 100% 保证不被查重。</div>
     </div>
-    <div class="preview" id="preview" style="margin-top:12px"></div>
-    <div class="copy-row">
-      <button class="btn" id="copyText">📋 复制文本</button>
-      <button class="btn ghost" id="copyMd">复制 Markdown</button>
-      <button class="btn ghost" id="copyHtml">复制 HTML</button>
+
+    <div class="card">
+      <p class="sec-title"><span class="dot"></span>第二步：选洗稿方向</p>
+      <div class="opt-group">
+        <span class="gl">改写强度</span>
+        <div class="opt-row" data-group="strength">
+          <div class="opt active" data-v="light">轻度润色</div>
+          <div class="opt" data-v="mid">中度重构</div>
+          <div class="opt" data-v="heavy">重度原创</div>
+        </div>
+      </div>
+      <div class="opt-group">
+        <span class="gl">目标调性</span>
+        <div class="opt-row" data-group="tone">
+          <div class="opt active" data-v="seed">种草安利</div>
+          <div class="opt" data-v="science">干货科普</div>
+          <div class="opt" data-v="story">真实故事</div>
+          <div class="opt" data-v="roast">吐槽避雷</div>
+          <div class="opt" data-v="review">专业测评</div>
+        </div>
+      </div>
+      <div class="opt-group">
+        <span class="gl">篇幅</span>
+        <div class="opt-row" data-group="length">
+          <div class="opt active" data-v="keep">保持原长</div>
+          <div class="opt" data-v="short">精简</div>
+          <div class="opt" data-v="long">扩充</div>
+        </div>
+      </div>
+      <div class="opt-group">
+        <span class="gl">保留项</span>
+        <label class="switch"><input type="checkbox" id="rwKeepData" checked>保留核心卖点 / 关键数据（品牌名、数字、结论原样留）</label>
+        <label class="switch"><input type="checkbox" id="rwFirst">用第一人称真实视角（"我/我们"亲身经历感）</label>
+      </div>
     </div>
-    <div class="note" id="styleNote"></div>
+
+    <div class="card rw-out hidden" id="rwOut">
+      <p class="sec-title"><span class="dot"></span>第三步：洗好的内容（可直接改）</p>
+      <div class="field full" style="margin-bottom:10px">
+        <label>标题（可写多个，复制时全部带上，发的时候自己留一个）</label>
+        <textarea id="rwTitles"></textarea>
+      </div>
+      <div class="field full" style="margin-bottom:10px">
+        <label>正文</label>
+        <textarea id="rwBody"></textarea>
+      </div>
+      <div class="field full">
+        <label>话题标签</label>
+        <textarea id="rwTags"></textarea>
+      </div>
+      <div class="copy-row">
+        <button class="btn" id="rwCopyAll">📋 复制全文</button>
+        <button class="btn ghost" id="rwCopyBody">复制正文</button>
+        <button class="btn ghost" id="rwCopyMd">复制 Markdown</button>
+      </div>
+      <div class="note" id="rwNote"></div>
+    </div>
   </div>
 </div>
 
@@ -150,10 +253,12 @@
   var product={};
   var current={text:"",html:"",md:""};
   var curStyle="xhs";
+  // rewrite state
+  var rw={strength:"light",tone:"seed",length:"keep",keepData:true,first:false};
 
   var $=function(id){return document.getElementById(id);};
   function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");setTimeout(function(){t.classList.remove("show");},2200);}
-  function setStatus(msg,type){var s=$("status");s.textContent=msg||"";s.className="status"+(type?(" "+type):"");}
+  function setStatus(msg,type,el){el=el||"status";var s=$(el);s.textContent=msg||"";s.className="status"+(type?(" "+type):"");}
   function isUrl(s){return /^https?:\/\/\S+$/i.test(s.trim());}
 
   // ---- settings ----
@@ -162,6 +267,17 @@
   $("apiKey").addEventListener("change",function(){localStorage.setItem(LS_KEY,this.value.trim());});
   $("apiModel").addEventListener("change",function(){localStorage.setItem(LS_MODEL,this.value.trim());});
   function getKey(){return ($("apiKey").value||"").trim();}
+
+  // ---- tab switch ----
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(tab){
+    tab.addEventListener("click",function(){
+      document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active");});
+      tab.classList.add("active");
+      var v=tab.getAttribute("data-view");
+      $("pfView").classList.toggle("hidden",v!=="pf");
+      $("rwView").classList.toggle("hidden",v!=="rw");
+    });
+  });
 
   // ---- link fetch (PC backend) ----
   function tryFetchUrl(url){
@@ -177,26 +293,30 @@
     });
   }
 
-  // ---- DeepSeek extraction ----
-  var SYS_PROMPT="你是一个电商产品信息提取助手。用户会给你一段产品相关的文本（可能是AI生成的，或是淘宝/抖音/1688商品页复制的文字，也可能含商品链接的描述）。请从中提取结构化信息，只输出 JSON，不要任何解释。字段说明：name=产品名,brand=品牌,category=分类(如 护肤/彩妆/仪器/保健品),price=价格(含单位如 ¥199),originalPrice=原价(没有则不填),capacity=容量或规格(如 30ml/500g/1盒),stock=库存(如 有货/仅剩3件/100件),suitableFor=适合人群(没有则不填),highlights=卖点数组(3-6条,每条简短),description=产品详情与说明(连贯段落),usage=使用方法或说明, tags=标签数组(用于话题,2-5个)。无法确定的字段留空字符串或空数组。";
-  function callDeepSeek(text){
+  // ---- DeepSeek call (generic) ----
+  function callDeepSeek(systemPrompt,userText){
     var key=getKey();var model=($("apiModel").value||"deepseek-v4-flash").trim();
+    if(!key){return Promise.reject(new Error("NO_KEY"));}
     return fetch("https://api.deepseek.com/chat/completions",{
       method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+key},
       body:JSON.stringify({model:model,messages:[
-        {role:"system",content:SYS_PROMPT},
-        {role:"user",content:text}
-      ],temperature:0.2,response_format:{type:"json_object"}})
+        {role:"system",content:systemPrompt},
+        {role:"user",content:userText}
+      ],temperature:0.6})
     }).then(function(r){
       if(!r.ok){return r.text().then(function(t){throw new Error("API "+r.status+" "+t.slice(0,140));});}
       return r.json();
     }).then(function(j){
       var c=j.choices&&j.choices[0]&&j.choices[0].message?j.choices[0].message.content:"";
       c=c.replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
-      return JSON.parse(c);
+      return c;
     });
   }
+
+  // ===== 产品排版 =====
+  var SYS_PROMPT="你是一个电商产品信息提取助手。用户会给你一段产品相关的文本（可能是AI生成的，或是淘宝/抖音/1688商品页复制的文字，也可能含商品链接的描述）。请从中提取结构化信息，只输出 JSON，不要任何解释。字段说明：name=产品名,brand=品牌,category=分类(如 护肤/彩妆/仪器/保健品),price=价格(含单位如 ¥199),originalPrice=原价(没有则不填),capacity=容量或规格(如 30ml/500g/1盒),stock=库存(如 有货/仅剩3件/100件),suitableFor=适合人群(没有则不填),highlights=卖点数组(3-6条,每条简短),description=产品详情与说明(连贯段落),usage=使用方法或说明, tags=标签数组(用于话题,2-5个)。无法确定的字段留空字符串或空数组。";
+  function parseJSON(c){return JSON.parse(c);}
 
   function normalize(d){
     d=d||{};
@@ -210,7 +330,6 @@
     };
   }
 
-  // ---- populate / read form ----
   function populateFields(p){
     $("f_name").value=p.name;$("f_brand").value=p.brand;$("f_category").value=p.category;
     $("f_price").value=p.price;$("f_originalPrice").value=p.originalPrice;$("f_capacity").value=p.capacity;
@@ -231,7 +350,6 @@
     };
   }
 
-  // ---- style builders -> blocks ----
   function blocksFor(style,p){
     var hl=p.highlights.length?p.highlights:["（未提取到卖点，可手动补充）"];
     if(style==="xhs"){
@@ -270,7 +388,6 @@
       if(p.tags.length)b3.push({t:"tags",items:p.tags.slice(0,3)});
       return b3;
     }
-    // official
     var b4=[{t:"title",v:p.name}];
     b4.push({t:"sub",v:[p.category,p.brand].filter(Boolean).join(" · ")});
     b4.push({t:"line",v:"规格 "+(p.capacity||"—")+"　|　参考价 "+(p.price||"待定")+"　|　库存 "+(p.stock||"—")});
@@ -318,7 +435,6 @@
     $("styleNote").textContent=notes[curStyle]||"";
   }
 
-  // ---- events ----
   $("extractBtn").addEventListener("click",function(){
     var raw=$("input").value.trim();
     if(!raw){toast("先粘贴内容或链接");return;}
@@ -341,17 +457,17 @@
     }
   });
   function runExtract(text){
-    var key=getKey();
-    if(!key){setStatus("请先在下方设置里填写 DeepSeek API Key。","err");$("apiKey").focus();return Promise.reject();}
+    if(!getKey()){setStatus("请先在上方设置里填写 DeepSeek API Key。","err");$("apiKey").focus();return Promise.reject();}
     setStatus("正在用 DeepSeek 识别字段…");
-    return callDeepSeek(text).then(function(d){
-      product=normalize(d);
-      populateFields(product);
+    return callDeepSeek(SYS_PROMPT,text).then(function(c){
+      var d=normalize(parseJSON(c));
+      product=d;populateFields(product);
       $("editorCard").classList.remove("hidden");
       $("styleCard").classList.remove("hidden");
       render();
       setStatus("识别完成 ✅ 可核对字段、切换风格后复制。","ok");
     }).catch(function(e){
+      if(e&&e.message==="NO_KEY"){setStatus("请先填写 DeepSeek API Key。","err");return;}
       setStatus("识别失败："+(e&&e.message?e.message:e),"err");
     });
   }
@@ -400,6 +516,89 @@
   $("copyText").addEventListener("click",function(){copy(current.text,"文本");});
   $("copyMd").addEventListener("click",function(){copy(current.md,"Markdown");});
   $("copyHtml").addEventListener("click",function(){copy(current.html,"HTML");});
+
+  // ===== 小红书洗稿 =====
+  var RW_SYS="你是一个资深小红书内容改写（洗稿）助手。用户会给你一段已有文案，请你重写成原创度更高、降低被平台判定为复制/抄袭风险的新内容。\n核心原则：\n1. 严禁只做简单的同义词替换。要真正改变句式结构、段落顺序、叙事视角和连接逻辑。\n2. 保留原文的核心事实、关键数据、品牌/产品名、核心结论（除非用户要求精简，但也不得编造原文没有的新事实性结论）。\n3. 改写成适合小红书发布的风格：分段清晰、适当使用 emoji、口语化、开头有钩子。\n4. 输出严格 JSON，不要任何解释：{\"titles\":[\"标题1\",\"标题2\",\"标题3\"],\"body\":\"正文，用\\n分段\",\"tags\":[\"标签1\",\"标签2\",...5-8个，不含#号]}。\n只输出 JSON。";
+
+  var STRENGTH={
+    light:"【改写强度】轻度润色——仅做表达润色与通顺、去重，保持原段落主体结构和论点顺序。",
+    mid:"【改写强度】中度重构——重组段落顺序，改变句式和连接词，可加小标题/序号，但核心信息不变。",
+    heavy:"【改写强度】重度原创——大幅重写，转换为有故事线或第一人称场景化叙事，接近原创；核心事实与数据必须真实保留，不得虚构。"
+  };
+  var TONE={
+    seed:"【目标调性】种草安利——热情、口语化、多用 emoji，像给闺蜜安利。",
+    science:"【目标调性】干货科普——冷静专业、讲原理和逻辑，减少情绪化词汇。",
+    story:"【目标调性】真实故事——第一人称亲身经历口吻，有时间/场景/转折，像在讲故事。",
+    roast:"【目标调性】吐槽避雷——犀利有态度，对比踩坑体验，节奏快。",
+    review:"【目标调性】专业测评——客观测评视角，可打分/对比参数，克制用语。"
+  };
+  var LENGTH={
+    keep:"【篇幅】与原文长度相近。",
+    short:"【篇幅】压缩到原文的约 60-70%，只留核心。",
+    long:"【篇幅】展开到原文的约 130-150%，补充场景、细节、感受。"
+  };
+
+  // option buttons
+  Array.prototype.forEach.call(document.querySelectorAll(".opt-row"),function(row){
+    row.addEventListener("click",function(e){
+      var opt=e.target.closest(".opt");if(!opt)return;
+      row.querySelectorAll(".opt").forEach(function(o){o.classList.remove("active");});
+      opt.classList.add("active");
+      var g=row.getAttribute("data-group"),v=opt.getAttribute("data-v");
+      if(g==="strength")rw.strength=v;
+      else if(g==="tone")rw.tone=v;
+      else if(g==="length")rw.length=v;
+    });
+  });
+  $("rwKeepData").addEventListener("change",function(){rw.keepData=this.checked;});
+  $("rwFirst").addEventListener("change",function(){rw.first=this.checked;});
+
+  $("rwBtn").addEventListener("click",function(){
+    var raw=$("rwInput").value.trim();
+    if(!raw){toast("先粘贴要洗稿的内容");return;}
+    if(!getKey()){setStatus("请先在上方设置里填写 DeepSeek API Key。","err","rwStatus");$("apiKey").focus();return;}
+    var btn=this;btn.disabled=true;
+    setStatus("正在按你选的方向洗稿…");
+    var keepLine=rw.keepData?"【保留项】是，关键数字、品牌名、产品名、核心结论必须原样保留。":"【保留项】否，可调整表达，但不得编造新的事实性结论。";
+    var firstLine=rw.first?"【视角】用\"我/我们\"的第一人称亲身视角叙述。":"【视角】可用客观或第三人称视角。";
+    var user=[STRENGTH[rw.strength],TONE[rw.tone],LENGTH[rw.length],keepLine,firstLine,
+      "\n原文内容：\n\"\"\"\n"+raw+"\n\"\"\""].join("\n");
+    callDeepSeek(RW_SYS,user).then(function(c){
+      var d=parseJSON(c);
+      var titles=Array.isArray(d.titles)?d.titles:[(d.title||"")];
+      var body=typeof d.body==="string"?d.body:"";
+      var tags=Array.isArray(d.tags)?d.tags:[];
+      $("rwTitles").value=titles.filter(Boolean).join("\n");
+      $("rwBody").value=body;
+      $("rwTags").value=tags.map(function(t){return "#"+t;}).join(" ");
+      $("rwOut").classList.remove("hidden");
+      setStatus("洗稿完成 ✅ 可直接改，复制去发。","ok");
+    }).catch(function(e){
+      if(e&&e.message==="NO_KEY"){setStatus("请先填写 DeepSeek API Key。","err");return;}
+      setStatus("洗稿失败："+(e&&e.message?e.message:e),"err");
+    }).then(function(){btn.disabled=false;});
+  });
+
+  $("rwClear").addEventListener("click",function(){
+    $("rwInput").value="";$("rwOut").classList.add("hidden");setStatus("","","rwStatus");
+  });
+
+  function rwAll(){
+    var t=$("rwTitles").value.trim(),b=$("rwBody").value.trim(),g=$("rwTags").value.trim();
+    return [t,b,g].filter(Boolean).join("\n\n");
+  }
+  $("rwCopyAll").addEventListener("click",function(){copy(rwAll(),"全文");});
+  $("rwCopyBody").addEventListener("click",function(){copy($("rwBody").value.trim(),"正文");});
+  $("rwCopyMd").addEventListener("click",function(){
+    var titles=$("rwTitles").value.split("\n").map(function(s){return s.trim();}).filter(Boolean);
+    var b=$("rwBody").value.trim();
+    var g=$("rwTags").value.trim();
+    var md="";
+    if(titles.length)md+="# "+titles[0]+"\n\n";
+    md+=b;
+    if(g)md+="\n\n"+g;
+    copy(md.trim(),"Markdown");
+  });
 })();
 </script>
 </body>
