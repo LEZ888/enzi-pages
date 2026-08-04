@@ -904,6 +904,7 @@ const DB = {
   writeAll(data) {
     try {
       localStorage.setItem(this.KEY, JSON.stringify(data));
+      try { refreshStorageMeter(); } catch (e2) {}
       return true;
     } catch (e) {
       // QuotaExceededError 或其他写入失败 → 全局暴露给 save 函数用
@@ -992,7 +993,7 @@ function checkDBWriteQuota() {
   DB._lastWriteError = null;
   const isQuota = (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message))));
   const msg = isQuota
-    ? '本地存储已满，无法保存！\n\n原因：浏览器给每个网站 localStorage 上限 5~10MB，案例/产品/知识图片会以 base64 存到本地，加多了就满。\n\n解决方法（任选一个）：\n① 去【案例/产品/知识】删一些旧图；或去【设置】备份后清空浏览器数据\n② 改用【视频链接】或【外链图片URL】代替上传\n③ 导出备份（设置→备份数据）后，换个浏览器或清理 localStorage'
+    ? '本地存储已满，无法保存！\n\n原因：浏览器给每个网站 localStorage 上限 5~10MB，案例/产品/知识图片会以 base64 存到本地，加多了就满。\n\n解决方法（任选一个）：\n① 去【案例/产品/知识】删一些旧图；或去【设置】备份后清空浏览器数据\n② 改用【视频链接】或【外链图片URL】代替上传\n③ 去【设置→本地存储占用】点「压缩已有图片」一键瘦身；或导出备份后清理 localStorage'
     : ('保存失败：' + (e && e.message || '未知错误'));
   openModal(`<div class="modal-card">
     <h3>${isQuota ? '⚠️ 本地存储已满' : '保存失败'}</h3>
@@ -1203,6 +1204,7 @@ function renderShell() {
         </div>
         <div class="left">
           <span style="font-size:13px;opacity:.9">${esc(roleLabel)}</span>
+          <span id="storeMeter" onclick="goModule('settings')" title="本地存储占用，点此去设置" style="font-size:12px;padding:3px 9px;border-radius:999px;cursor:pointer;background:rgba(16,185,129,.22);color:#fff">💾 -</span>
           <button class="btn ghost sm" style="color:#fff;background:rgba(255,255,255,.18)" onclick="logout()">退出</button>
         </div>
       </div>
@@ -1215,6 +1217,7 @@ function renderShell() {
       </div>
     </div>`;
   renderModule(App.currentModule);
+  refreshStorageMeter();
 }
 
 function toggleSidebar() {
@@ -1340,6 +1343,104 @@ function fileToBase64(file) {
     r.onerror = rej;
     r.readAsDataURL(file);
   });
+}
+
+/* 图片压缩：缩放到最长边 maxDim 以内并转 JPEG，大幅减少本地存储占用
+   —— 这是解决"加一两个产品就满、后续存不了"的核心修复 */
+function optimizeImageSrc(src, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    if (!src || src.indexOf('data:image') !== 0) { resolve(src); return; }
+    const img = new Image();
+    img.onload = function () {
+      try {
+        const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+        if (!w || !h) { resolve(src); return; }
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        const tw = Math.max(1, Math.round(w * scale)), th = Math.max(1, Math.round(h * scale));
+        const c = document.createElement('canvas');
+        c.width = tw; c.height = th;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, tw, th);
+        ctx.drawImage(img, 0, 0, tw, th);
+        resolve(c.toDataURL('image/jpeg', quality));
+      } catch (e) { reject(e); }
+    };
+    img.onerror = function () { reject(new Error('图片加载失败')); };
+    img.src = src;
+  });
+}
+function fileToOptimizedBase64(file, maxDim, quality) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => optimizeImageSrc(r.result, maxDim, quality).then(res).catch(rej);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+/* 本地存储占用统计 + 顶栏/设置页进度条 */
+function getStorageBytes() {
+  let n = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      n += (k ? k.length : 0) + (localStorage.getItem(k) || '').length;
+    }
+  } catch (e) {}
+  return n;
+}
+function refreshStorageMeter() {
+  const bytes = getStorageBytes();
+  const mb = bytes / 1048576;
+  const cap = 5 * 1048576; // 以 5MB 为安全线（iOS Safari 最严格的常见上限）
+  const pct = Math.min(100, bytes / cap * 100);
+  const border = pct > 85 ? '#ef4444' : pct > 60 ? '#f59e0b' : '#10b981';
+  const top = document.getElementById('storeMeter');
+  if (top) { top.textContent = '💾 ' + mb.toFixed(1) + 'MB'; top.style.background = pct > 85 ? 'rgba(239,68,68,.28)' : pct > 60 ? 'rgba(245,158,11,.25)' : 'rgba(16,185,129,.22)'; top.title = '本地存储占用 ' + pct.toFixed(0) + '%，点此去设置'; }
+  const box = document.getElementById('storeMeterBox');
+  if (box) {
+    box.innerHTML = `<div style="font-size:13px;color:#374151;margin-bottom:6px">当前占用：<b>${mb.toFixed(2)} MB</b> / 安全线 5 MB（浏览器给每个网站的 localStorage 上限）</div>
+      <div style="height:10px;border-radius:6px;background:#e5e7eb;overflow:hidden"><div style="height:100%;width:${pct}%;background:${border};transition:width .3s"></div></div>
+      <div style="font-size:12px;color:${border};margin-top:4px">${pct > 85 ? '空间快满了！建议立即「压缩已有图片」或删除旧图' : pct > 60 ? '空间使用偏多，留意占用' : '空间充足'}</div>`;
+  }
+}
+
+/* 一键压缩已有图片（释放已占满的空间，让后续能继续加产品） */
+function compressExistingImages() {
+  const data = DB.readAll();
+  const jobs = [];
+  const pushImgs = (col, rec) => {
+    (rec.images || []).forEach((u, i) => { if (u && u.indexOf('data:image') === 0) jobs.push({ col, id: rec.id, kind: 'img', i, url: u }); });
+  };
+  (data.products || []).forEach(r => pushImgs('products', r));
+  (data.cases || []).forEach(r => pushImgs('cases', r));
+  (data.activity_cards || []).forEach(r => pushImgs('activity_cards', r));
+  (data.knowledge_articles || []).forEach(a => { if (a.cover && a.cover.indexOf('data:image') === 0) jobs.push({ col: 'knowledge_articles', id: a.id, kind: 'cover', url: a.cover }); });
+  if (!jobs.length) { toast('没有需要压缩的图片'); return; }
+  confirmDialog('将把已有的 ' + jobs.length + ' 张图片压缩瘦身（观感几乎不变），可释放大量空间，之后就能继续加产品了。确定开始？', () => {
+    let idx = 0, done = 0, saved = 0;
+    const step = () => {
+      if (idx >= jobs.length) {
+        try { DB.writeAll(data); } catch (e) {}
+        toast('已压缩 ' + saved + ' 张图片，空间已释放 ✅');
+        refreshStorageMeter();
+        return;
+      }
+      const j = jobs[idx++];
+      const max = j.kind === 'cover' ? 800 : (j.col === 'cases' ? 1200 : 1000);
+      optimizeImageSrc(j.url, max, 0.72).then(opt => {
+        const rec = (data[j.col] || []).find(r => r.id === j.id);
+        if (rec) {
+          if (j.kind === 'cover') { if (rec.cover !== opt) { rec.cover = opt; saved++; } }
+          else { if (rec.images[j.i] !== opt) { rec.images[j.i] = opt; saved++; } }
+        }
+        if (++done % 5 === 0) toast('压缩中... ' + done + '/' + jobs.length);
+        step();
+      }).catch(() => { done++; step(); });
+    };
+    step();
+  }, '压缩图片');
 }
 
 function renderProducts(c) {
@@ -1568,7 +1669,7 @@ function addProductImages() {
   if (pending === 0) return;
   const beforeCount = (App._pfImgs || []).length;
   files.forEach(f => {
-    fileToBase64(f).then(b64 => {
+    fileToOptimizedBase64(f, 1000, 0.72).then(b64 => {
       if ((App._pfImgs || []).length < 9) App._pfImgs.push(b64);
       if (--pending === 0) {
         renderImgPreview();
@@ -3547,6 +3648,16 @@ function renderSettings(c) {
         <p class="muted" style="font-size:12px;margin-top:6px">导入将覆盖当前所有数据，操作前请先导出备份。支持跨设备迁移。</p>
       </section>
 
+      <section class="set-sec">
+        <h3>本地存储占用</h3>
+        <div id="storeMeterBox" class="store-meter-box"></div>
+        <p class="muted" style="font-size:12px;margin:6px 0 10px">新加的图片会自动压缩后保存（单张约 60~120KB，可存几十~上百个产品）。若之前加的图太大占满了空间，点下面按钮一键瘦身已有图片，之后就能继续加产品了。</p>
+        <div class="row">
+          <button class="btn" onclick="compressExistingImages()">🗜 压缩已有图片（释放空间）</button>
+          <button class="btn ghost" onclick="refreshStorageMeter()">刷新占用</button>
+        </div>
+      </section>
+
       <section class="set-sec danger-sec">
         <h3>危险操作</h3>
         <button class="btn danger" onclick="resetAllData()">清空并重置全部数据</button>
@@ -4089,7 +4200,7 @@ function addActivityCardImages() {
   if (!files.length) return;
   let pending = files.length;
   files.forEach(f => {
-    fileToBase64(f).then(b64 => {
+    fileToOptimizedBase64(f, 1000, 0.72).then(b64 => {
       App._acImgs.push(b64);
       renderAcImgPreview();
     }).catch(() => {}).finally(() => { if (--pending === 0) inp.value = ''; });
@@ -4782,7 +4893,7 @@ function openKnowledgeForm(id) {
 
 function kCoverChange(file) {
   if (!file) return;
-  fileToBase64(file).then(b64 => {
+  fileToOptimizedBase64(file, 800, 0.75).then(b64 => {
     App._kCover = b64;
     document.getElementById('kCoverPrev').innerHTML = renderKCoverPrev();
     // 选完图后自动弹出图片编辑器，让用户立即裁剪（知识封面不允许加文字水印）
@@ -5000,7 +5111,7 @@ function addCaseImages() {
   const files = Array.from(inp.files || []);
   if (!files.length) return;
   let pending = files.length;
-  files.forEach(f => fileToBase64(f).then(b64 => { App._caseImgs.push(b64); renderCaseImgPreview(); }).catch(() => {}).finally(() => { if (--pending === 0) inp.value = ''; }));
+  files.forEach(f => fileToOptimizedBase64(f, 1200, 0.72).then(b64 => { App._caseImgs.push(b64); renderCaseImgPreview(); }).catch(() => {}).finally(() => { if (--pending === 0) inp.value = ''; }));
 }
 function removeCaseImg(i) { App._caseImgs.splice(i, 1); renderCaseImgPreview(); }
 
@@ -5213,23 +5324,20 @@ function edReset() {
 
 function edSaveImg() {
   const s = App._ed; if (!s) return;
-  try {
-    const isPng = (App._edArr[s.index] || '').startsWith('data:image/png');
-    const data = s.canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.92);
-    // 优先用 afterSave 回调（知识/单值字段）；否则写回数组
+  const finish = (data) => {
     if (typeof s.afterSave === 'function') {
-      s.afterSave(data);
-      closeModal();
-      toast('已更新图片');
-      return;
+      s.afterSave(data); closeModal(); toast('已更新图片'); refreshStorageMeter(); return;
     }
-    // 否则用 _edArr 或回退 _caseImgs
     const arr = App._edArr || App._caseImgs;
     arr[s.index] = data;
     if (arr === App._caseImgs) renderCaseImgPreview();
     if (arr === App._pfImgs && typeof renderImgPreview === 'function') renderImgPreview();
-    closeModal();
-    toast('已更新图片');
+    closeModal(); toast('已更新图片'); refreshStorageMeter();
+  };
+  try {
+    // 画布已是「图片+文字/裁剪」的最终结果，导出后再压缩一次，避免大图占满本地存储
+    const raw = s.canvas.toDataURL('image/jpeg', 0.92);
+    optimizeImageSrc(raw, 1200, 0.72).then(finish).catch(() => finish(raw));
   } catch (err) { console.error('edSaveImg:', err); toast('保存失败'); }
 }
 
