@@ -80,9 +80,10 @@
   .collected{position:absolute;top:8px;right:8px;font-size:16px}
   .card .body{padding:10px;display:flex;flex-direction:column;gap:5px}
   .card .nm{font-size:14px;font-weight:600;line-height:1.35}
-  .card .br{font-size:12px;color:var(--c-sub)}
-  .tags{display:flex;flex-wrap:wrap;gap:5px}
-  .tag{font-size:11px;color:#555;background:#f3f3f5;padding:2px 7px;border-radius:var(--radius)}
+  .card .pr{font-size:13px;color:var(--c-primary);font-weight:700}
+  .card-fav{position:absolute;bottom:6px;right:6px;width:28px;height:28px;background:rgba(255,255,255,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#999;z-index:2;cursor:pointer;line-height:1}
+  .card-fav.on{color:#e4393c}
+  .card-cart{position:absolute;bottom:6px;left:6px;width:28px;height:28px;background:var(--c-primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;z-index:2;cursor:pointer;line-height:1}
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:var(--gap);padding:0 14px}
   @media(min-width:760px){.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
@@ -278,7 +279,7 @@
   .iedit .ctrls{display:flex;flex-direction:column;gap:8px;margin-top:10px}
   .iedit .ctrl-row{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:13px}
   .iedit input[type=range]{flex:1}
-  footer.foot{text-align:center;color:#bbb;font-size:11px;padding:18px}
+  footer.foot{text-align:center;color:#bbb;font-size:11px;padding:18px;display:none}
   /* ===== 朋友圈动态 ===== */
   .moments-cover{position:relative;height:160px;background:#333 center/cover no-repeat;margin:0 0 0 0}
   .moments-cover .cover-img{width:100%;height:100%;object-fit:cover;display:block}
@@ -355,6 +356,10 @@
   <div class="view" id="view-mall"><div class="page-pad" id="mallBody"></div></div>
   <!-- 朋友圈动态 -->
   <div class="view" id="view-moments"><div class="page-pad" id="momentsBody"></div></div>
+  <!-- 购物车 -->
+  <div class="view" id="view-cart"><div class="page-pad" id="cartBody"></div></div>
+  <!-- 收藏夹 -->
+  <div class="view" id="view-favorites"><div class="page-pad" id="favBody"></div></div>
 </div>
 
 <!-- 详情浮层 -->
@@ -533,7 +538,9 @@ const DEFAULT_SETTINGS={
     {id:"home",name:"产品展示",icon:"🛍️",type:"home"},
     {id:"moments",name:"朋友圈动态",icon:"💬",type:"moments"},
     {id:"mall",name:"积分商城",icon:"🎁",type:"mall"},
-    {id:"profile",name:"个人中心",icon:"👤",type:"profile"}
+    {id:"profile",name:"个人中心",icon:"👤",type:"profile"},
+    {id:"cart",name:"购物车",icon:"🛒",type:"cart",optional:true},
+    {id:"favorites",name:"收藏夹",icon:"♥",type:"favorites",optional:true}
   ]},
   banner:{enabled:false,items:[]},
   catTabStyle:"round",
@@ -559,7 +566,7 @@ const DEFAULT_SETTINGS={
   customers:[]
 };
 
-let STATE={products:[],settings:null,identity:null,isAdmin:false,view:"home",currentCat:"all",search:"",detailId:null,detailImg:0,editDesc:"",filterTag:null};
+let STATE={products:[],settings:null,identity:null,isAdmin:false,view:"home",currentCat:"all",search:"",detailId:null,detailImg:0,editDesc:"",filterTag:null,cart:[]};
 
 /* ============ 存储 ============ */
 const Store={
@@ -736,9 +743,10 @@ function cardHTML(p){
   const act=(STATE.settings.switches.activityTag&&p.activity)?`<div class="badge">${esc(p.activity)}</div>`:"";
   const col=(STATE.settings.switches.collections&&STATE.identity.collections.includes(p.id))?`<div class="collected">★</div>`:"";
   const off=(p.onShelf===false)?`<div class="offshelf">已下架</div>`:"";
-  const tags=(p.tags||[]).map(t=>`<span class="tag" data-tag="${esc(t)}">#${esc(t)}</span>`).join("");
-  return `<div class="card" data-id="${p.id}"><div class="img"><img loading="lazy" src="${img}" alt="">${act}${col}${off}</div>
-    <div class="body"><div class="nm">${esc(p.name||"（未命名产品）")}</div>${p.brand?`<div class="br">${esc(p.brand)}</div>`:""}<div class="tags">${tags}</div></div></div>`;
+  const price=p.price?`<div class="pr">¥${esc(p.price)}</div>`:"";
+  const fav=STATE.identity.collections.includes(p.id)?'<div class="card-fav on" data-pid="'+p.id+'">\u2665</div>':'<div class="card-fav" data-pid="'+p.id+'">\u2661</div>';
+  const cartAdd=`<div class="card-cart" data-pid="${p.id}">+</div>`;
+  return `<div class="card" data-id="${p.id}"><div class="img"><img loading="lazy" src="${img}" alt="">${act}${col}${off}${fav}${cartAdd}</div><div class="body"><div class="nm">${esc(p.name||"（未命名产品）")}</div>${price}</div></div>`;
 }
 
 /* ============ 渲染：首页(产品展示) ============ */
@@ -787,6 +795,7 @@ function bindCardClicks(root){
   root.querySelectorAll(".card").forEach(el=>el.onclick=()=>openDetail(el.dataset.id));
   root.querySelectorAll(".tag[data-tag]").forEach(el=>el.onclick=(e)=>{e.stopPropagation();STATE.filterTag=el.dataset.tag;STATE.search="";document.getElementById("searchInput").value="";renderHome();toast("已筛选功效："+el.dataset.tag);});
   root.querySelectorAll(".mlist .mi").forEach(el=>el.onclick=()=>{root.querySelectorAll(".mlist .mi").forEach(x=>x.classList.remove("on"));el.classList.add("on");document.getElementById("menuView").innerHTML=cardHTML(STATE.products.find(p=>p.id===el.dataset.id));bindCardClicks(document.getElementById("menuView"));});
+  bindCardFavCart(root);
 }
 function renderHome(){
   renderBanner();renderCats();renderSearch();
@@ -843,12 +852,14 @@ function renderDetail(){
 }
 function renderDetailActions(p){
   const bar=document.getElementById("dActions");const els=[];
+  els.push(`<button class="btn primary" id="actCart">🛒 加入购物车</button>`);
   if(STATE.settings.switches.buyButton&&p.buyLink){els.push(`<button class="btn primary" id="actBuy">${esc(p.buyText||"去购买")}</button>`);}
   if(STATE.settings.switches.collections){const col=STATE.identity.collections.includes(p.id);els.push(`<button class="btn" id="actCollect">${col?"★ 已收藏":"☆ 收藏"}</button>`);}
   const c=STATE.settings.shop.contact;
   if(c.wechat||c.phone){els.push(`<button class="btn" id="actContact">咨询</button>`);}
   els.push(`<button class="btn" id="actShare">分享</button>`);
   bar.innerHTML=els.join("");
+  if(document.getElementById("actCart"))document.getElementById("actCart").onclick=()=>{addToCart(p.id,1);};
   if(document.getElementById("actBuy"))document.getElementById("actBuy").onclick=()=>{const ag=STATE.settings.agents.find(x=>x.id===currentAgent());const u=(ag&&ag.mallUrl)?ag.mallUrl:p.buyLink;window.open(appendRef(u),"_blank");};
   if(document.getElementById("actCollect"))document.getElementById("actCollect").onclick=()=>{const arr=STATE.identity.collections;const i=arr.indexOf(p.id);if(i>=0){arr.splice(i,1);toast("已取消收藏");}else{arr.push(p.id);toast("已收藏");}persistIdentity();renderDetailActions(p);renderHome();};
   if(document.getElementById("actContact"))document.getElementById("actContact").onclick=()=>{let m="";if(c.wechat)m+="微信："+c.wechat+"\n";if(c.phone)m+="电话：tel:"+c.phone;alert(m||"暂未设置客服联系方式");if(c.phone)window.location.href="tel:"+c.phone;};
@@ -862,9 +873,10 @@ function renderNav(){
   const nav=STATE.settings.nav;
   const old=document.querySelector(".bottom-nav,.side-nav");if(old)old.remove();
   document.body.classList.toggle("side-mode",nav.style==="side");
-  const items=nav.items.filter(i=>i.type!=="home"||true);
+  const enabledOpt=(nav.enabledOptional||[]);
+  const items=nav.items.filter(i=>{if(i.optional)return enabledOpt.includes(i.id);return true;});
   const cur=STATE.view;
-  const html=items.map(it=>{let badge="";if(it.type==="moments"){const u=momentsUnread();if(u>0)badge=`<span class="nav-badge">${u>99?"99+":u}</span>`;}return `<div class="ni ${cur===it.type?"on":""}" data-type="${it.type}"><div class="ic">${it.icon||"•"}</div><div>${esc(it.name)}</div>${badge}</div>`;}).join("");
+  const html=items.map(it=>{let badge="";if(it.type==="moments"){const u=momentsUnread();if(u>0)badge=`<span class="nav-badge">${u>99?"99+":u}</span>`;}if(it.type==="cart"){const c=cartCount();if(c>0)badge=`<span class="nav-badge">${c>99?"99+":c}</span>`;}return `<div class="ni ${cur===it.type?"on":""}" data-type="${it.type}"><div class="ic">${it.icon||"•"}</div><div>${esc(it.name)}</div>${badge}</div>`;}).join("");
   const navEl=document.createElement("div");
   navEl.className=nav.style==="side"?"side-nav":"bottom-nav";
   navEl.innerHTML=html;
@@ -875,31 +887,40 @@ function switchView(type){
   if(type==="home")STATE.view="home";
   STATE.view=type;
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
-  const map={home:"view-home",profile:"view-profile",mall:"view-mall",moments:"view-moments"};
+  const map={home:"view-home",profile:"view-profile",mall:"view-mall",moments:"view-moments",cart:"view-cart",favorites:"view-favorites"};
   if(map[type])document.getElementById(map[type]).classList.add("on");
   if(type==="profile")renderProfile();
   if(type==="mall")renderMall();
   if(type==="moments")renderMoments();
+  if(type==="cart")renderCart();
+  if(type==="favorites")renderFavorites();
   renderNav();window.scrollTo(0,0);
 }
 function renderProfile(){
   const id=STATE.identity||{};const c=STATE.settings.shop.contact;
+  const optItems=(STATE.settings.nav.items||[]).filter(i=>i.optional);
+  const enabledOpt=STATE.settings.nav.enabledOptional||[];
   document.getElementById("profileBody").innerHTML=`<h2 style="margin-top:0">个人中心</h2>
     <div class="stat">
+      <div class="s"><b>${cartCount()}</b><span>购物车</span></div>
       <div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div>
       <div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div>
       <div class="s"><b>${id.points||0}</b><span>积分</span></div>
     </div>
     <div class="btn-row" style="margin-top:12px">
-      <button class="btn sm" id="pfBind">${id.phone?"换绑手机号":"绑定手机号"}</button>
-      <button class="btn sm" id="pfFav">我的收藏</button>
+      <button class="btn sm primary" id="pfCart">🛒 购物车</button>
+      <button class="btn sm" id="pfFav">♥ 我的收藏</button>
       <button class="btn sm" id="pfHis">浏览记录</button>
     </div>
+    ${optItems.length?`<fieldset style="margin-top:14px;padding:10px;border:1px solid var(--c-line);border-radius:var(--radius)"><legend style="font-size:13px;font-weight:600">导航栏快捷入口</legend>${optItems.map(it=>`<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer"><input type="checkbox" data-navopt="${it.id}" ${enabledOpt.includes(it.id)?"checked":""}> <span>${it.icon} ${esc(it.name)}</span></label>`).join("")}</fieldset>`:""}
+    <div class="btn-row" style="margin-top:10px"><button class="btn sm" id="pfBind">${id.phone?"换绑手机号":"绑定手机号"}</button></div>
     ${(id.phone)?`<div class="help">已绑定手机号：${esc(id.phone)}（换设备可用于恢复身份）</div>`:""}
     <div class="help">客服微信：${c.wechat||"未设置"}　电话：${c.phone||"未设置"}（在后台「店铺装修→联系客服」配置）</div>`;
+  document.getElementById("pfCart").onclick=()=>switchView("cart");
+  document.getElementById("pfFav").onclick=()=>switchView("favorites");
   document.getElementById("pfBind").onclick=()=>{openSheet({title:"绑定手机号",fields:[{k:"ph",label:"手机号",value:id.phone||"",required:true,ph:"11 位手机号"}],onSave:async v=>{STATE.identity.phone=v.ph;await persistIdentity();renderProfile();toast("已保存");}});};
-  document.getElementById("pfFav").onclick=()=>{const ids=(id.collections||[]);if(!ids.length){toast("还没有收藏");return;}STATE.view="home";switchView("home");STATE.filterTag=null;renderHome();toast("已显示收藏产品");};
   document.getElementById("pfHis").onclick=()=>{toast("浏览记录："+(id.history||[]).length+" 条");};
+  document.querySelectorAll("[data-navopt]").forEach(el=>el.onclick=async function(){const nid=this.dataset.navopt;let arr=[...enabledOpt];if(this.checked){if(!arr.includes(nid))arr.push(nid);}else{arr=arr.filter(x=>x!==nid);}STATE.settings.nav.enabledOptional=arr;await Store.saveAll();renderNav();toast(arr.includes(nid)?"已显示":"已隐藏");});
 }
 function renderMall(){
   const items=STATE.settings.redeemItems||[];
@@ -909,6 +930,68 @@ function renderMall(){
     ${items.length?items.map(it=>`<div class="item-row"><div class="pi" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">${it.img?`<img src="${it.img}" style="width:100%;height:100%;object-fit:cover">`:(it.icon||"🎁")}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分${it.stock>0?(" · 剩 "+it.stock+" 件"):(it.stock===0?" · 已兑完":"")}</span></div><button class="btn sm primary" data-r="${it.id}">${it.stock===0?"已兑完":"兑换"}</button></div>`).join(""):`<div class="empty">暂未上架兑换礼品</div>`}`;
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.id===b.dataset.r);if((STATE.identity.points||0)<it.cost){toast("积分不足");return;}STATE.identity.points-=it.cost;STATE.identity.pointsLog=STATE.identity.pointsLog||[];STATE.identity.pointsLog.push({ts:Date.now(),type:"redeem",detail:"兑换："+(it.name||"礼品"),amount:-it.cost});STATE.identity.redeemed=STATE.identity.redeemed||[];STATE.identity.redeemed.push({id:it.id,name:it.name,cost:it.cost,ts:Date.now()});persistIdentity();renderMall();toast("兑换成功："+it.name);});
 }
+/* ============ 购物车 ============ */
+function addToCart(pid,qty){
+  if(!qty||qty<1)qty=1;
+  const p=STATE.products.find(x=>x.id===pid);if(!p)return;
+  const exist=STATE.cart.find(x=>x.pid===pid);
+  if(exist){exist.qty+=qty;}else{STATE.cart.push({pid:pid,name:p.name,img:(p.images&&p.images[0])||"",price:p.price||"",brand:p.brand||"",qty:qty});}
+  saveCart();renderNav();toast("已加入购物车");
+}
+function removeFromCart(pid){STATE.cart=STATE.cart.filter(x=>x.pid!==pid);saveCart();renderCart();}
+function setCartQty(pid,qty){const it=STATE.cart.find(x=>x.pid===pid);if(!it)return;it.qty=Math.max(1,qty);saveCart();renderCart();}
+function cartTotal(){return STATE.cart.reduce((s,it)=>s+it.qty*(parseFloat(it.price)||0),0);}
+function cartCount(){return STATE.cart.reduce((s,it)=>s+it.qty,0);}
+function saveCart(){try{localStorage.setItem(LS_KEY+"_cart",JSON.stringify(STATE.cart));}catch(e){}
+}
+function loadCart(){try{const d=JSON.parse(localStorage.getItem(LS_KEY+"_cart"));if(Array.isArray(d))STATE.cart=d;}catch(e){}}
+function renderCart(){
+  const items=STATE.cart;
+  var h="<h2 style='margin-top:0'>\u{1f6d2} 购物车"+(items.length?" ("+cartCount()+"件)":"")+"</h2>";
+  if(!items.length){h+='<div class="empty">购物车空空如也~<br><br><button class="btn primary" onclick="switchView(\'home\')">去逛逛</button></div>';}
+  else{
+    h+=items.map(function(it){
+      var imgCell=it.img?'<img src="'+it.img+'" style="width:100%;height:100%;object-fit:cover">':'\u{1F4E6}';
+      return '<div class="sp-card" style="align-items:center"><div style="width:60px;height:60px;background:#f0f0f0;border-radius:8px;overflow:hidden;flex:0 0 60px">'+imgCell+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">'+esc(it.name)+'</div>'
+        +(it.brand?'<div style="font-size:12px;color:var(--c-sub)">'+esc(it.brand)+'</div>':'')
+        +(it.price?'<div style="font-size:13px;color:var(--c-primary);font-weight:700">\u00A5'+esc(it.price)+'</div>':'')+'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:center;gap:4px">'
+        +'<div style="display:flex;align-items:center;gap:6px"><button class="btn sm" onclick="setCartQty(\''+it.pid+'\','+(it.qty-1)+')">\u2212</button><span style="min-width:24px;text-align:center;font-weight:600">'+it.qty+'</span><button class="btn sm" onclick="setCartQty(\''+it.pid+'\','+(it.qty+1)+')">+</button></div>'
+        +'<button class="btn sm" style="color:#e4393c;font-size:11px;padding:2px 8px" onclick="removeFromCart(\''+it.pid+'\')">删除</button></div></div>';
+    }).join("");
+    h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--c-line);display:flex;justify-content:space-between;align-items:center;font-size:15px"><span>合计</span><span style="color:var(--c-primary);font-weight:700;font-size:18px">\u00A5'+cartTotal().toFixed(2)+'</span></div>'
+      +'<button class="btn primary" style="width:100%;margin-top:12px" onclick="toast(\'下单功能开发中\')">结算 ('+cartCount()+'件)</button>';
+  }
+  document.getElementById("cartBody").innerHTML=h;
+  /* bind card fav/cart inside cart page */
+  document.querySelectorAll(".card-fav").forEach(el=>el.onclick=function(e){e.stopPropagation();toggleFav(this.dataset.pid);});
+  document.querySelectorAll(".card-cart").forEach(el=>el.onclick=function(e){e.stopPropagation();addToCart(this.dataset.pid,1);});
+}
+
+/* ============ 收藏夹 ============ */
+function toggleFav(pid){
+  const arr=STATE.identity.collections||[];
+  const i=arr.indexOf(pid);
+  if(i>=0){arr.splice(i,1);toast("已取消收藏");}else{arr.push(pid);toast("已收藏");}
+  STATE.identity.collections=arr;persistIdentity();renderHome();
+  if(STATE.view==="favorites")renderFavorites();
+  renderNav();
+}
+function renderFavorites(){
+  const ids=STATE.identity.collections||[];
+  const prods=ids.map(id=>STATE.products.find(p=>p.id===id)).filter(Boolean);
+  document.getElementById("favBody").innerHTML="<h2 style='margin-top:0'>\u2665 我的收藏"+(ids.length?" ("+ids.length+")":"")+"</h2>"+
+    (!ids.length?'<div class="empty">还没有收藏~<br><br><button class="btn primary" onclick="switchView(\'home\')">去逛逛</button></div>':
+    '<div class="grid">'+prods.map(cardHTML).join("")+'</div>'+
+    (!prods.length&&ids.length?'<div class="help">部分收藏的产品可能已被下架或删除</div>':''));
+  if(prods.length)bindCardFavCart(document.getElementById("favBody"));
+}
+function bindCardFavCart(root){
+  root.querySelectorAll(".card-fav").forEach(el=>el.onclick=function(e){e.stopPropagation();const pid=this.dataset.pid;const arr=STATE.identity.collections||[];const i=arr.indexOf(pid);if(i>=0){arr.splice(i,1);this.textContent="\u2661";this.classList.remove("on");toast("已取消收藏");}else{arr.push(pid);this.textContent="\u2665";this.classList.add("on");toast("已收藏");}STATE.identity.collections=arr;persistIdentity();if(STATE.view==="favorites")renderFavorites();renderNav();});
+  root.querySelectorAll(".card-cart").forEach(el=>el.onclick=function(e){e.stopPropagation();addToCart(this.dataset.pid,1);});
+}
+
 /* ============ 朋友圈动态（前端，微信风格） ============ */
 function momentsPublished(){const now=Date.now();return (STATE.settings.moments.posts||[]).filter(p=>p.status==="published"&&p.ts<=now);}
 function momentsUnread(){const now=Date.now();const readAt=STATE.identity.momentsReadAt||0;return momentsPublished().filter(p=>p.ts>readAt).length;}
@@ -1778,6 +1861,8 @@ const NAV_TEMPLATES=[
   {type:'moments',name:'朋友圈动态',icon:'💬'},
   {type:'mall',name:'积分商城',icon:'🎁'},
   {type:'profile',name:'个人中心',icon:'👤'},
+  {type:'cart',name:'购物车',icon:'🛒',optional:true},
+  {type:'favorites',name:'收藏夹',icon:'♥',optional:true},
   {type:'tutorial',name:'教程视频',icon:'🎬'},
   {type:'cats',name:'分类导购',icon:'📑'},
   {type:'series',name:'系列专区',icon:'🧴'},
@@ -1949,6 +2034,7 @@ async function init(){
   STATE.settings.messages=STATE.settings.messages||[];
   STATE.products=d.products||[];
   STATE.isAdmin=adminSessionValid(); /* 恢复登录会话，免二次验证 */
+  loadCart();
   await Store.init();await ensureIdentity();applyTheme();updateModeTag();renderNav();renderHome();
   // 定时发布：扫描到点的 scheduled 动态自动转 published
   const checkScheduled=async()=>{let ch=false;const now=Date.now();(STATE.settings.moments.posts||[]).forEach(p=>{if(p.status==="scheduled"&&p.ts<=now){p.status="published";ch=true;}});if(ch){await Store.saveAll();renderMoments();renderNav();}};
@@ -4409,7 +4495,13 @@ function renderProfile(){
   const invHtml=invs.length?invs.map(v=>`<div class="pl-row"><span class="pl-d">邀请客户 ${esc((v.id||"").slice(0,8))}</span><span class="pl-t">${fmtFull(v.ts)}</span></div>`).join(""):`<div class="empty">还没有邀请到好友</div>`;
   const redHtml=red.length?red.map(r=>`<div class="pl-row"><span class="pl-d">${esc(r.name||"礼品")}（${esc(r.status||"待发货")}）</span><span class="pl-t">${fmtFull(r.ts)}</span></div>`).join(""):`<div class="empty">还没有兑换记录</div>`;
   document.getElementById("profileBody").innerHTML=`<h2 style="margin-top:0">个人中心</h2>
-    <div class="stat"><div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div><div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div><div class="s"><b>${id.points||0}</b><span>积分</span></div></div>
+    <div class="stat"><div class="s"><b>${cartCount()}</b><span>购物车</span></div><div class="s"><b>${(id.collections||[]).length}</b><span>收藏</span></div><div class="s"><b>${(id.history||[]).length}</b><span>浏览</span></div><div class="s"><b>${id.points||0}</b><span>积分</span></div></div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn sm primary" id="pfCart">🛒 购物车</button>
+      <button class="btn sm" id="pfFav">♥ 收藏夹</button>
+      <button class="btn sm" id="pfHis">浏览记录</button>
+    </div>
+    ${(()=>{const optItems=(STATE.settings.nav.items||[]).filter(i=>i.optional);const enabledOpt=STATE.settings.nav.enabledOptional||[];return optItems.length?`<fieldset style="margin:10px 0;padding:8px;border:1px solid var(--c-line);border-radius:var(--radius)"><legend style="font-size:12px;font-weight:600">导航快捷入口</legend><div style="display:flex;flex-wrap:wrap;gap:8px">${optItems.map(it=>`<label style="display:flex;align-items:center;gap:4px;padding:3px 8px;font-size:12px;background:#f7f7f7;border-radius:var(--radius);cursor:pointer"><input type="checkbox" data-navopt="${it.id}" ${enabledOpt.includes(it.id)?"checked":""}> ${it.icon}${it.name}</label>`).join("")}</div></fieldset>`:"";})()}
     <h3 style="margin:14px 0 6px">我的积分明细</h3>${logHtml}
     <h3 style="margin:14px 0 6px">我的邀请（${invs.length} 人）</h3>${invHtml}
     <div class="invite-box">
@@ -4435,8 +4527,10 @@ function renderProfile(){
   document.getElementById("cpLink").onclick=()=>{copyText(link);toast("已复制邀请链接");};
   document.getElementById("sharePage").onclick=()=>openSharePicker({type:"page"});
   document.getElementById("pfBind").onclick=()=>{openSheet({title:"绑定手机号",help:"绑定后可同步积分、收藏和订单。",fields:[{k:"ph",label:"手机号",value:id.phone||"",required:true,ph:"11 位手机号"}],onSave:async v=>{if(!/^\d{6,15}$/.test(v.ph)){toast("手机号格式不对");return false;}STATE.identity.phone=v.ph;if(!STATE.identity.inviteCode)STATE.identity.inviteCode=v.ph.slice(-4)+Math.random().toString(36).slice(2,6).toUpperCase();await persistIdentity();renderProfile();toast("已保存");}});};
-  document.getElementById("pfFav").onclick=()=>{const ids=(id.collections||[]);if(!ids.length){toast("还没有收藏");return;}STATE.view="home";switchView("home");renderHome();toast("已显示收藏产品");};
+  document.getElementById("pfCart").onclick=()=>switchView("cart");
+  document.getElementById("pfFav").onclick=()=>switchView("favorites");
   document.getElementById("pfHis").onclick=()=>{toast("浏览记录："+(id.history||[]).length+" 条");};
+  document.querySelectorAll("[data-navopt]").forEach(el=>el.onclick=async function(){const nid=this.dataset.navopt;let arr=[...(STATE.settings.nav.enabledOptional||[])];if(this.checked){if(!arr.includes(nid))arr.push(nid);}else{arr=arr.filter(x=>x!==nid);}STATE.settings.nav.enabledOptional=arr;await Store.saveAll();renderNav();toast(arr.includes(nid)?"已显示":"已隐藏");});
 }
 
 /* ============ 前端：积分商城（覆盖主导脚本 renderMall） ============ */
