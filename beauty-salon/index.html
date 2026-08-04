@@ -152,11 +152,21 @@
   .danger-sec { background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 16px; margin-top: 8px; }
   .modal-card h3 { margin: 0 0 14px; font-size: 17px; }
   .modal-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
-  .ac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-  .ac-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff; }
-  .ac-thumbwrap { margin-bottom: 8px; }
-  .ac-thumb { width: 100%; height: 96px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
-  .ac-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; word-break: break-all; }
+  .ac-grid { display: flex; flex-direction: column; gap: 10px; }
+  .ac-card { display: flex; align-items: stretch; gap: 10px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+  .ac-thumbwrap { flex: 0 0 auto; width: 80px; }
+  .ac-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
+  .ac-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .ac-title { font-weight: 600; font-size: 14px; word-break: break-all; line-height: 1.3; }
+  .ac-price { color: #7c3aed; font-weight: 600; font-size: 13px; }
+  .ac-cats { font-size: 12px; color: #6b7280; min-height: 14px; }
+  .ac-card .row-act { flex: 0 0 auto; align-items: center; justify-content: flex-end; }
+  @media (max-width: 480px) {
+    .ac-card { padding: 8px; gap: 8px; }
+    .ac-thumbwrap, .ac-thumb { width: 64px; height: 64px; }
+    .ac-card .row-act { flex-direction: column; gap: 4px; }
+    .ac-card .row-act .btn { padding: 4px 8px; font-size: 11.5px; }
+  }
   .case-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff; }
   .case-thumb { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; overflow: hidden; }
   .case-title { font-weight: 600; font-size: 14px; margin: 8px 0 4px; word-break: break-all; }
@@ -185,6 +195,19 @@
   .kg-line2 { font-size: 12px; line-height: 1.5; max-height: 36px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .kg-act { display: flex; gap: 4px; align-items: center; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
   .kg-act .btn { padding: 4px 8px; font-size: 12px; }
+  /* 知识预览富文本排版（让 p/div/br 正常分段，不再挤成一团） */
+  .k-preview-content p { margin: 0 0 10px 0; }
+  .k-preview-content p:last-child { margin-bottom: 0; }
+  .k-preview-content div { margin: 0 0 8px 0; }
+  .k-preview-content br { display: block; content: ""; margin-top: 6px; }
+  .k-preview-content b, .k-preview-content strong { font-weight: 700; color: #111827; }
+  .k-preview-content ul, .k-preview-content ol { margin: 6px 0 10px 22px; }
+  .k-preview-content li { margin-bottom: 4px; }
+  .k-preview-content h1, .k-preview-content h2, .k-preview-content h3 { margin: 10px 0 6px 0; font-weight: 700; color: #111827; }
+  .k-preview-content h1 { font-size: 18px; }
+  .k-preview-content h2 { font-size: 16px; }
+  .k-preview-content h3 { font-size: 15px; }
+  .k-preview-content img { max-width: 100%; border-radius: 6px; margin: 6px 0; }
   @media (max-width: 640px) {
     .kg-act { flex-direction: column; gap: 4px; }
     .kg-act .btn { padding: 4px 6px; font-size: 11px; }
@@ -879,7 +902,14 @@ const DB = {
   },
 
   writeAll(data) {
-    localStorage.setItem(this.KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify(data));
+      return true;
+    } catch (e) {
+      // QuotaExceededError 或其他写入失败 → 全局暴露给 save 函数用
+      DB._lastWriteError = e;
+      return false;
+    }
   },
 
   getList(collection) {
@@ -954,6 +984,26 @@ const DB = {
 function money(n) { return Number(n || 0).toFixed(2); }
 function todayStr() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
 function monthStr(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+
+// 检测 localStorage 写入失败（QuotaExceededError），弹出友好引导
+function checkDBWriteQuota() {
+  if (!DB._lastWriteError) return false;
+  const e = DB._lastWriteError;
+  DB._lastWriteError = null;
+  const isQuota = (e && (e.name === 'QuotaExceededError' || /quota/i.test(String(e.message))));
+  const msg = isQuota
+    ? '本地存储已满，无法保存！\n\n原因：浏览器给每个网站 localStorage 上限 5~10MB，案例/产品/知识图片会以 base64 存到本地，加多了就满。\n\n解决方法（任选一个）：\n① 去【案例/产品/知识】删一些旧图；或去【设置】备份后清空浏览器数据\n② 改用【视频链接】或【外链图片URL】代替上传\n③ 导出备份（设置→备份数据）后，换个浏览器或清理 localStorage'
+    : ('保存失败：' + (e && e.message || '未知错误'));
+  openModal(`<div class="modal-card">
+    <h3>${isQuota ? '⚠️ 本地存储已满' : '保存失败'}</h3>
+    <p style="margin:8px 0 18px;white-space:pre-line;color:#374151;line-height:1.7;font-size:13.5px">${esc(msg)}</p>
+    <div class="modal-act">
+      <button class="btn ghost" onclick="closeModal()">关闭</button>
+      <button class="btn" onclick="closeModal();document.querySelector('[data-m=\\\'settings\\\']')&&document.querySelector('[data-m=\\\'settings\\\']').click()">去设置备份</button>
+    </div>
+  </div>`);
+  return true;
+}
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
@@ -1504,7 +1554,11 @@ function openProductForm(id) {
 
 function renderImgPreview() {
   const box = document.getElementById('pf_imgs'); if (!box) return;
-  box.innerHTML = (App._pfImgs || []).map((u, i) => `<div style="position:relative"><img src="${u}" style="width:60px;height:60px;object-fit:cover;border-radius:8px"><button type="button" onclick="removeImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer">×</button></div>`).join('');
+  box.innerHTML = (App._pfImgs || []).map((u, i) => `<div style="position:relative">
+    <img src="${u}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openImageEditor(App._pfImgs,${i},{title:'产品图片编辑 · 可裁剪+加文字',allowText:true})">
+    <button type="button" title="编辑（裁剪/加文字）" onclick="openImageEditor(App._pfImgs,${i},{title:'产品图片编辑 · 可裁剪+加文字',allowText:true})" style="position:absolute;bottom:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">✎</button>
+    <button type="button" title="删除" onclick="removeImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+  </div>`).join('');
 }
 function addProductImages() {
   const inp = document.getElementById('pf_file');
@@ -1512,10 +1566,19 @@ function addProductImages() {
   if ((App._pfImgs || []).length >= 9) { toast('最多9张'); inp.value = ''; return; }
   let pending = files.length;
   if (pending === 0) return;
+  const beforeCount = (App._pfImgs || []).length;
   files.forEach(f => {
     fileToBase64(f).then(b64 => {
       if ((App._pfImgs || []).length < 9) App._pfImgs.push(b64);
-      if (--pending === 0) { renderImgPreview(); if ((App._pfImgs || []).length >= 9) toast('已达9张上限'); }
+      if (--pending === 0) {
+        renderImgPreview();
+        // 单张图且产品图编辑可用 → 自动进入编辑器（让用户立刻裁剪+加文字）
+        if (files.length === 1 && App._pfImgs.length === beforeCount + 1) {
+          setTimeout(() => openImageEditor(App._pfImgs, App._pfImgs.length - 1, { title: '产品图片编辑 · 可裁剪+加文字', allowText: true }), 100);
+        } else if ((App._pfImgs || []).length >= 9) {
+          toast('已达9张上限');
+        }
+      }
     }).catch(() => { if (--pending === 0) renderImgPreview(); });
   });
   inp.value = '';
@@ -1989,17 +2052,27 @@ function saveProduct(id) {
   } else {
     p.production_date = null; p.shelf_life_months = null;
   }
-  if (id) { DB.update('products', id, p); toast('已保存'); }
-  else {
-    DB.insert('products', p);
-    // 修复 Bug D：新建产品后重置筛选，确保新加的产品立刻可见（避免被对内/对某分类/搜索词过滤掉）
-    App.productSearch = '';
-    App.productCat = '';
-    App.productFilter = '';
-    App.productFastExpire = false;
-    toast('已添加：' + p.name);
+  // 兜底：DB.writeAll 已捕获 QuotaExceededError，但 JS 仍可能抛其它异常（序列化/未知字段），这里兜一层
+  try {
+    if (id) { DB.update('products', id, p); toast('已保存'); }
+    else {
+      DB.insert('products', p);
+      // 修复 Bug D：新建产品后重置筛选，确保新加的产品立刻可见（避免被对内/对某分类/搜索词过滤掉）
+      App.productSearch = '';
+      App.productCat = '';
+      App.productFilter = '';
+      App.productFastExpire = false;
+      toast('已添加：' + p.name);
+    }
+  } catch (err) {
+    console.error('saveProduct err:', err);
+    if (checkDBWriteQuota()) return;  // quota 已弹引导
+    toast('保存失败：' + (err && err.message || '请重试'));
+    return;
   }
   closeModal();
+  // 清空 App._pfImgs 防止下次打开新建表单时残留（避免第2个产品添加时被旧图干扰）
+  App._pfImgs = [];
   try { renderProducts(document.getElementById('content') || document.body); }
   catch (e) { console.error('renderProducts failed:', e); toast('保存成功但列表刷新失败，请手动切换模块'); }
 }
@@ -3849,14 +3922,17 @@ function renderActivityCards(c) {
             <input id="ac_newcat" placeholder="新建分类名" style="flex:1" maxlength="20">
             <button type="button" class="btn sm ghost" onclick="addAcCategory()">+ 新增</button>
           </div>
-        </div>
-        <div class="cat-main">
-          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
-            <div class="ac-search-wrap" style="flex:1">
-              <input id="acSearch" placeholder="搜索标题/明细/价格" style="width:100%">
+          <div style="margin-top:10px">
+            <div class="ac-search-wrap" style="width:100%">
+              <input id="acSearch" placeholder="🔎 搜索标题/明细/价格" style="width:100%;padding-left:30px">
               <button type="button" class="ac-search-clear" id="acSearchClear" onclick="clearAcSearch()" title="清空搜索">×</button>
             </div>
-            <button class="btn sm" onclick="openActivityCardForm(null)">+ 新建活动卡</button>
+          </div>
+        </div>
+        <div class="cat-main">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+            <span style="font-size:12px;color:#6b7280">活动卡列表（点功能键预览/编辑/复制/删除）</span>
+            <button class="btn sm" onclick="openActivityCardForm(null)" style="margin-left:auto">+ 新建活动卡</button>
           </div>
           <div id="acGrid" class="ac-grid"></div>
         </div>
@@ -3911,9 +3987,11 @@ function renderAcGrid() {
       : '<div class="ac-thumb" style="background:#f3f4f6;color:#9ca3af;display:flex;align-items:center;justify-content:center;font-size:11px">无图</div>';
     return `<div class="ac-card">
       <div class="ac-thumbwrap">${thumb}</div>
-      <div class="ac-title">${esc(a.title || '(未命名)')}${a.is_internal ? ' <span class="mr-badge int">对内</span>' : ''}</div>
-      <div class="ac-price">${a.price != null && a.price !== '' ? '¥' + money(a.price) : '价格未填'}</div>
-      <div class="ac-cats">${esc(catNames) || '<span style="color:#9ca3af">无分类</span>'}</div>
+      <div class="ac-info">
+        <div class="ac-title">${esc(a.title || '(未命名)')}${a.is_internal ? ' <span class="mr-badge int">对内</span>' : ''}</div>
+        <div class="ac-price">${a.price != null && a.price !== '' ? '¥' + money(a.price) : '价格未填'}</div>
+        <div class="ac-cats">${esc(catNames) || '<span style="color:#9ca3af">无分类</span>'}</div>
+      </div>
       <div class="row-act">
         <button class="btn sm ghost" onclick="previewActivityCard('${a.id}')">预览</button>
         <button class="btn sm ghost" onclick="openActivityCardForm('${a.id}')">编辑</button>
@@ -4636,9 +4714,11 @@ function previewKnowledge(id) {
   if (!a) return;
   const cat = DB.getList('knowledge_categories').find(c => c.id === a.category_id);
   const exp = DB.getList('expert_profiles').find(e => e.id === a.expert_profile_id);
-  const cover = a.cover ? `<img src="${a.cover}" style="width:100%;max-height:220px;object-fit:cover">` : '';
+  const cover = a.cover ? `<img src="${a.cover}" style="width:100%;max-height:220px;object-fit:cover;display:block">` : '';
+  // 顶部加显眼的关闭按钮（iOS PWA / modal-mask 点击有时不灵敏；并且很多预览无关闭入口）+ 底部也加一个
   openModal(`
-    <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+    <div style="position:relative;max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <button type="button" onclick="closeModal()" aria-label="关闭" style="position:absolute;top:8px;right:8px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)">×</button>
       ${cover}
       <div style="padding:16px">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
@@ -4646,9 +4726,13 @@ function previewKnowledge(id) {
           ${cat ? `<span class="tag" style="background:#ede9fe;color:#7c3aed">${esc(cat.name)}</span>` : ''}
           ${a.pinned ? '<span style="font-size:11px;background:#fef3c7;color:#b45309;padding:1px 8px;border-radius:999px">置顶</span>' : ''}
         </div>
-        <div style="font-size:20px;font-weight:700;color:#111827">${esc(a.title || '(无标题)')}</div>
-        <div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:10px;line-height:1.7">${esc(stripHtml(a.content || ''))}</div>
-        ${exp ? `<div style="margin-top:12px;border-top:1px solid #f0f0f0;padding-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">专家简介模板</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(exp.content || '')}</div></div>` : ''}
+        <div style="font-size:20px;font-weight:700;color:#111827;line-height:1.4">${esc(a.title || '(无标题)')}</div>
+        <div class="k-preview-content" style="font-size:14px;color:#374151;margin-top:12px;line-height:1.75;word-break:break-word;white-space:normal">${a.content || '<span style="color:#9ca3af">(无内容)</span>'}</div>
+        ${exp ? `<div style="margin-top:14px;border-top:1px solid #f0f0f0;padding-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">👤 ${esc(exp.title || '专家简介模板')}</div><div class="k-preview-content" style="font-size:13px;color:#4b5563;margin-top:4px;line-height:1.7;word-break:break-word">${exp.content || ''}</div></div>` : ''}
+      </div>
+      <div style="padding:10px 16px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6">
+        <button class="btn ghost" onclick="closeModal()">关闭</button>
+        <button class="btn" onclick="closeModal();openKnowledgeForm('${a.id}')">编辑</button>
       </div>
     </div>`);
 }
@@ -4667,9 +4751,13 @@ function openKnowledgeForm(id) {
       </select>
     </div>
     <div class="field"><label>标题（选填）</label><input id="kfTitle" value="${esc(a ? a.title : '')}"></div>
-    <div class="field"><label>封面图（选填，单图）</label>
+    <div class="field"><label>封面图（选填，单图，点 ✎ 可裁剪）</label>
       <input type="file" accept="image/*" onchange="kCoverChange(this.files[0])">
-      <div id="kCoverPrev" style="margin-top:6px">${App._kCover ? `<img src="${App._kCover}" style="max-width:120px;border-radius:8px"><button type="button" class="xbtn" onclick="kCoverClear()">×</button>` : ''}</div>
+      <div id="kCoverPrev" style="margin-top:6px">${App._kCover ? `<div style="position:relative;display:inline-block">
+        <img src="${App._kCover}" style="max-width:120px;border-radius:8px">
+        <button type="button" class="xbtn" onclick="kCoverClear()" style="position:absolute;top:-8px;right:-8px">×</button>
+        <button type="button" onclick="kCoverEdit()" style="position:absolute;bottom:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0">✎</button>
+      </div>` : ''}</div>
     </div>
     <div class="field"><label>分类</label>
       <select id="kfCat" class="inp"><option value="">未分类</option>${cats.map(c => `<option value="${c.id}" ${a && a.category_id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select>
@@ -4696,7 +4784,40 @@ function kCoverChange(file) {
   if (!file) return;
   fileToBase64(file).then(b64 => {
     App._kCover = b64;
-    document.getElementById('kCoverPrev').innerHTML = `<img src="${b64}" style="max-width:120px;border-radius:8px"><button type="button" class="xbtn" onclick="kCoverClear()">×</button>`;
+    document.getElementById('kCoverPrev').innerHTML = renderKCoverPrev();
+    // 选完图后自动弹出图片编辑器，让用户立即裁剪（知识封面不允许加文字水印）
+    setTimeout(() => {
+      openImageEditor([b64], 0, {
+        title: '知识封面裁剪（仅裁剪/滤镜，不加文字）',
+        allowText: false,
+        afterSave: function(newDataUrl) {
+          App._kCover = newDataUrl;
+          const prev = document.getElementById('kCoverPrev');
+          if (prev) prev.innerHTML = renderKCoverPrev();
+          toast('已裁剪');
+        }
+      });
+    }, 100);
+  });
+}
+function renderKCoverPrev() {
+  return App._kCover ? `<div style="position:relative;display:inline-block">
+    <img src="${App._kCover}" style="max-width:120px;border-radius:8px">
+    <button type="button" class="xbtn" onclick="kCoverClear()" style="position:absolute;top:-8px;right:-8px">×</button>
+    <button type="button" onclick="kCoverEdit()" style="position:absolute;bottom:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;padding:0">✎</button>
+  </div>` : '';
+}
+function kCoverEdit() {
+  if (!App._kCover) return;
+  openImageEditor([App._kCover], 0, {
+    title: '知识封面裁剪',
+    allowText: false,
+    afterSave: function(newDataUrl) {
+      App._kCover = newDataUrl;
+      const prev = document.getElementById('kCoverPrev');
+      if (prev) prev.innerHTML = renderKCoverPrev();
+      toast('已裁剪');
+    }
   });
 }
 function kCoverClear() { App._kCover = ''; document.getElementById('kCoverPrev').innerHTML = ''; }
@@ -4711,16 +4832,25 @@ function fillKExpOptions() {
 
 function saveKnowledge(id) {
   const title = document.getElementById('kfTitle').value.trim();
+  if (!title) { toast('标题必填'); return; }
   const type = document.getElementById('kfType').value;
   const category_id = document.getElementById('kfCat').value || null;
   const expert_profile_id = document.getElementById('kfExp').value || null;
   const content = document.getElementById('kfContent').innerHTML;
   const cover = App._kCover || '';
   const data = { title, type, category_id, expert_profile_id, content, cover };
-  if (id) DB.update('knowledge_articles', id, data);
-  else DB.insert('knowledge_articles', data);
+  try {
+    if (id) DB.update('knowledge_articles', id, data);
+    else DB.insert('knowledge_articles', { ...data, created_at: todayStr() });
+  } catch (e) {
+    console.error('saveKnowledge err:', e);
+    if (checkDBWriteQuota()) return;
+    toast('保存失败：' + (e && e.message || '请重试'));
+    return;
+  }
   closeModal();
-  renderKGrid();
+  App._kCover = '';
+  try { renderKGrid(); } catch (err) { console.error('renderKGrid failed:', err); toast('保存成功但列表刷新失败'); }
   toast('已保存');
 }
 
@@ -4912,8 +5042,9 @@ function openCaseForm(id, copyData) {
       <div style="margin-bottom:4px">
         <button type="button" class="btn sm ghost" onclick="document.execCommand('bold')"><b>B</b></button>
         <button type="button" class="btn sm ghost" onclick="document.execCommand('insertLineBreak')">换行</button>
+        <button type="button" class="btn sm ghost" onclick="document.execCommand('paste')">📋 粘贴</button>
       </div>
-      <div id="case_content" contenteditable="true" style="border:1px solid #d1d5db;border-radius:8px;padding:8px;min-height:80px">${a && a.content ? a.content : ''}</div>
+      <div id="case_content" contenteditable="true" spellcheck="false" onpaste="return true" style="border:1px solid #d1d5db;border-radius:8px;padding:8px;min-height:80px;-webkit-user-select:text;user-select:text">${a && a.content ? a.content : ''}</div>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="btn" style="flex:1" onclick="saveCase('${id || ''}')">保存</button>
@@ -4949,12 +5080,15 @@ function saveCase(id) {
       toast('已新建');
     }
   } catch (e) {
+    console.error('saveCase err:', e);
+    if (checkDBWriteQuota()) return;  // quota 已弹引导
     toast('保存失败：' + (e && e.message || '请重试'));
     return;
   }
+  App._caseImgs = [];
   closeModal();
   try { renderCases(document.getElementById('content') || document.body); }
-  catch (e) { /* 渲染失败不影响已落库，下次进入会看到 */ }
+  catch (e) { console.error('renderCases failed:', e); toast('保存成功但列表刷新失败，请手动切换模块'); }
 }
 
 function deleteCase(id) {
@@ -4966,13 +5100,17 @@ function deleteCase(id) {
   }, '删除案例');
 }
 
-/* ---- Canvas 图片编辑器（滤镜 / 加文字 / 裁剪）---- */
-function openCaseImageEditor(index) {
-  const src = App._caseImgs[index];
+/* ---- Canvas 图片编辑器（滤镜 / 加文字 / 裁剪）通用版 ---- */
+// arr: 图片数组（产品/案例/知识共用），index: 选中索引, opts: {allowText, title, afterSave(fn)}
+function openImageEditor(arr, index, opts) {
+  opts = opts || {};
+  const src = arr[index];
   if (!src) return;
-  App._ed = { index, img: null, canvas: null, filters: { brightness: 100, contrast: 100, saturate: 100 }, texts: [], cropMode: false, cropStart: null, cropRect: null, dragging: null };
+  // 兼容旧字段：把 App._caseImgs 临时指向当前 arr（让现有 edDraw/edApplyCrop/edSaveImg 复用）
+  App._edArr = arr;
+  App._ed = { index, img: null, canvas: null, filters: { brightness: 100, contrast: 100, saturate: 100 }, texts: [], cropMode: false, cropStart: null, cropRect: null, dragging: null, allowText: opts.allowText !== false, afterSave: opts.afterSave || null };
   const html = `
-    <h3>图片编辑</h3>
+    <h3>${opts.title || '图片编辑'}</h3>
     <div class="case-imgedit">
       <canvas id="edCanvas"></canvas>
       <div id="edCrop" class="ed-cropbox" style="display:none"></div>
@@ -4982,19 +5120,19 @@ function openCaseImageEditor(index) {
       <label>对比度 <input type="range" id="edContrast" min="0" max="200" value="100" oninput="edApplyFilters()"></label>
       <label>饱和度 <input type="range" id="edSat" min="0" max="200" value="100" oninput="edApplyFilters()"></label>
     </div>
-    <div class="ed-tool">
+    ${opts.allowText !== false ? `<div class="ed-tool">
       <input id="edText" placeholder="输入文字" style="width:120px">
       <input id="edTextSize" type="text" inputmode="numeric" value="28" style="width:48px">
       <input id="edTextColor" type="color" value="#ffffff" style="width:38px;height:30px;border:none;background:none">
       <button class="btn sm" onclick="edAddText()">添加文字</button>
-    </div>
+    </div>` : ''}
     <div class="ed-tool">
-      <button class="btn sm ghost" onclick="edStartCrop()" id="edCropBtn">裁剪</button>
+      <button class="btn sm ghost" onclick="edStartCrop()" id="edCropBtn">✂ 裁剪</button>
       <button class="btn sm ghost" onclick="edReset()">重置</button>
-      <button class="btn sm" onclick="edSaveImg()">保存修改</button>
+      <button class="btn" onclick="edSaveImg()">保存修改</button>
       <button class="btn sm ghost" onclick="closeModal()">取消</button>
     </div>
-    <div style="font-size:12px;color:#9ca3af;margin-top:6px">拖动滑块调滤镜；输入文字点「添加文字」后可拖动位置；「裁剪」后在图片上拖拽选区自动裁剪。</div>`;
+    <div style="font-size:12px;color:#9ca3af;margin-top:6px">拖动滑块调滤镜；输入文字点「添加文字」后可拖动位置；点「✂ 裁剪」后在图片上拖拽选区自动裁剪。</div>`;
   openModal(html);
   const canvas = document.getElementById('edCanvas');
   App._ed.canvas = canvas;
@@ -5004,6 +5142,9 @@ function openCaseImageEditor(index) {
   img.src = src;
   bindEdEvents(canvas);
 }
+
+/* ---- 兼容旧 API：案例用 ---- */
+function openCaseImageEditor(index) { openImageEditor(App._caseImgs, index, { title: '案例图片编辑', allowText: true }); }
 
 function edDraw() {
   const s = App._ed; if (!s || !s.canvas || !s.img) return;
@@ -5073,13 +5214,23 @@ function edReset() {
 function edSaveImg() {
   const s = App._ed; if (!s) return;
   try {
-    const isPng = (App._caseImgs[s.index] || '').startsWith('data:image/png');
+    const isPng = (App._edArr[s.index] || '').startsWith('data:image/png');
     const data = s.canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.92);
-    App._caseImgs[s.index] = data;
-    renderCaseImgPreview();
+    // 优先用 afterSave 回调（知识/单值字段）；否则写回数组
+    if (typeof s.afterSave === 'function') {
+      s.afterSave(data);
+      closeModal();
+      toast('已更新图片');
+      return;
+    }
+    // 否则用 _edArr 或回退 _caseImgs
+    const arr = App._edArr || App._caseImgs;
+    arr[s.index] = data;
+    if (arr === App._caseImgs) renderCaseImgPreview();
+    if (arr === App._pfImgs && typeof renderImgPreview === 'function') renderImgPreview();
     closeModal();
     toast('已更新图片');
-  } catch (err) { toast('保存失败'); }
+  } catch (err) { console.error('edSaveImg:', err); toast('保存失败'); }
 }
 
 function bindEdEvents(canvas) {
