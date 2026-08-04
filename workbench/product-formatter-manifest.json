@@ -1,0 +1,16 @@
+{
+  "name": "产品排版工具 · 恩子聊美业",
+  "short_name": "排版工具",
+  "description": "粘贴豆包/元宝内容或淘宝抖音文字，一键拆字段重排：4种风格(小红书/淘宝上架/朋友圈/品牌官网) + 一键复制。",
+  "start_url": "./product-formatter.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf7f2",
+  "theme_color": "#c8794f",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "product-formatter-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "product-formatter-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
