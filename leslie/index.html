@@ -273,6 +273,7 @@
   .moments-cover .me{position:absolute;right:14px;bottom:-26px;display:flex;align-items:center;gap:8px;flex-direction:row-reverse}
   .moments-cover .me .av{width:54px;height:54px;border-radius:8px;border:2px solid #fff;object-fit:cover;background:#eee}
   .moments-cover .me .nm{color:#fff;font-weight:600;text-shadow:0 1px 3px rgba(0,0,0,.6);font-size:15px}
+  .mav-ph{display:flex;align-items:center;justify-content:center;background:#e4393c;color:#fff;font-weight:700;font-size:18px}
   .moments-list{margin-top:40px;display:flex;flex-direction:column;gap:14px}
   .mpost{background:var(--c-card);border-radius:var(--radius);padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
   .mpost .top{display:flex;gap:10px;align-items:flex-start}
@@ -401,40 +402,98 @@
   <div class="btn-row" style="margin-top:14px;justify-content:flex-end"><button class="btn" id="chgPwdCancel">取消</button><button class="btn primary" id="chgPwdOk">更新密码</button></div>
 </div></div>
 
-<div class="modal hidden" id="formModal"><div class="box">
+<div class="modal hidden" id="formModal"><div class="box" style="max-width:560px">
   <h3 id="formTitle">新增产品</h3>
-  <div class="btn-row" id="formActionBar" style="margin-bottom:12px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm primary" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别填框</button></div>
-  <div id="pasteHint" style="font-size:12px;color:var(--c-sub);text-align:center;margin-bottom:10px"></div>
-  <div class="field"><label>产品标题 *（也建议填，但不强制）</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
-  <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
-  <div class="field"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
-  <div class="field"><label>系列</label><select id="f_series"><option value="">不选择</option></select></div>
-  <div class="field"><label>功效标签（逗号分隔，可点筛选）</label><input id="f_tags" placeholder="美白, 补水, 提亮"></div>
-  <div class="field"><label>活动标签（白字红底，替代价格）</label>
-    <div id="f_act_chips" class="chips"></div>
-    <input id="f_act_custom" class="hidden" style="margin-top:6px" placeholder="自定义标签文字">
+  <!-- 顶部操作栏 -->
+  <div class="btn-row" id="formActionBar" style="margin-bottom:10px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm primary" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别填框</button></div>
+  <div id="pasteHint" style="font-size:12px;color:var(--c-sub);text-align:center;margin-bottom:8px"></div>
+
+  <!-- ===== 基本信息 ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">基本信息</legend>
+  <div class="field" style="margin-bottom:8px"><label>产品标题 *</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
+  <div class="field btn-row" style="gap:10px">
+    <div style="flex:1"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
+    <div style="flex:1"><label>分类</label><select id="f_cat"><option value="">不选择</option></select></div>
   </div>
-  <div class="field"><label>产品描述（富文本，可不填）</label><button class="btn sm" id="f_desc_edit" type="button">打开富文本编辑器</button><div id="f_desc_preview" style="font-size:12px;color:var(--c-sub);margin-top:6px"></div></div>
-  <div class="field"><label>产品图片（多张，第一张主图，可在线编辑）</label><input id="f_imgs" type="file" accept="image/*" multiple><div class="thumbs" id="f_thumbs"></div></div>
-  <div class="field"><label>产品视频（一个，可不传）</label><input id="f_video" type="file" accept="video/*"><div id="f_video_name" style="font-size:12px;color:var(--c-sub);margin-top:4px"></div></div>
-  <div class="field"><label>详情长图（可选）</label><input id="f_long" type="file" accept="image/*"><div id="f_long_name" style="font-size:12px;color:var(--c-sub);margin-top:4px"></div></div>
-  <div class="field btn-row">
-    <div style="flex:1"><label>库存数量（可不填）</label><input id="f_stock" type="number" placeholder="留空=不显示"></div>
-    <div style="flex:1"><label>活动结束时间（可选倒计时）</label><input id="f_end" type="datetime-local"></div>
+  <div class="field btn-row" style="gap:10px">
+    <div style="flex:1"><label>系列</label><select id="f_series"><option value="">不选择</option></select></div>
+    <div style="flex:1"><label>库存数量</label><input id="f_stock" type="number" placeholder="留空=不限"></div>
   </div>
-  <div class="field btn-row">
-    <div style="flex:1"><label>去购买按钮文字</label><input id="f_buytxt" placeholder="如：去购买"></div>
-    <div style="flex:1"><label>去购买链接</label><input id="f_buylink" placeholder="https://…"></div>
+  <div class="field btn-row" style="gap:10px">
+    <div style="flex:1"><label>原价 / 划线价（选填）</label><input id="f_origprice" type="number" step="0.01" placeholder="如：399"></div>
+    <div style="flex:1"><label>容量 / 规格（选填）</label><input id="f_spec" placeholder="如：30ml / 50g"></div>
   </div>
-  <div class="field"><label>单品分享卡片（可选，留空则用分享模板/默认主图）</label>
-    <input id="f_sharetitle" placeholder="分享标题">
-    <input id="f_sharedesc" placeholder="分享描述" style="margin-top:6px">
-    <input id="f_sharethumb" placeholder="缩略图URL（或留空用主图）" style="margin-top:6px">
+  </fieldset>
+
+  <!-- ===== 标签与活动 ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">标签与活动</legend>
+  <div class="field" style="margin-bottom:8px"><label>功效标签（逗号分隔）</label><input id="f_tags" placeholder="美白, 补水, 提亮"></div>
+  <div class="field" style="margin-bottom:0">
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:13px" onclick="const p=this.nextElementSibling;p.style.display=p.style.display==='block'?'none':'block';this.querySelector('span').textContent=p.style.display==='block'?'▾':'▸'">活动标签<span>▸</span><span style="font-weight:400;color:var(--c-sub);margin-left:4px;font-size:11px">(选填，折叠)</span></label>
+    <div id="f_act_fold" style="display:none;margin-top:6px">
+      <div id="f_act_chips" class="chips" style="margin-bottom:4px"></div>
+      <input id="f_act_custom" class="hidden" style="width:100%;box-sizing:border-box;font-size:14px;padding:7px 9px;border:1px solid var(--c-line);border-radius:6px" placeholder="自定义标签文字">
+    </div>
   </div>
-  <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="f_shelf" checked style="width:auto"> 上架销售（取消=下架，前端不显示）</label></div>
-  <div class="field"><label>排序（数字越小越靠前）</label><input id="f_order" type="number" value="0"></div>
+  </fieldset>
+
+  <!-- ===== 媒体文件 ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">媒体文件</legend>
+  <div class="field" style="margin-bottom:8px"><label>产品图片（多张，第一张为主图）</label><input id="f_imgs" type="file" accept="image/*" multiple><div class="thumbs" id="f_thumbs"></div></div>
+  <div class="field btn-row" style="gap:10px">
+    <div style="flex:1"><label>产品视频（可选）</label><input id="f_video" type="file" accept="video/*"><div id="f_video_name" style="font-size:11px;color:var(--c-sub);margin-top:2px"></div></div>
+    <div style="flex:1"><label>详情长图（可选）</label><input id="f_long" type="file" accept="image/*"><div id="f_long_name" style="font-size:11px;color:var(--c-sub);margin-top:2px"></div></div>
+  </div>
+  </fieldset>
+
+  <!-- ===== 产品描述（内嵌富文本编辑器） ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">产品描述（可选）</legend>
+  <div class="rte-bar" id="formRteBar" style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:#f5f5f5;border:1px solid var(--c-line);border-radius:6px">
+    <button data-c="bold" style="font-weight:700;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">B</button>
+    <button data-c="italic" style="font-style:italic;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">I</button>
+    <button data-c="underline" style="text-decoration:underline;font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">U</button>
+    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+    <button data-c="foreColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">A<font color="red">色</font></button>
+    <button data-c="hiliteColor" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">底色</button>
+    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+    <button data-c="justifyLeft" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬅</button>
+    <button data-c="justifyCenter" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">⬌</button>
+    <span style="width:1px;background:#ddd;margin:2px 4px"></span>
+    <button data-c="insertUnorderedList" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">•≣</button>
+    <button data-c="createLink" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🔗</button>
+    <button data-c="insertImage" style="font-size:12px;padding:4px 8px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer">🖼</button>
+    <input type="color" id="formRteColor" value="#e4393c" style="width:26px;height:26px;padding:0;border:none;vertical-align:middle">
+  </div>
+  <div id="formRte" contenteditable="true" style="min-height:100px;max-height:200px;overflow-y:auto;padding:10px;border:1px solid var(--c-line);border-radius:6px;background:#fff;font-size:15px;line-height:1.7;outline:none" data-ph="在此输入产品描述…"></div>
+  <div id="f_desc_preview" style="font-size:11px;color:var(--c-sub);margin-top:4px"></div>
+  </fieldset>
+
+  <!-- ===== 购买与分享 ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">购买与分享</legend>
+  <div class="field btn-row" style="gap:10px">
+    <div style="flex:1"><label>购买按钮文字</label><input id="f_buytxt" placeholder="去购买"></div>
+    <div style="flex:1"><label>购买链接</label><input id="f_buylink" placeholder="https://…"></div>
+  </div>
+  <div class="field" style="margin-bottom:8px"><label>活动结束时间（倒计时）</label><input id="f_end" type="datetime-local"></div>
+  <details style="margin-top:4px"><summary style="font-size:13px;cursor:pointer;color:var(--c-sub)">单品分享卡片（可选，展开填写）</summary>
+    <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">
+      <input id="f_sharetitle" placeholder="分享标题" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
+      <input id="f_sharedesc" placeholder="分享描述" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
+      <input id="f_sharethumb" placeholder="缩略图URL（留空用主图）" style="font-size:14px;padding:8px 10px;border:1px solid var(--c-line);border-radius:6px;box-sizing:border-box">
+    </div>
+  </details>
+  </fieldset>
+
+  <!-- ===== 其他设置 ===== -->
+  <fieldset style="border:1px solid var(--c-line);border-radius:8px;padding:10px;margin-bottom:8px"><legend style="font-size:13px;font-weight:600;color:var(--c-primary);padding:0 6px">其他设置</legend>
+  <div class="field btn-row" style="gap:10px">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px"><input type="checkbox" id="f_shelf" checked style="width:auto"> 上架显示</label>
+    <div style="flex:1"><label>排序</label><input id="f_order" type="number" value="0" style="width:70px"></div>
+  </div>
+  </fieldset>
+
   <div id="draftTip" class="help hidden"></div>
-  <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="formCancel">取消</button><button class="btn" id="formPreview">📱 预览前台效果</button><button class="btn primary" id="formSave">保存</button></div>
+  <div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="formCancel">取消</button><button class="btn" id="formPreview">📱 预览前台效果</button><button class="btn primary" id="formSave">保存</button></div>
 </div></div>
 
 <div class="mask hidden" id="mask"></div>
@@ -503,7 +562,7 @@ function uid(){return "p"+Date.now().toString(36)+Math.random().toString(36).sli
 function toast(m){const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 function plain(t){const d=document.createElement("div");d.innerHTML=t||"";return (d.textContent||"").replace(/\s+/g," ").trim();}
-async function fileToCompressedDataURL(file,maxW=1200,q=0.82){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{let{w,h}=img;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);res(c.toDataURL("image/jpeg",q));};img.onerror=rej;img.src=r.result;};r.onerror=rej;r.readAsDataURL(file);});}
+async function fileToCompressedDataURL(file,maxW=1200,q=0.82){return new Promise((res,rej)=>{var r=new FileReader();r.onload=function(){var raw=r.result;var img=new Image();img.onload=function(){try{var w=img.naturalWidth||img.width||0,h=img.naturalHeight||img.height||0;if(!w||!h){res(raw);return;}if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}var c=document.createElement("canvas");c.width=w;c.height=h;var ctx=c.getContext("2d");ctx.fillStyle="#ffffff";ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);var out=c.toDataURL("image/jpeg",q);if(!out||out.length<200)out=raw;res(out);}catch(e){res(raw);}};img.onerror=function(){res(raw);};img.src=raw;};r.onerror=rej;r.readAsDataURL(file);});}
 async function fileToDataURL(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});}
 function applyTheme(){
   const c=STATE.settings.shop.colors,s=STATE.settings.shop;
@@ -556,7 +615,7 @@ function renderBanner(){
   if(!STATE.settings.switches.banner||!cfg.enabled||!cfg.items.length){b.classList.add("hidden");return;}
   b.classList.remove("hidden");
   b.innerHTML=`<div class="track">${cfg.items.map(it=>`<div class="slide" data-link="${esc(it.link||"")}"><img src="${it.img}" loading="lazy"></div>`).join("")}</div><div class="dots">${cfg.items.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("")}</div>`;
-  b.querySelectorAll(".slide").forEach(s=>s.onclick=()=>{if(s.dataset.link)window.open(s.dataset.link,"_blank");});
+  b.querySelectorAll(".slide").forEach(s=>s.onclick=()=>{const L=s.dataset.link;if(!L)return;if(L.indexOf("#p:")===0){openDetail(L.slice(3));}else{window.open(L,"_blank");}});
 }
 function renderCats(){
   const wrap=document.getElementById("cats");
@@ -639,11 +698,12 @@ function renderDetail(){
   const tags=(p.tags||[]).map(t=>`<span class="et" data-tag="${esc(t)}">#${esc(t)}</span>`).join("");
   let stock="";if(p.stock!==undefined&&p.stock!==null&&p.stock!==""){stock=`<div class="stock">库存：<span class="${p.stock>0?"ok":"no"}">${p.stock>0?p.stock+" 件（有货）":"缺货"}</span></div>`;}
   let end="";if(p.endTime){const diff=new Date(p.endTime).getTime()-Date.now();if(diff>0){const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000);end=`<div class="stock">活动倒计时：<span class="ok">${d}天${h}时</span></div>`;}}
+  let meta="";{const ma=[];if(p.spec)ma.push("规格："+p.spec);if(p.origPrice)ma.push("原价：¥"+p.origPrice);if(ma.length)meta=`<div class="stock">${ma.map(x=>`<span class="ok">${esc(x)}</span>`).join("　")}</div>`;}
   const long=STATE.settings.switches.longImage&&p.longImage?`<div class="longimg"><img src="${p.longImage}" loading="lazy"></div>`:"";
   document.getElementById("ovBody").innerHTML=
     `<div class="slider">${slide}</div><div class="dots">${dots}</div>
      <div class="d-name">${esc(p.name||"未命名产品")}</div>${p.brand?`<div class="d-brand">品牌：${esc(p.brand)}</div>`:""}
-     ${act}<div class="eff-tags">${tags}</div>${stock}${end}
+     ${act}<div class="eff-tags">${tags}</div>${stock}${end}${meta}
      <div class="d-desc">${p.desc||"<span style='color:#bbb'>暂无描述</span>"}</div>${long}`;
   document.querySelectorAll("#ovBody .dots i").forEach((el,i)=>el.onclick=()=>{STATE.detailImg=i;renderDetail();});
   if(media.length>1)document.querySelector("#ovBody .slider").onclick=()=>{STATE.detailImg=(STATE.detailImg+1)%media.length;renderDetail();};
@@ -705,7 +765,7 @@ function renderProfile(){
     </div>
     ${(id.phone)?`<div class="help">已绑定手机号：${esc(id.phone)}（换设备可用于恢复身份）</div>`:""}
     <div class="help">客服微信：${c.wechat||"未设置"}　电话：${c.phone||"未设置"}（在后台「店铺装修→联系客服」配置）</div>`;
-  document.getElementById("pfBind").onclick=async()=>{const ph=prompt("输入手机号：",id.phone||"");if(!ph)return;STATE.identity.phone=ph;await persistIdentity();renderProfile();toast("已保存");};
+  document.getElementById("pfBind").onclick=()=>{openSheet({title:"绑定手机号",fields:[{k:"ph",label:"手机号",value:id.phone||"",required:true,ph:"11 位手机号"}],onSave:async v=>{STATE.identity.phone=v.ph;await persistIdentity();renderProfile();toast("已保存");}});};
   document.getElementById("pfFav").onclick=()=>{const ids=(id.collections||[]);if(!ids.length){toast("还没有收藏");return;}STATE.view="home";switchView("home");STATE.filterTag=null;renderHome();toast("已显示收藏产品");};
   document.getElementById("pfHis").onclick=()=>{toast("浏览记录："+(id.history||[]).length+" 条");};
 }
@@ -723,7 +783,8 @@ function momentsUnread(){const now=Date.now();const readAt=STATE.identity.moment
 function fmtTime(ts){const d=Date.now()-ts;if(d<60000)return"刚刚";if(d<3600000)return Math.floor(d/60000)+"分钟前";if(d<86400000)return Math.floor(d/3600000)+"小时前";if(d<86400000*7)return Math.floor(d/86400000)+"天前";const dt=new Date(ts);return (dt.getMonth()+1)+"月"+dt.getDate()+"日";}
 function renderMoments(){
   const m=STATE.settings.moments;const now=Date.now();
-  const cover=m.cover?`<div class="moments-cover" style="background-image:url('${m.cover}')"><img class="cover-img" src="${m.cover}" onerror="this.style.display='none'"><div class="me">${m.author.avatar?`<img class="av" src="${m.author.avatar}">`:`<div class="av" style="display:flex;align-items:center;justify-content:center;background:#e4393c;color:#fff;font-weight:700">${esc((m.author.nickname||"店")[0])}</div>`}<div class="nm">${esc(m.author.nickname||"店铺")}</div></div></div>`:`<div class="moments-cover" style="background:#333"><div style="height:100%"></div><div class="me">${m.author.avatar?`<img class="av" src="${m.author.avatar}">`:`<div class="av" style="display:flex;align-items:center;justify-content:center;background:#e4393c;color:#fff;font-weight:700">${esc((m.author.nickname||"店")[0])}</div>`}<div class="nm">${esc(m.author.nickname||"店铺")}</div></div></div>`;
+  var _cov=m.cover||"";var _mav=(m.author&&m.author.avatar)||"";var _mnm=(m.author&&m.author.nickname)||"店铺";
+  var coverHtml='<div class="moments-cover">'+(_cov?('<img class="cover-img" src="'+_cov+'" onerror="this.style.display=&quot;none&quot;">'):'')+'<div class="me">'+(_mav?('<img class="av" src="'+_mav+'">'):('<div class="av mav-ph">'+esc(_mnm.slice(0,1))+'</div>'))+'<div class="nm">'+esc(_mnm)+'</div></div></div>';
   let posts=momentsPublished().slice().sort((a,b)=>{
     if(a.pinned&&!b.pinned)return -1;if(b.pinned&&!a.pinned)return 1;
     return (b.ts||0)-(a.ts||0);
@@ -732,11 +793,12 @@ function renderMoments(){
   if(!posts.length){body=`<div class="empty">商家还没有发布动态</div>`;}
   else{
     body=posts.map(p=>{
-      const av=p.author&&p.author.avatar?`<img class="av" src="${p.author.avatar}">`:`<div class="av" style="display:flex;align-items:center;justify-content:center;background:#e4393c;color:#fff;font-weight:700">${esc((p.author&&p.author.nickname||"店")[0])}</div>`;
-      let imgs="";
+      var pAv=(p.author&&p.author.avatar)||"";var pNm=(p.author&&p.author.nickname)||"店";
+      var av=pAv?('<img class="av" src="'+pAv+'">'):('<div class="av mav-ph">'+esc(pNm.slice(0,1))+'</div>');
+      var imgs="";
       if(p.imgs&&p.imgs.length){
         const cls=p.imgs.length===1?"imgs s1":"imgs";
-        const cells=p.imgs.map((src,i)=>("<div class=\"ph\" data-pid=\""+p.id+"\" data-idx=\""+i+"\"><img src=\""+src+"\" loading=\"lazy\" alt=\"\"></div>")).join("");
+        var cells=p.imgs.map(function(src,i){return '<div class="ph" data-pid="'+p.id+'" data-idx="'+i+'"><img src="'+src+'" alt=""></div>';}).join("");
         imgs=`<div class="${cls}">`+cells+`</div>`;
       }
       const vid=p.video?`<div class="vid"><video src="${p.video}" controls preload="none"></video></div>`:"";
@@ -761,7 +823,7 @@ function renderMoments(){
       </div>`;
     }).join("");
   }
-  document.getElementById("momentsBody").innerHTML=cover+`<div class="moments-list">${body}</div>`;
+  document.getElementById("momentsBody").innerHTML=coverHtml+`<div class="moments-list">${body}</div>`;
   // 绑定事件
   const mb=document.getElementById("momentsBody");
   mb.querySelectorAll(".ph").forEach(el=>el.onclick=()=>{const pp=STATE.settings.moments.posts.find(x=>x.id===el.dataset.pid);if(pp)openLightbox(pp.imgs,+el.dataset.idx);});
@@ -933,17 +995,17 @@ function openVirtualUsers(){
     <div class="btn-row" style="margin-top:8px"><button class="btn primary sm" id="vAdd">+ 新增虚拟身份</button></div>
     <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="vClose">完成</button></div></div>`;
   document.body.appendChild(modal);
-  const renderV=()=>{modal.querySelector("#vList").innerHTML=vs.length?vs.map((v,i)=>`<div class="item-row"><div class="pi" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden">${v.avatar?`<img src="${v.avatar}" style="width:100%;height:100%;object-fit:cover">`:esc((v.nickname||"匿")[0])}</div><div class="pn">${esc(v.nickname||"匿名")}</div><button class="btn sm" data-ve="${i}">编辑</button><button class="btn sm danger" data-vd="${i}">删除</button></div>`).join(""):`<div class="empty">还没有虚拟身份</div>`;
+  const renderV=()=>{modal.querySelector("#vList").innerHTML=vs.length?vs.map((v,i)=>`<div class="item-row"><div class="pi" style="width:44px;height:44px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;border-radius:8px;flex-shrink:0">${v.avatar?`<img src="${v.avatar}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.innerHTML='${esc((v.nickname||'匿')[0])}'">`:esc((v.nickname||"匿")[0])}</div><div class="pn">${esc(v.nickname||"匿名")}</div><button class="btn sm" data-ve="${i}">编辑</button><button class="btn sm danger" data-vd="${i}">删除</button></div>`).join(""):`<div class="empty">还没有虚拟身份</div>`;
     modal.querySelectorAll("[data-ve]").forEach(b=>b.onclick=()=>editV(+b.dataset.ve));
     modal.querySelectorAll("[data-vd]").forEach(b=>b.onclick=async()=>{vs.splice(+b.dataset.vd,1);await Store.saveAll();renderV();toast("已删除");});
   };
   const editV=(idx)=>{const isNew=idx<0;const v=isNew?{id:uid(),avatar:"",nickname:""}:vs[idx];const fm=document.createElement("div");fm.className="modal";
     fm.innerHTML=`<div class="box"><h3>${isNew?"新增":"编辑"}虚拟身份</h3>
-      <div class="field"><label>头像</label><input type="file" id="veAv" accept="image/*"><div id="veAn" style="font-size:12px;color:var(--c-sub)">${v.avatar?"已设置":"未设置"}</div></div>
+      <div class="field"><label>头像（可留空，留空就显示昵称首字）</label><div style="display:flex;align-items:center;gap:10px"><div id="vePv" style="width:54px;height:54px;border-radius:8px;overflow:hidden;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#999;flex-shrink:0">${v.avatar?`<img src="${v.avatar}" style="width:100%;height:100%;object-fit:cover;display:block">`:esc((v.nickname||"匿")[0])}</div><input type="file" id="veAv" accept="image/*" style="flex:1;min-width:0"></div><div id="veAn" style="font-size:12px;color:var(--c-sub);margin-top:4px">${v.avatar?"已设置":"未设置"}</div></div>
       <div class="field"><label>昵称</label><input id="veNm" value="${esc(v.nickname||"")}" placeholder="如：小美 / 妆容达人Lisa"></div>
       <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="veC">取消</button><button class="btn primary" id="veS">保存</button></div></div>`;
     document.body.appendChild(fm);let av=v.avatar||"";
-    fm.querySelector("#veAv").onchange=async e=>{const f=e.target.files[0];if(f){av=await fileToCompressedDataURL(f,120,0.9);fm.querySelector("#veAn").textContent=f.name;}};
+    fm.querySelector("#veAv").onchange=async e=>{const f=e.target.files[0];if(f){try{av=await fileToCompressedDataURL(f,120,0.9);fm.querySelector("#veAn").textContent=f.name+" ✓";var _pv=fm.querySelector("#vePv");if(_pv)_pv.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;display:block">';}catch(err){console.error("avatar load err",err);fm.querySelector("#veAn").textContent="读取失败";toast("头像读取失败，请重试");}}};
     fm.querySelector("#veC").onclick=()=>fm.remove();
     fm.querySelector("#veS").onclick=async()=>{const nm=fm.querySelector("#veNm").value.trim();if(!nm){toast("请填昵称");return;}v.avatar=av;v.nickname=nm;if(isNew)vs.push(v);await Store.saveAll();fm.remove();renderV();toast("已保存");};
   };
@@ -1058,6 +1120,8 @@ function openForm(p){
   document.getElementById("formTitle").textContent=p?"编辑产品":"新增产品";
   fill("f_name",p?p.name:"");fill("f_brand",p?p.brand:"");fill("f_tags",p?(p.tags||[]).join(","):"");
   fill("f_stock",(p&&p.stock!==undefined&&p.stock!==null)?p.stock:"");
+  fill("f_origprice",(p&&p.origPrice!==undefined&&p.origPrice!==null)?p.origPrice:"");
+  fill("f_spec",p?p.spec:"");
   fill("f_end",p&&p.endTime?p.endTime:"");fill("f_buytxt",p?p.buyText:"去购买");fill("f_buylink",p?p.buyLink:"");
   fill("f_order",p?(p.order||0):0);
   fill("f_sharetitle",p&&p.share?p.share.title:"");fill("f_sharedesc",p&&p.share?p.share.desc:"");fill("f_sharethumb",p&&p.share?p.share.thumb:"");
@@ -1067,7 +1131,11 @@ function openForm(p){
   const act=p?p.activity:"";
   if(act&&["爆款","秒杀","有活动","新品","推荐"].includes(act)){}else if(act){document.getElementById("f_act_custom").value=act;document.getElementById("f_act_custom").classList.remove("hidden");}
   renderActChips(act);
-  fill("f_desc_preview",p&&p.desc?plain(p.desc).slice(0,40)+"…":"");
+  // 内嵌富文本编辑器
+  const rte=document.getElementById("formRte");
+  rte.innerHTML=p&&p.desc?p.desc:"";
+  const pv=document.getElementById("f_desc_preview");
+  if(pv)pv.textContent=p&&p.desc?plain(p.desc).slice(0,40)+(p.desc.length>40?'…':''):'';
   document.getElementById("f_video_name").textContent=p&&p.video?"已存在视频":"";
   document.getElementById("f_long_name").textContent=p&&p.longImage?"已存在长图":"";
   document.getElementById("f_shelf").checked=p?p.onShelf!==false:true;
@@ -1083,11 +1151,13 @@ function openForm(p){
 }
 function fill(id,v){const el=document.getElementById(id);if(el)el.value=v;}
 function loadDraftIntoForm(){
-  fill("f_name",FORM.name||"");fill("f_brand",FORM.brand||"");fill("f_tags",(FORM.tags||[]).join(","));
+  fill("f_name",FORM.name||"");fill("f_brand",FORM.brand||"");fill("f_tags",(FORM.tags||[]).join(","));fill("f_origprice",FORM.origPrice||"");fill("f_spec",FORM.spec||"");
   const fc=document.getElementById("f_cat");if(FORM.cat)fc.value=FORM.cat;const fs=document.getElementById("f_series");if(FORM.series)fs.value=FORM.series;
-  document.getElementById("f_desc_preview").textContent=FORM.desc?plain(FORM.desc).slice(0,40)+"…":"";renderThumbs();
+  const rte=document.getElementById("formRte");if(rte&&FORM.desc)rte.innerHTML=FORM.desc;
+  const pv=document.getElementById("f_desc_preview");if(pv)pv.textContent=FORM.desc?plain(FORM.desc).slice(0,40)+(FORM.desc.length>40?'…':''):'';
+  renderThumbs();
 }
-function saveDraft(){const dkey="draft_"+(FORM.id||"new");const snap={ts:Date.now(),form:{id:FORM.id,images:FORM.images,video:FORM.video,longImage:FORM.longImage,desc:FORM.desc,name:val("f_name"),brand:val("f_brand"),cat:val("f_cat"),series:val("f_series"),tags:val("f_tags"),stock:val("f_stock"),end:val("f_end"),buytxt:val("f_buytxt"),buylink:val("f_buylink"),order:val("f_order"),activity:getActValue(),actcustom:val("f_act_custom"),shelf:document.getElementById("f_shelf").checked}};localStorage.setItem(dkey,JSON.stringify(snap));}
+function saveDraft(){const dkey="draft_"+(FORM.id||"new");const snap={ts:Date.now(),form:{id:FORM.id,images:FORM.images,video:FORM.video,longImage:FORM.longImage,desc:FORM.desc,name:val("f_name"),brand:val("f_brand"),cat:val("f_cat"),series:val("f_series"),tags:val("f_tags"),stock:val("f_stock"),end:val("f_end"),buytxt:val("f_buytxt"),buylink:val("f_buylink"),origprice:val("f_origprice"),spec:val("f_spec"),order:val("f_order"),activity:getActValue(),actcustom:val("f_act_custom"),shelf:document.getElementById("f_shelf").checked}};localStorage.setItem(dkey,JSON.stringify(snap));}
 function val(id){const el=document.getElementById(id);return el?el.value:"";}
 function renderThumbs(){const w=document.getElementById("f_thumbs");w.innerHTML=FORM.images.map((s,i)=>`<div class="th"><img src="${s}"><div class="x" data-i="${i}">×</div><div class="edit" data-i="${i}" style="position:absolute;bottom:1px;left:1px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border-radius:3px;font-size:11px;display:flex;align-items:center;justify-content:center">✎</div></div>`).join("");
   w.querySelectorAll(".x").forEach(el=>el.onclick=()=>{FORM.images.splice(+el.dataset.i,1);renderThumbs();});
@@ -1111,7 +1181,24 @@ function getActValue(){
   if(onChip)return onChip.dataset.act;
   return '';
 }
-document.getElementById("f_desc_edit").onclick=()=>openRichEditor(FORM.desc||"",html=>{FORM.desc=html;document.getElementById("f_desc_preview").textContent=plain(html).slice(0,40)+"…";});
+// 内嵌富文本编辑器工具栏绑定
+(function(){
+  const bar=document.getElementById("formRteBar");
+  const rte=document.getElementById("formRte");
+  if(!bar||!rte)return;
+  bar.querySelectorAll("button[data-c]").forEach(b=>b.onclick=()=>{const c=b.dataset.c;rte.focus();
+    if(c==="foreColor")document.execCommand("foreColor",false,document.getElementById("formRteColor").value);
+    else if(c==="hiliteColor")document.execCommand("hiliteColor",false,document.getElementById("formRteColor").value);
+    else if(c==="createLink"){const u=prompt("链接地址：","https://");if(u)document.execCommand("createLink",false,u);}
+    else if(c==="insertImage"){const u=prompt("图片地址：");if(u)document.execCommand("insertImage",false,u);}
+    else document.execCommand(c,false,b.dataset.v||null);
+  });
+  // 输入时更新预览字数
+  rte.addEventListener("input",()=>{
+    const pv=document.getElementById("f_desc_preview");
+    if(pv){const t=plain(rte.innerHTML);pv.textContent=t.length?t.slice(0,40)+(t.length>40?'…':''):'空';}
+  });
+})();
 document.getElementById("f_imgs").onchange=async e=>{for(const f of Array.from(e.target.files||[]))if(f.type.startsWith("image/"))FORM.images.push(await fileToCompressedDataURL(f));renderThumbs();toast("图片已加入（可点✎在线编辑）");};
 document.getElementById("f_video").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>30*1024*1024){toast("视频超过30MB，建议压缩");return;}FORM.video=await fileToDataURL(f);document.getElementById("f_video_name").textContent=f.name;};
 document.getElementById("f_long").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;FORM.longImage=await fileToCompressedDataURL(f,1600,0.85);document.getElementById("f_long_name").textContent=f.name;};
@@ -1121,10 +1208,12 @@ document.getElementById("formSave").onclick=async()=>{
   const name=val("f_name").trim();
   const act=getActValue();
   const stockRaw=val("f_stock").trim();
+  const rteEl=document.getElementById("formRte");
+  const descHtml=rteEl?rteEl.innerHTML.trim():"";
   const obj={name:name||"未命名产品",brand:val("f_brand").trim(),cat:val("f_cat")||"",series:val("f_series")||"",
-    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),activity:act||"",desc:FORM.desc,
+    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),activity:act||"",desc:descHtml,
     images:FORM.images,video:FORM.video,longImage:FORM.longImage,
-    stock:(stockRaw===""?null:parseInt(stockRaw)),endTime:val("f_end")||"",
+    stock:(stockRaw===""?null:parseInt(stockRaw)),endTime:val("f_end")||"",origPrice:(val("f_origprice").trim()===""?null:parseFloat(val("f_origprice"))),spec:val("f_spec").trim(),
     buyText:val("f_buytxt").trim()||"去购买",buyLink:val("f_buylink").trim(),
     order:parseInt(val("f_order"))||0,onShelf:document.getElementById("f_shelf").checked,
     share:(val("f_sharetitle").trim()||val("f_sharedesc").trim()||val("f_sharethumb").trim())?{title:val("f_sharetitle").trim(),desc:val("f_sharedesc").trim(),thumb:val("f_sharethumb").trim()}:null};
@@ -1136,30 +1225,32 @@ document.getElementById("formSave").onclick=async()=>{
 };
 /* --- 新增商品：前台效果预览（与客户看到的详情页样式完全一致） --- */
 function previewProduct(){
+  const rteEl=document.getElementById("formRte");
   const obj={
     name:val("f_name").trim()||"未命名产品",brand:val("f_brand").trim(),
     cat:val("f_cat")||"",series:val("f_series")||"",
     tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),
-    activity:getActValue(),desc:FORM.desc,images:FORM.images,video:FORM.video,longImage:FORM.longImage,
-    stock:(val("f_stock").trim()===""?null:parseInt(val("f_stock"))),endTime:val("f_end")||"",
+    activity:getActValue(),desc:rteEl?rteEl.innerHTML.trim():"",images:FORM.images,video:FORM.video,longImage:FORM.longImage,
+    stock:(val("f_stock").trim()===""?null:parseInt(val("f_stock"))),endTime:val("f_end")||"",origPrice:(val("f_origprice").trim()===""?null:parseFloat(val("f_origprice"))),spec:val("f_spec").trim(),
     buyText:val("f_buytxt").trim()||"去购买",buyLink:val("f_buylink").trim(),onShelf:document.getElementById("f_shelf").checked
   };
   const media=(obj.images||[]).slice();
   if(STATE.settings.switches.video&&obj.video)media.push("__video__");
   const cur=media[0]||"";
-  const slide=cur==="__video__"?`<video src="${obj.video}" controls style="max-width:100%"></video>`:(cur?`<img src="${cur}" style="width:100%;display:block">`:`<div style="padding:48px;text-align:center;color:#bbb">未添加图片</div>`);
+  const slide=cur==="__video__"?`<video src="${obj.video}" controls style="max-width:100%;display:block"></video>`:(cur?`<img src="${cur}" style="width:100%;display:block">`:`<div style="padding:48px;text-align:center;color:#bbb;background:#f8f8f8">未添加图片</div>`);
   const act=(STATE.settings.switches.activityTag&&obj.activity)?`<span class="badge" style="position:static;display:inline-block;margin-bottom:8px">${esc(obj.activity)}</span>`:"";
   const tags=(obj.tags||[]).map(t=>`<span class="et">#${esc(t)}</span>`).join("");
   let stock="";if(obj.stock!==null&&obj.stock!==""){stock=`<div class="stock">库存：<span class="${obj.stock>0?"ok":"no"}">${obj.stock>0?obj.stock+" 件（有货）":"缺货"}</span></div>`;}
   let end="";if(obj.endTime){const diff=new Date(obj.endTime).getTime()-Date.now();if(diff>0){const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000);end=`<div class="stock">活动倒计时：<span class="ok">${d}天${h}时</span></div>`;}}
+  let meta="";{const ma=[];if(obj.spec)ma.push("规格："+obj.spec);if(obj.origPrice)ma.push("原价：¥"+obj.origPrice);if(ma.length)meta=`<div class="stock" style="margin-top:4px">${ma.map(x=>`<span class="ok">${esc(x)}</span>`).join("　")}</div>`;}
   const long=STATE.settings.switches.longImage&&obj.longImage?`<div class="longimg"><img src="${obj.longImage}" style="width:100%;display:block"></div>`:"";
   const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="box" style="max-width:480px"><h3>📱 前台效果预览</h3>
-    <div style="border:1px solid var(--c-line);border-radius:10px;overflow:hidden;background:#fff;margin-bottom:12px">
-      <div class="slider" style="position:relative;background:#f3f3f3">${slide}</div>
-      <div style="padding:12px">
-        <div class="d-name">${esc(obj.name)}</div>${obj.brand?`<div class="d-brand">品牌：${esc(obj.brand)}</div>`:""}
-        ${act}<div class="eff-tags">${tags}</div>${stock}${end}
-        <div class="d-desc">${obj.desc||'<span style="color:#bbb">暂无描述</span>'}</div>${long}
+    <div style="border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;background:#fff;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+      <div class="slider" style="position:relative;background:#f0f0f0;min-height:180px">${slide}</div>
+      <div style="padding:14px;background:#fafafa;border-top:1px solid #eee">
+        <div class="d-name" style="font-size:17px;font-weight:700;color:#222">${esc(obj.name)}</div>${obj.brand?`<div class="d-brand" style="color:#888;font-size:13px;margin-top:2px">品牌：${esc(obj.brand)}</div>`:""}
+        ${act}<div class="eff-tags" style="margin-top:6px">${tags}</div>${stock}${end}${meta}
+        <div class="d-desc" style="margin-top:10px;font-size:14px;line-height:1.7;color:#444;border-top:1px dashed #ddd;padding-top:8px">${obj.desc||'<span style="color:#bbb">暂无描述</span>'}</div>${long}
       </div>
     </div>
     <div class="btn-row" style="justify-content:flex-end;margin:0"><button class="btn" id="pvClose">关闭</button></div></div>`;
@@ -1176,62 +1267,117 @@ function parseProductText(text){
   const lines=raw.split(/\r?\n/).map(function(l){return l.trim();}).filter(Boolean);
   if(!lines.length)return {};
   const esc=function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');};
-  const get=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
-  const cleanName=function(s){if(!s)return s;let n=s.replace(/^([【\[(「][^】\]\)」]*[】\]\)」]\s*)/,'')/* 去掉【xxx】【xxx】前缀 */.replace(/^[🔥✨💰💯❤️🌟⭐🎉🛒📢📣]+\s*/,'') /* 去掉开头emoji */.replace(/\s*(【[^】]*】)\s*$/g,'') /* 去掉尾部【标签】*/.trim();return n||s;};
+  const get=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('^'+esc(k)+'\\s*[:：:]*\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
+  const getAnywhere=function(keys){for(const ln of lines){for(const k of keys){const m=ln.match(new RegExp('.*'+esc(k)+'\\s*[:：:]*\\s*(.+)$'));if(m)return m[1].trim();}}return null;};
+
+  const cleanName=function(s){if(!s)return s;
+    let n=s
+      .replace(/^([【\[(「][^】\]\)」]*[】\]\)」]\s*)+/,'') /* 去掉【xxx】【xxx】前缀 */
+      .replace(/^[🔥✨💰💯❤️🌟⭐🎉🛒📢📣💄🌸☀️⚡🎁]+\s*/,'') /* 去掉开头emoji */
+      .replace(/\s*[【[^】]*】]\s*$/g,'') /* 去掉尾部【标签】*/
+      .replace(/^\d+[\.．\s]*/,'') /* 去掉开头序号 */
+      .replace(/[\(（].*?[\)）]$/,'') /* 去掉尾部括号备注 */
+      .trim();
+    return n&&n.length>=2?n:s;
+  };
 
   const r={};
-  /* ---- 名称提取（更智能） ---- */
-  let name=get(['产品名称','商品名称','商品名','品名','名称','标题','名字','产品名']);
-  if(!name){/* 取第一个非链接、非纯数字、非极短行作为名称 */
-    const first=lines.find(function(l){return !/^https?:\/\//i.test(l)&&l.length>=2&&!/^\d+$/.test(l);});
+
+  /* ---- 名称提取（增强：支持更多格式） ---- */
+  let name=get(['产品名称','商品名称','商品名','品名','名称','标题','名字','产品名','产品','货品','宝贝名称','商品']);
+  if(!name){
+    /* 取第一个非链接、非纯数字、非极短行、非标签行作为名称 */
+    const first=lines.find(function(l){
+      if(/^https?:\/\//i.test(l))return false;
+      if(/^\d+$/.test(l))return false;
+      if(l.length<2)return false;
+      if(/^[¥￥$]/.test(l))return false;/* 价格行 */
+      if(/^库存|销量|评分|快递|规格|产地|保质期|成分|功效|用法|使用方法|注意事项/.test(l))return false;
+      return true;
+    });
     if(first)name=cleanName(first);
   }
   if(name)r.name=cleanName(name);
 
-  /* ---- 基础字段 ---- */
-  const brand=get(['品牌','牌子','商标']);if(brand)r.brand=brand;
-  const cat=get(['分类','类别','品类']);if(cat)r.cat=cat;
-  const series=get(['系列','产品线']);if(series)r.series=series;
+  /* ---- 品牌提取（增强） ---- */
+  let brand=get(['品牌','牌子','商标','牌名','厂家','制造商']);
+  if(!brand){/* 尝试从名称中提取大写英文品牌 */const bm=(r.name||'').match(/[A-Z][A-Za-z0-9]{2,}/);if(bm&&!['OK','VIP','APP','URL','PDF'].includes(bm[0]))brand=bm[0];}
+  if(brand)r.brand=brand;
 
-  /* ---- 功效/标签（支持更多格式） ---- */
-  const tagsRaw=get(['核心功效','主要功效','功效标签','功效','卖点','标签','特点','特色','成分','成分功效']);
-  if(tagsRaw){const t=tagsRaw.split(/[,，、;；|｜\s]+/).map(function(s){return s.trim();}).filter(Boolean).filter(function(s){return s.length>=2&&s.length<=20;});if(t.length)r.tags=t;}
+  /* ---- 分类/系列 ---- */
+  const cat=get(['分类','类别','品类','类目']);if(cat)r.cat=cat;
+  const series=get(['系列','产品线','套装','组合']);if(series)r.series=series;
 
-  /* ---- 活动 ---- */
-  const actRaw=get(['活动标签','活动类型','活动','促销','优惠']);if(actRaw)r.activity=actRaw;
+  /* ---- 功效/标签（大幅增强） ---- */
+  const tagsRaw=get(['核心功效','主要功效','功效标签','功效','卖点','标签','特点','特色','成分','成分功效','适用肤质','适合人群','产品亮点','主打'])
+    ||getAnywhere(['功效','卖点','特点','适用','适合','针对','解决','改善']);
+  if(tagsRaw){
+    const t=tagsRaw.split(/[,，、;；|｜\/\\·\s]+/).map(function(s){return s.trim();})
+      .filter(Boolean)
+      .filter(function(s){return s.length>=2&&s.length<=20&&!/^[\d\.]+$/.test(s);});
+    if(t.length)r.tags=t;
+  }
+  if(tagsRaw)r.effect=tagsRaw;
+  /* 额外：从整段文字中提取 #标签# 格式 */
+  if(!r.tags||r.tags.length<2){
+    const hashTags=raw.match(/#[^#，,\s]{2,12}/g);
+    if(hashTags&&hashTags.length){const ht=hashTags.map(function(h){return h.replace('#','');});r.tags=r.tags?Array.from(new Set(r.tags.concat(ht))):ht;}
+  }
+
+  /* ---- 活动（增强） ---- */
+  const actRaw=get(['活动标签','活动类型','活动','促销','优惠','特惠','限时','秒杀','爆款','新品','推荐','有活动']);
+  if(actRaw){
+    const knownMap={'秒杀':'秒杀','爆款':'爆款','新品':'新品','推荐':'推荐','促销':'有活动','优惠':'有活动','限时':'有活动','特惠':'有活动'};
+    r.activity=knownMap[actRaw]||actRaw;
+  }
+  /* 额外：检测文本中的活动关键词 */
+  if(!r.activity){
+    const actKw=['秒杀','爆款','限时','特价','买一送一','满减','折扣','新品上市','首发'];
+    for(const kw of actKw){if(raw.indexOf(kw)>=0){r.activity=kw;break;}}
+
+  }
 
   /* ---- 库存/时间 ---- */
-  const stockRaw=get(['库存数量','库存','存货','现货']);if(stockRaw){const m=stockRaw.match(/\d+/);if(m)r.stock=m[0];}
-  const endRaw=get(['活动结束时间','结束时间','活动截止','有效期至','截止','到期']);if(endRaw){const dt=parseDateTime(endRaw);if(dt)r.endTime=dt;}
+  const stockRaw=get(['库存数量','库存','存货','现货','余量','库存量']);if(stockRaw){const m=stockRaw.match(/\d+/);if(m)r.stock=m[0];}
+  const endRaw=get(['活动结束时间','结束时间','活动截止','有效期至','截止','到期','活动至']);if(endRaw){const dt=parseDateTime(endRaw);if(dt)r.endTime=dt;}
 
   /* ---- 购买相关 ---- */
-  const buyText=get(['按钮文字','购买文字','按钮','立即购买','去购买','去抢购']);if(buyText)r.buyText=buyText;
-  const buyLinkRaw=get(['购买链接','下单链接','商品链接','链接','购买','下单']);
+  const buyText=get(['按钮文字','购买文字','按钮','立即购买','去购买','去抢购','下单','马上抢']);if(buyText)r.buyText=buyText;
+  const buyLinkRaw=get(['购买链接','下单链接','商品链接','链接','购买','下单','详情链接']);
   if(buyLinkRaw){const m=buyLinkRaw.match(/https?:\/\/\S+/i);if(m)r.buyLink=m[0];else if(/^https?:\/\//i.test(buyLinkRaw.trim()))r.buyLink=buyLinkRaw.trim();}
   if(!r.buyLink){const all=raw.match(/https?:\/\/[^\s"'<>]*/i);if(all)r.buyLink=all[0];}
 
-  /* ---- 价格（新增） ---- */
-  const priceMatch=raw.match(/[￥¥]\s*(\d+\.?\d*)\s*元?|[价格售价]\s*[:：]\s*[￥¥]?\s*(\d+\.?\d*)|(\d+)\s*元\s*(?:\/)?/);
+  /* ---- 价格（增强） ---- */
+  const priceMatch=raw.match(/[￥¥$]\s*(\d+\.?\d*)\s*(?:元|RMB)?|[价格售价]\s*[:：]\s*[￥¥$]?\s*(\d+\.?\d*)|(\d+(?:\.\d+)?)\s*元\s*(?:\/|每)?/);
   if(priceMatch){const p=priceMatch[1]||priceMatch[2]||priceMatch[3];if(p)r.price=p;}
 
+  /* ---- 原价 / 划线价 ---- */
+  const opRaw=get(['原价','原价格','零售价','专柜价','吊牌价','市场价','划线价']);
+  if(opRaw){const om=opRaw.match(/\d+(?:\.\d+)?/);if(om)r.origPrice=om[0];}
+  /* ---- 容量 / 规格 / 净含量 ---- */
+  const specRaw=get(['容量','规格','净含量','含量','体积','净重']);
+  if(specRaw){r.spec=specRaw.trim();}
+  else{const sm=raw.match(/(\d+(?:\.\d+)?)\s*(ml|ML|g|G|克|毫升|l|L|kg|KG)/);if(sm)r.spec=sm[0];}
+
   /* ---- 分享信息 ---- */
-  const shareTitle=get(['分享标题','分享']);if(shareTitle)r.shareTitle=shareTitle;
-  const shareDesc=get(['分享描述','分享说明']);if(shareDesc)r.shareDesc=shareDesc;
+  const shareTitle=get(['分享标题','分享','文案标题']);if(shareTitle)r.shareTitle=shareTitle;
+  const shareDesc=get(['分享描述','分享说明','推荐语','分享文案']);if(shareDesc)r.shareDesc=shareDesc;
 
   /* ---- 描述提取（大幅增强） ---- */
-  const LAB=/^(产品名称|商品名称|商品名|品名|名称|标题|品牌|牌子|商标|分类|类别|品类|系列|产品线|核心功效|主要功效|功效标签|功效|卖点|标签|特点|特色|成分|活动标签|活动类型|活动|促销|优惠|库存数量|库存|存货|现货|活动结束时间|结束时间|活动截止|有效期至|截止|到期|按钮文字|购买文字|按钮|购买链接|下单链接|商品链接|链接|购买|下单|分享标题|分享|分享描述|分享说明|价格|售价)[:：]/;
-  const dkeys=['产品描述','产品介绍','详细描述','描述','详情','介绍','说明','文案','正文','产品详情'];
+  const LAB=/^(产品名称|商品名称|商品名|品名|名称|标题|品牌|牌子|商标|分类|类别|品类|系列|产品线|核心功效|主要功效|功效标签|功效|卖点|标签|特点|特色|成分|活动标签|活动类型|活动|促销|优惠|库存数量|库存|存货|现货|活动结束时间|结束时间|活动截止|有效期至|截止|到期|按钮文字|购买文字|按钮|购买链接|下单链接|商品链接|链接|购买|下单|分享标题|分享|分享描述|分享说明|价格|售价|适用人群|适用肤质|使用方法|用法|保质期|规格|产地|厂家|制造商)[:：:]*$/;
+  const dkeys=['产品描述','产品介绍','详细描述','描述','详情','介绍','说明','文案','正文','产品详情','产品故事','产品说明','使用说明'];
   let desc=null;
   /* 1. 带标签的描述 */
-  for(let i=0;i<lines.length;i++){for(const k of dkeys){const m=lines[i].match(new RegExp('^'+esc(k)+'\\s*[:：]\\s*(.*)$'));if(m){const inline=m[1].trim();const out=[];if(inline)out.push(inline);for(let j=i+1;j<lines.length;j++){if(LAB.test(lines[j]))break;out.push(lines[j]);}if(out.length){const joined=out.join('\n').trim();if(!desc||joined.length>desc.length)desc=joined;}}}}
-  /* 2. 无标签兜底：收集所有"剩余行"作为描述（排除已用字段行、链接、短于4字的碎片行） */
+  for(let i=0;i<lines.length;i++){for(const k of dkeys){const m=lines[i].match(new RegExp('^'+esc(k)+'\\s*[:：:]*\\s*(.*)$'));if(m){const inline=m[1].trim();const out=[];if(inline)out.push(inline);for(let j=i+1;j<lines.length;j++){if(LAB.test(lines[j]))break;out.push(lines[j]);}if(out.length){const joined=out.join('\n').trim();if(!desc||joined.length>desc.length)desc=joined;}}}}
+  /* 2. 无标签兜底：收集所有"剩余行"作为描述 */
   if(!desc){
     const used=new Set([name,r.brand,r.cat,r.series,tagsRaw,actRaw,buyText,shareTitle,shareDesc].filter(Boolean));
     const left=lines.filter(function(ln){
       if(ln===name||used.has(ln))return false;
       if(/^https?:\/\//i.test(ln))return false;
       if(LAB.test(ln))return false;
-      if(ln.length<5)return false;/* 太短的碎片行不纳入描述 */
+      if(ln.length<4)return false;
+      if(/^[\d\.]+$/.test(ln))return false;/* 纯数字行 */
       return true;
     });
     if(left.length)desc=left.join('\n').trim();
@@ -1248,6 +1394,8 @@ function applyParsed(r){
   if(r.cat){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(c){return c.name&&(c.name===r.cat||c.name.indexOf(r.cat)>=0||r.cat.indexOf(c.name)>=0);});if(c){fc.value=c.id;filled.push('分类');}}
   if(r.series){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(s){return s.name&&(s.name===r.series||s.name.indexOf(r.series)>=0||r.series.indexOf(s.name)>=0);});if(s){fs.value=s.id;filled.push('系列');}}
   if(r.tags){fill('f_tags',r.tags.join(','));filled.push('功效标签');}
+  if(r.origPrice!==undefined&&r.origPrice!==null&&r.origPrice!==""){fill('f_origprice',r.origPrice);filled.push('原价');}
+  if(r.spec){fill('f_spec',r.spec);filled.push('容量/规格');}
   if(r.activity){const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===r.activity||r.activity.indexOf(k)>=0;});if(hit){renderActChips(hit);filled.push('活动标签');}else{document.getElementById('f_act_custom').value=r.activity;document.getElementById('f_act_custom').classList.remove('hidden');renderActChips('__custom__');filled.push('活动标签');}}
   if(r.stock!==undefined&&r.stock!==null){fill('f_stock',r.stock);filled.push('库存');}
   if(r.endTime){fill('f_end',r.endTime);filled.push('结束时间');}
@@ -1255,7 +1403,7 @@ function applyParsed(r){
   if(r.buyLink){fill('f_buylink',r.buyLink);filled.push('购买链接');}
   if(r.shareTitle){fill('f_sharetitle',r.shareTitle);filled.push('分享标题');}
   if(r.shareDesc){fill('f_sharedesc',r.shareDesc);filled.push('分享描述');}
-  if(r.desc){FORM.desc=r.desc;const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(r.desc).slice(0,40)+(r.desc.length>40?'…':'');filled.push('描述');}
+  if(r.desc){const rte=document.getElementById('formRte');if(rte)rte.innerHTML=r.desc.replace(/\n/g,'<br>');const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(r.desc).slice(0,40)+(r.desc.length>40?'…':'');filled.push('描述');}
   return filled;
 }
 async function doPasteFill(){
@@ -1353,7 +1501,7 @@ function openImageEditor(src,onSave){
   cv.onmousedown=e=>{const r=cv.getBoundingClientRect();drawPts={x:(e.clientX-r.left)/r.width*400,y:(e.clientY-r.top)/r.height*400};st.draw=[drawPts];};
   cv.onmousemove=e=>{if(!drawPts)return;const r=cv.getBoundingClientRect();st.draw.push({x:(e.clientX-r.left)/r.width*400,y:(e.clientY-r.top)/r.height*400});draw();};
   cv.onmouseup=()=>drawPts=null;
-  m.querySelector("#cropOn").onclick=()=>{const r=cv.getBoundingClientRect();const x=prompt("裁剪左(%)：","0"),y=prompt("裁剪上(%)：","0"),ww=prompt("裁剪宽(%)：","100"),hh=prompt("裁剪高(%)：","100");if(x===null)return;toast("裁剪为高级功能占位，可旋转/滤镜/文字/涂鸦后保存");};
+  m.querySelector("#cropOn").onclick=()=>{openSheet({title:"裁剪图片",help:"按百分比填，一次填完点确定即可（左/上为起点，宽/高为保留范围）",okText:"确定裁剪",fields:[{k:"x",label:"左边距离 %",type:"number",value:0},{k:"y",label:"上边距离 %",type:"number",value:0},{k:"w",label:"保留宽度 %",type:"number",value:100},{k:"h",label:"保留高度 %",type:"number",value:100}],onSave:v=>{const cx=+v.x||0,cy=+v.y||0,cw=+v.w||100,ch=+v.h||100;const W=cv.width,H=cv.height;const sx=Math.max(0,Math.round(W*cx/100)),sy=Math.max(0,Math.round(H*cy/100));const sw=Math.min(W-sx,Math.round(W*cw/100)),sh=Math.min(H-sy,Math.round(H*ch/100));if(sw<8||sh<8){toast("裁剪范围太小");return false;}const tmp=document.createElement("canvas");tmp.width=sw;tmp.height=sh;tmp.getContext("2d").drawImage(cv,sx,sy,sw,sh,0,0,sw,sh);const d=tmp.toDataURL("image/jpeg",0.92);img.onload=function(){st.rot=0;st.flipH=false;st.flipV=false;draw();};img.src=d;toast("已裁剪");}});};
   m.querySelector("#iedCancel").onclick=()=>m.remove();
   m.querySelector("#iedSave").onclick=()=>{onSave(cv.toDataURL("image/jpeg",0.9));m.remove();toast("图片已更新");};
 }
@@ -1545,8 +1693,8 @@ function renderDecorTab(b){
   b.querySelector("#dc_banner").onclick=async()=>{STATE.settings.banner.enabled=!STATE.settings.banner.enabled;b.querySelector("#dc_banner").classList.toggle("on",STATE.settings.banner.enabled);b.querySelector("#bannerEdit").classList.toggle("hidden",!STATE.settings.banner.enabled);applyThemeLive();};
   const renderBannerList=()=>{const bl=b.querySelector("#bannerList");bl.innerHTML=STATE.settings.banner.items.map((it,i)=>`<div class="item-row"><img class="pi" src="${it.img}" onerror="this.style.display='none'"><div class="pn" style="font-size:12px">${it.link||"无链接"}</div><button class="btn sm danger" data-bi="${i}">删</button></div>`).join("");bl.querySelectorAll("[data-bi]").forEach(x=>x.onclick=async()=>{STATE.settings.banner.items.splice(+x.dataset.bi,1);await Store.saveAll();renderBannerList();renderHome();});};
   renderBannerList();
-  b.querySelector("#dc_bannerAdd").onclick=async()=>{const f=await pickFile("image/*");if(!f)return;const img=await fileToCompressedDataURL(f);const link=prompt("跳转链接(可空)：","")||"";STATE.settings.banner.items.push({img,link});await Store.saveAll();renderBannerList();renderHome();};
-  b.querySelector("#dc_redeem").onclick=async()=>{const name=prompt("礼品名称：");if(!name)return;const cost=parseInt(prompt("所需积分：","100")||"100");const icon=prompt("图标emoji：","🎁")||"🎁";STATE.settings.redeemItems.push({id:uid(),name,cost,icon});await Store.saveAll();toast("已添加兑换项");};
+  b.querySelector("#dc_bannerAdd").onclick=()=>{openSheet({title:"添加轮播海报",help:"直接从手机相册选图。",fields:[{k:"img",label:"海报图片",type:"image",value:"",maxW:1400,required:true},{k:"link",label:"跳转链接（可留空）",value:"",ph:"https://..."}],onSave:async v=>{STATE.settings.banner.items=STATE.settings.banner.items||[];STATE.settings.banner.items.push({id:"PO"+Math.random().toString(36).slice(2,7).toUpperCase(),img:v.img,link:v.link,title:"",hidden:false});await Store.saveAll();renderBannerList();renderHome();toast("已添加");}});};
+  b.querySelector("#dc_redeem").onclick=()=>{openSheet({title:"添加积分兑换礼品",fields:[{k:"name",label:"礼品名称",value:"",required:true},{k:"cost",label:"所需积分",type:"number",value:100},{k:"img",label:"礼品图片（手机相册，可留空）",type:"image",value:"",maxW:600},{k:"icon",label:"没图时显示的图标",value:"🎁"},{k:"stock",label:"库存（-1 = 不限量）",type:"number",value:-1}],onSave:async v=>{STATE.settings.redeemItems=STATE.settings.redeemItems||[];STATE.settings.redeemItems.push({id:uid(),name:v.name,cost:parseInt(v.cost)||0,img:v.img,icon:v.icon||"🎁",stock:(v.stock===""?-1:(parseInt(v.stock))) });await Store.saveAll();toast("已添加兑换项");}});};
 }
 function pickFile(accept){return new Promise(res=>{const i=document.createElement("input");i.type="file";i.accept=accept;i.onchange=()=>res(i.files&&i.files[0]);i.click();});}
 
@@ -4114,7 +4262,7 @@ function renderProfile(){
   document.getElementById("cpCode").onclick=()=>{copyText(code);toast("已复制邀请码");};
   document.getElementById("cpLink").onclick=()=>{copyText(link);toast("已复制邀请链接");};
   document.getElementById("sharePage").onclick=()=>openSharePicker({type:"page"});
-  document.getElementById("pfBind").onclick=async()=>{const ph=prompt("输入手机号：",id.phone||"");if(!ph)return;STATE.identity.phone=ph;if(!STATE.identity.inviteCode)STATE.identity.inviteCode=ph.slice(-4)+Math.random().toString(36).slice(2,6).toUpperCase();await persistIdentity();renderProfile();toast("已保存");};
+  document.getElementById("pfBind").onclick=()=>{openSheet({title:"绑定手机号",help:"绑定后可同步积分、收藏和订单。",fields:[{k:"ph",label:"手机号",value:id.phone||"",required:true,ph:"11 位手机号"}],onSave:async v=>{if(!/^\d{6,15}$/.test(v.ph)){toast("手机号格式不对");return false;}STATE.identity.phone=v.ph;if(!STATE.identity.inviteCode)STATE.identity.inviteCode=v.ph.slice(-4)+Math.random().toString(36).slice(2,6).toUpperCase();await persistIdentity();renderProfile();toast("已保存");}});};
   document.getElementById("pfFav").onclick=()=>{const ids=(id.collections||[]);if(!ids.length){toast("还没有收藏");return;}STATE.view="home";switchView("home");renderHome();toast("已显示收藏产品");};
   document.getElementById("pfHis").onclick=()=>{toast("浏览记录："+(id.history||[]).length+" 条");};
 }
@@ -4126,7 +4274,7 @@ function renderMall(){
   document.getElementById("mallBody").innerHTML=`<h2 style="margin-top:0">积分商城</h2>
     <div class="stat"><div class="s"><b>${p}</b><span>我的积分</span></div></div>
     <p style="color:var(--c-sub);font-size:13px;margin:12px 0">可用积分兑换下方礼品：</p>
-    ${items.length?items.map(it=>`<div class="item-row"><div class="pi" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px">${it.icon||"🎁"}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分</span></div><button class="btn sm primary" data-r="${it.id}" ${(p<it.cost)?'disabled style="opacity:.5"':""}>${p<it.cost?"积分不足":"兑换"}</button></div>`).join(""):`<div class="empty">暂未上架兑换礼品（后台「积分管理→积分商城产品」添加）</div>`}`;
+    ${items.length?items.map(it=>`<div class="item-row"><div class="pi" style="background:#f8f8f8;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:8px;flex-shrink:0">${it.img?`<img src="${it.img}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.innerHTML='${esc(it.icon||'🎁')}'">`:(it.icon||"🎁")}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分${it.stock>0?(" · 剩 "+it.stock+" 件"):(it.stock===0?" · 已兑完":"")}</span></div><button class="btn sm primary" data-r="${it.id}" ${(p<it.cost||it.stock===0)?'disabled style="opacity:.5"':""}>${(p<it.cost)?"积分不足":(it.stock===0?"已兑完":"兑换")}</button></div>`).join(""):`<div class="empty">暂未上架兑换礼品（后台「积分管理→积分商城产品」添加）</div>`}`;
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.id===b.dataset.r);doRedeem(it);});
 }
 
@@ -4545,19 +4693,33 @@ function renderCustomerTab(b){
 }
 async function editCustomerTags(id){
   var cs=STATE.settings.customers;var c=cs.find(function(x){return x.id===id;})||{id:id,tags:[],note:""};
-  var tags=prompt("标签（多个用逗号分隔，如：意向高,已成交,需跟进）：",(c.tags||[]).join(","));if(tags===null)return;
-  var note=prompt("备注：",c.note||"");if(note===null)return;
-  c.tags=tags.split(/[,，]/).map(function(s){return s.trim();}).filter(Boolean);c.note=note.trim();
-  if(!cs.find(function(x){return x.id===id;}))cs.push(c);
-  await Store.saveAll();renderCustomerTab(document.getElementById("pbody"));toast("已保存");
+  openSheet({title:"客户标签与备注",help:"一次填完再保存。",
+    fields:[
+      {k:"tags",label:"标签（多个用逗号分隔）",value:(c.tags||[]).join(","),ph:"意向高,已成交,需跟进"},
+      {k:"note",label:"备注",type:"textarea",rows:3,value:c.note||"",ph:"如：干皮，对酒精敏感"}
+    ],
+    onSave:async function(v){
+      c.tags=v.tags.split(/[,，]/).map(function(s){return s.trim();}).filter(Boolean);
+      c.note=v.note;
+      if(!cs.find(function(x){return x.id===id;}))cs.push(c);
+      await Store.saveAll();renderCustomerTab(document.getElementById("pbody"));toast("已保存");
+    }});
 }
 async function adjustCustomerPoints(id){
-  var amt=prompt("加减积分（正为加，负为减，如 50 或 -20）：");if(amt===null)return;
-  var reason=prompt("原因：","手动调整");if(reason===null)return;
-  var hosts=await Store.loadIdentities();var h=hosts[id];if(!h){toast("未找到客户");return;}
-  var a=parseInt(amt)||0;if(!a){toast("积分无效");return;}
-  h.points=(h.points||0)+a;h.pointsLog=h.pointsLog||[];h.pointsLog.push({ts:Date.now(),type:"manual",detail:reason||"手动调整",amount:a});
-  await Store.saveIdentities(hosts);toast("已调整："+(h.points||0));renderCustomerTab(document.getElementById("pbody"));
+  openSheet({title:"调整客户积分",
+    fields:[
+      {k:"amt",label:"加减积分（正为加，负为减）",type:"number",value:"",required:true,ph:"如 50 或 -20"},
+      {k:"reason",label:"原因",value:"手动调整",ph:"如：到店活动赠送"}
+    ],
+    onSave:async function(v){
+      var hosts=await Store.loadIdentities();var h=hosts[id];
+      if(!h){toast("未找到客户");return false;}
+      var a=parseInt(v.amt)||0;if(!a){toast("积分无效");return false;}
+      h.points=(h.points||0)+a;h.pointsLog=h.pointsLog||[];
+      h.pointsLog.push({ts:Date.now(),type:"manual",detail:v.reason||"手动调整",amount:a});
+      await Store.saveIdentities(hosts);toast("已调整："+(h.points||0));
+      renderCustomerTab(document.getElementById("pbody"));
+    }});
 }
 
 /* ============ 三、客户咨询留言 ============ */
@@ -4596,8 +4758,12 @@ function renderMessageTab(b){
 }
 function replyMessage(id){
   var m=STATE.settings.messages.find(function(x){return x.id===id;});if(!m)return;
-  var r=prompt("回复内容：",m.reply||"");if(r===null)return;
-  m.reply=r.trim();m.replyTs=Date.now();Store.saveAll();renderMessageTab(document.getElementById("pbody"));toast("已回复");
+  openSheet({title:"回复客户留言",help:"客户说："+(m.text||""),
+    fields:[{k:"r",label:"回复内容",type:"textarea",rows:4,value:m.reply||"",required:true}],
+    onSave:async function(v){
+      m.reply=v.r;m.replyTs=Date.now();
+      await Store.saveAll();renderMessageTab(document.getElementById("pbody"));toast("已回复");
+    }});
 }
 
 /* ============ 四、首页欢迎弹窗 ============ */
@@ -4691,14 +4857,63 @@ function renderTutorialTab(b){
   var list=STATE.settings.tutorials||[];
   var rows=list.length?list.map(function(t){
     var p=STATE.products.find(function(x){return x.id===t.pid;});
-    return '<div class="item-row"><div class="pi" style="display:flex;align-items:center;justify-content:center;font-size:18px">▶</div>'
-      +'<div class="pn">'+esc(t.title)+(p?(" · 关联："+esc(p.name)):"")+'</div>'
-      +'<button class="btn sm" data-edt="'+t.id+'">编辑</button><button class="btn sm" data-delt="'+t.id+'">删除</button></div>';
-  }).join(""):'<div class="empty">还没有教程视频</div>';
-  b.innerHTML='<h3>教程视频专区</h3><button class="btn sm primary" id="tAdd">+ 添加教程</button><div class="help">单独板块展示产品使用教程，可关联对应产品，看完可直接进产品详情。</div>'+rows;
+    return '<div class="item-row"><div class="pi" style="display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;background:#000;color:#fff;border-radius:8px;flex-shrink:0">'
+      +(t.cover?('<img src="'+t.cover+'" style="width:100%;height:100%;object-fit:cover;display:block">'):"\u25b6")+'</div>'
+      +'<div class="pn">'+esc(t.title)+(p?(" \u00b7 \u5173\u8054\uff1a"+esc(p.name)):"")+'<br><span class="muted" style="font-size:12px">'+(t.url?"\u5df2\u8bbe\u89c6\u9891":"\u672a\u8bbe\u89c6\u9891")+'</span></div>'
+      +'<div class="btn-row"><button class="btn sm primary" data-pvt="'+t.id+'">\u9884\u89c8</button><button class="btn sm" data-edt="'+t.id+'">\u7f16\u8f91</button><button class="btn sm" data-delt="'+t.id+'">\u5220\u9664</button></div></div>';
+  }).join(""):'<div class="empty">\u8fd8\u6ca1\u6709\u6559\u7a0b\u89c6\u9891</div>';
+  b.innerHTML='<h3>\u6559\u7a0b\u89c6\u9891\u4e13\u533a</h3>'
+    +'<div class="btn-row" style="margin-bottom:6px"><button class="btn sm primary" id="tAdd">+ \u6dfb\u52a0\u6559\u7a0b</button>'
+    +(list.length?'<button class="btn sm" id="tPvAll">\u9884\u89c8\u6574\u4e2a\u4e13\u533a</button>':'')+'</div>'
+    +'<div class="help">\u5355\u72ec\u677f\u5757\u5c55\u793a\u4ea7\u54c1\u4f7f\u7528\u6559\u7a0b\uff0c\u53ef\u5173\u8054\u5bf9\u5e94\u4ea7\u54c1\u3002\u70b9\u300c\u9884\u89c8\u300d\u770b\u5230\u7684\u5c31\u662f\u5ba2\u6237\u770b\u5230\u7684\u6548\u679c\u3002</div>'+rows;
   b.querySelector("#tAdd").onclick=function(){editTutorial(null);};
+  if(b.querySelector("#tPvAll"))b.querySelector("#tPvAll").onclick=function(){previewTutorialAll();};
+  b.querySelectorAll("[data-pvt]").forEach(function(el){el.onclick=function(){previewTutorial(el.dataset.pvt);};});
   b.querySelectorAll("[data-edt]").forEach(function(el){el.onclick=function(){editTutorial(el.dataset.edt);};});
-  b.querySelectorAll("[data-delt]").forEach(function(el){el.onclick=async function(){if(!confirm("删除该教程？"))return;STATE.settings.tutorials=STATE.settings.tutorials.filter(function(x){return x.id!==el.dataset.delt;});await Store.saveAll();renderTutorialTab(b);toast("已删除");};});
+  b.querySelectorAll("[data-delt]").forEach(function(el){el.onclick=async function(){if(!confirm("\u5220\u9664\u8be5\u6559\u7a0b\uff1f"))return;STATE.settings.tutorials=STATE.settings.tutorials.filter(function(x){return x.id!==el.dataset.delt;});await Store.saveAll();renderTutorialTab(b);toast("\u5df2\u5220\u9664");};});
+}
+function _tutCardHtml(t){
+  return '<div class="tut-card" data-pvid="'+t.id+'"><div class="tut-thumb">'
+    +(t.cover?('<img src="'+t.cover+'" style="width:100%;height:100%;object-fit:cover;display:block">'):"\u25b6")
+    +'</div><div class="tut-name">'+esc(t.title||"\u672a\u547d\u540d")+'</div></div>';
+}
+function previewTutorial(id){
+  var t=(STATE.settings.tutorials||[]).find(function(x){return x.id===id;});if(!t)return;
+  var p=STATE.products.find(function(x){return x.id===t.pid;});
+  var m=document.createElement("div");m.className="modal";
+  m.innerHTML='<div class="box" style="max-height:92vh;overflow:auto">'
+    +'<h3 style="margin-top:0">\u9884\u89c8\uff08\u5ba2\u6237\u770b\u5230\u7684\u6548\u679c\uff09</h3>'
+    +'<div class="help" style="margin-bottom:8px">\u4e0b\u9762\u5c31\u662f\u5ba2\u6237\u5728\u9996\u9875\u300c\u6559\u7a0b\u89c6\u9891\u300d\u91cc\u770b\u5230\u548c\u70b9\u5f00\u540e\u7684\u6837\u5b50\u3002</div>'
+    +'<div class="help">\u2460 \u9996\u9875\u5361\u7247\uff1a</div>'
+    +'<div class="tut-grid" style="margin:6px 0 12px">'+_tutCardHtml(t)+'</div>'
+    +'<div class="help">\u2461 \u70b9\u5f00\u540e\uff1a</div>'
+    +'<div style="border:1px solid var(--c-line);border-radius:10px;padding:10px;margin-top:6px">'
+    +'<div style="font-weight:600;margin-bottom:6px">'+esc(t.title||"\u672a\u547d\u540d\u6559\u7a0b")+'</div>'
+    +(t.url?('<video src="'+t.url+'" controls playsinline preload="metadata" style="width:100%;border-radius:8px;background:#000"></video>')
+           :'<div class="empty">\u672a\u8bbe\u7f6e\u89c6\u9891\uff0c\u5ba2\u6237\u4f1a\u770b\u5230\u300c\u672a\u8bbe\u7f6e\u89c6\u9891\u5730\u5740\u300d</div>')
+    +(p?('<div style="margin-top:8px"><button class="btn sm primary" id="pvGo">\u770b\u5bf9\u5e94\u4ea7\u54c1\uff1a'+esc(p.name||"")+'</button></div>')
+       :'<div class="help" style="margin-top:6px">\u672a\u5173\u8054\u4ea7\u54c1\uff08\u5ba2\u6237\u4e0d\u4f1a\u770b\u5230\u8df3\u8f6c\u6309\u94ae\uff09</div>')
+    +'</div>'
+    +'<div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pvClose">\u5173\u95ed</button></div></div>';
+  document.body.appendChild(m);
+  m.onclick=function(e){if(e.target===m)m.remove();};
+  m.querySelector("#pvClose").onclick=function(){m.remove();};
+  var g=m.querySelector("#pvGo");
+  if(g)g.onclick=function(){m.remove();if(typeof closeAdmin==="function")closeAdmin();openDetail(t.pid);};
+}
+function previewTutorialAll(){
+  var list=STATE.settings.tutorials||[];
+  var m=document.createElement("div");m.className="modal";
+  m.innerHTML='<div class="box" style="max-height:92vh;overflow:auto">'
+    +'<h3 style="margin-top:0">\u9884\u89c8\uff1a\u6559\u7a0b\u89c6\u9891\u4e13\u533a</h3>'
+    +'<div class="help" style="margin-bottom:8px">\u5ba2\u6237\u5728\u9996\u9875\u770b\u5230\u7684\u6574\u4e2a\u677f\u5757\uff08\u70b9\u5361\u7247\u53ef\u7ee7\u7eed\u9884\u89c8\u89c6\u9891\uff09</div>'
+    +'<div class="section" style="padding:0"><div class="sec-head"><h2>\u6559\u7a0b\u89c6\u9891</h2></div>'
+    +'<div class="tut-grid">'+list.map(_tutCardHtml).join("")+'</div></div>'
+    +'<div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="pvaClose">\u5173\u95ed</button></div></div>';
+  document.body.appendChild(m);
+  m.onclick=function(e){if(e.target===m)m.remove();};
+  m.querySelector("#pvaClose").onclick=function(){m.remove();};
+  m.querySelectorAll("[data-pvid]").forEach(function(el){el.onclick=function(){previewTutorial(el.dataset.pvid);};});
 }
 async function editTutorial(id){
   var list=STATE.settings.tutorials;var t=id?list.find(function(x){return x.id===id;}):null;
@@ -4754,16 +4969,23 @@ function movePoster(id,dir){
 }
 async function editPoster(id){
   var cfg=STATE.settings.banner;var it=id?cfg.items.find(function(x){return x.id===id;}):null;
-  var img=prompt("海报图片URL：",it?it.img:"");if(img===null)return;
-  var link=prompt("跳转链接（商品或外链，可留空）：",it?it.link:"");if(link===null)return;
-  var title=prompt("标题（后台标记用）：",it?it.title:"");
-  if(title===null)return;
-  var hidden=prompt("是否隐藏？（隐藏填 1，显示留空）：",it&&it.hidden?"1":"");
-  if(hidden===null)return;
-  var obj={img:img.trim(),link:(link||"").trim(),title:(title||"").trim(),hidden:hidden.trim()==="1"};
-  if(it){Object.assign(it,obj);}else{obj.id="PO"+Math.random().toString(36).slice(2,7).toUpperCase();cfg.items=cfg.items||[];cfg.items.push(obj);}
-  cfg.enabled=true;
-  await Store.saveAll();toast("已保存");renderHome();renderPosterTab(document.getElementById("pbody"));
+  var prodOpts=[{v:"",l:"不跳转"}].concat((STATE.products||[]).map(function(p){return {v:"#p:"+p.id,l:"产品："+(p.name||"未命名")};}));
+  var curLink=it&&it.link?it.link:"";
+  var isProd=curLink.indexOf("#p:")===0;
+  openSheet({title:(it?"编辑":"添加")+"轮播海报",help:"图片直接从手机相册选，不用粘贴网址；全部填完一次保存。",
+    fields:[
+      {k:"img",label:"海报图片（点下方选择手机图片）",type:"image",value:it?it.img:"",maxW:1400,q:0.85,required:true,hint:"建议横图，16:9 或 3:2 最好看"},
+      {k:"title",label:"标题（后台标记用，可留空）",value:it?it.title:""},
+      {k:"prod",label:"点击跳转到产品",type:"select",value:isProd?curLink:"",opts:prodOpts},
+      {k:"link",label:"或填外部链接（填了优先用这个）",value:isProd?"":curLink,ph:"https://..."},
+      {k:"hidden",label:"暂时隐藏",type:"checkbox",value:!!(it&&it.hidden),cbText:"隐藏这张海报"}
+    ],
+    onSave:async function(v){
+      var obj={img:v.img,link:(v.link||v.prod||""),title:v.title,hidden:!!v.hidden};
+      if(it){Object.assign(it,obj);}else{obj.id="PO"+Math.random().toString(36).slice(2,7).toUpperCase();cfg.items=cfg.items||[];cfg.items.push(obj);}
+      cfg.enabled=true;
+      await Store.saveAll();toast("已保存");renderHome();renderPosterTab(document.getElementById("pbody"));
+    }});
 }
 
 /* ============ 十、数据统计面板 ============ */
@@ -4817,12 +5039,18 @@ renderSwitchTab=function(b){
   if(b.querySelector("#resetGuide"))b.querySelector("#resetGuide").onclick=function(){localStorage.removeItem("leslie_guide_seen");toast("已重置引导提示");};
 };
 function editWelcome(){
-  var w=STATE.settings.welcome;
-  var title=prompt("弹窗标题：",w.title||"");if(title===null)return;
-  var body=prompt("弹窗正文：",w.body||"");if(body===null)return;
-  var image=prompt("图片URL（可留空）：",w.image||"");if(image===null)return;
-  STATE.settings.welcome={enabled:true,title:title.trim(),body:body.trim(),image:image.trim()};
-  Store.saveAll();toast("欢迎弹窗已更新");
+  var w=STATE.settings.welcome||{};
+  openSheet({title:"首页欢迎弹窗",help:"客户第一次打开小程序时弹出，一次填完再保存。",
+    fields:[
+      {k:"title",label:"弹窗标题",value:w.title||"",required:true,ph:"如：欢迎来到 LESLEY"},
+      {k:"body",label:"弹窗正文",type:"textarea",rows:4,value:w.body||"",ph:"如：新客下单立减 30 元"},
+      {k:"image",label:"弹窗图片（手机相册选，可留空）",type:"image",value:w.image||"",maxW:900},
+      {k:"enabled",label:"是否开启",type:"checkbox",value:w.enabled!==false,cbText:"开启欢迎弹窗"}
+    ],
+    onSave:async function(v){
+      STATE.settings.welcome={enabled:!!v.enabled,title:v.title,body:v.body,image:v.image};
+      await Store.saveAll();toast("欢迎弹窗已更新");
+    }});
 }
 
 /* ============ 详情页动作扩展（咨询 / 对比） ============ */
@@ -4938,6 +5166,159 @@ async function seedSamples(){
 })();
 
 })();
+
+</script>
+<script>
+/* ============ 通用「一页填完」表单弹窗（替代逐条 prompt 问答） ============ */
+var __SHEET_SEQ=0;
+function openSheet(opt){
+  opt=opt||{};
+  var fields=opt.fields||[];
+  var sid="sh"+(++__SHEET_SEQ);
+  var m=document.createElement("div");m.className="modal";
+  var h='<div class="box" style="max-height:88vh;overflow:auto">';
+  h+='<h3 style="margin-top:0">'+esc(opt.title||"编辑")+'</h3>';
+  if(opt.help)h+='<div class="help" style="margin-bottom:8px">'+esc(opt.help)+'</div>';
+  fields.forEach(function(f,i){
+    var id=sid+"_"+i;f._id=id;
+    var v=(f.value===undefined||f.value===null)?"":f.value;
+    h+='<div class="field">';
+    if(f.label)h+='<label>'+esc(f.label)+(f.required?' <span style="color:#e4393c">*</span>':'')+'</label>';
+    if(f.type==="textarea"){
+      h+='<textarea id="'+id+'" rows="'+(f.rows||3)+'" placeholder="'+esc(f.ph||"")+'">'+esc(String(v))+'</textarea>';
+    }else if(f.type==="select"){
+      h+='<select id="'+id+'">'+(f.opts||[]).map(function(o){
+        var ov=(o&&o.v!==undefined)?o.v:o;var ol=(o&&o.l!==undefined)?o.l:o;
+        return '<option value="'+esc(String(ov))+'"'+(String(ov)===String(v)?" selected":"")+'>'+esc(String(ol))+'</option>';
+      }).join("")+'</select>';
+    }else if(f.type==="checkbox"){
+      h+='<label style="display:flex;align-items:center;gap:8px;font-weight:400"><input type="checkbox" id="'+id+'"'+(v?" checked":"")+'> '+esc(f.cbText||"是")+'</label>';
+    }else if(f.type==="image"){
+      h+='<div style="display:flex;align-items:center;gap:10px">'
+       +'<div id="'+id+'_pv" style="width:68px;height:68px;border:1px solid var(--c-line);border-radius:8px;background:#f7f7f7;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:11px;color:#999;flex-shrink:0">'
+       +(v?'<img src="'+v+'" style="width:100%;height:100%;object-fit:cover;display:block">':'无图')+'</div>'
+       +'<div style="flex:1;min-width:0"><input type="file" id="'+id+'" accept="'+(f.accept||"image/*")+'" style="max-width:100%">'
+       +'<div style="margin-top:4px"><button type="button" class="btn sm" id="'+id+'_clr">清除</button></div></div></div>';
+    }else{
+      h+='<input id="'+id+'" type="'+(f.type==="number"?"number":(f.type==="color"?"color":"text"))+'" value="'+esc(String(v))+'" placeholder="'+esc(f.ph||"")+'">';
+    }
+    if(f.hint)h+='<div class="help" style="margin-top:4px">'+esc(f.hint)+'</div>';
+    h+='</div>';
+  });
+  h+='<div class="btn-row" style="justify-content:flex-end;position:sticky;bottom:0;background:var(--c-card);padding-top:8px">'
+   +'<button class="btn" id="'+sid+'_c">取消</button>'
+   +'<button class="btn primary" id="'+sid+'_s">'+esc(opt.okText||"保存")+'</button></div></div>';
+  m.innerHTML=h;document.body.appendChild(m);
+  var imgVals={};
+  fields.forEach(function(f){
+    if(f.type!=="image")return;
+    imgVals[f.k]=f.value||"";
+    var inp=m.querySelector("#"+f._id),pv=m.querySelector("#"+f._id+"_pv"),clr=m.querySelector("#"+f._id+"_clr");
+    if(!inp)return;
+    inp.onchange=function(e){
+      var file=e.target.files&&e.target.files[0];if(!file)return;
+      pv.textContent="处理中…";
+      fileToCompressedDataURL(file,f.maxW||1200,f.q||0.85).then(function(d){
+        if(!d||d.length<200){pv.textContent="失败";toast("图片读取失败，请换一张");return;}
+        imgVals[f.k]=d;pv.innerHTML='<img src="'+d+'" style="width:100%;height:100%;object-fit:cover;display:block">';
+      },function(){pv.textContent="失败";toast("图片读取失败，请换一张");});
+    };
+    if(clr)clr.onclick=function(){imgVals[f.k]="";pv.textContent="无图";inp.value="";};
+  });
+  m.onclick=function(e){if(e.target===m)m.remove();};
+  m.querySelector("#"+sid+"_c").onclick=function(){m.remove();if(opt.onCancel)opt.onCancel();};
+  m.querySelector("#"+sid+"_s").onclick=function(){
+    var vals={},bad=null;
+    fields.forEach(function(f){
+      if(f.type==="image"){vals[f.k]=imgVals[f.k]||"";}
+      else{
+        var el=m.querySelector("#"+f._id);if(!el)return;
+        if(f.type==="checkbox")vals[f.k]=!!el.checked;
+        else if(f.type==="number")vals[f.k]=el.value.trim();
+        else vals[f.k]=el.value.trim();
+      }
+      if(f.required&&!bad&&(vals[f.k]===""||vals[f.k]===undefined))bad=f.label||f.k;
+    });
+    if(bad){toast("请填写："+bad);return;}
+    var btn=this;btn.disabled=true;btn.textContent="保存中…";
+    Promise.resolve(opt.onSave?opt.onSave(vals):null).then(function(r){
+      if(r===false){btn.disabled=false;btn.textContent=opt.okText||"保存";return;}
+      m.remove();
+    },function(err){btn.disabled=false;btn.textContent=opt.okText||"保存";toast("保存失败");});
+  };
+  return m;
+}
+
+/* ---------- 代理管理：一页填完 ---------- */
+async function _editAgent(id){
+  var s=STATE.settings;var a=id?(s.agents||[]).find(function(x){return x.id===id;}):null;
+  openSheet({title:(a?"编辑":"添加")+"代理",help:"一次填完再保存，不用一条条回答。",
+    fields:[
+      {k:"name",label:"代理名称",value:a?a.name:"",required:true,ph:"如：小美"},
+      {k:"group",label:"分组",type:"select",value:a?a.group:"一级代理",opts:["一级代理","二级代理","VIP代理","未分组"]},
+      {k:"mallUrl",label:"绑定商城跳转链接（可留空）",value:a?a.mallUrl:"",ph:"https://...",hint:"客户从该代理链接进入后，点购买会带上代理标识"}
+    ],
+    onSave:async function(v){
+      var obj={name:v.name,group:v.group||"未分组",mallUrl:v.mallUrl||""};
+      var theId;
+      if(a){Object.assign(a,obj);theId=a.id;}
+      else{obj.id="AG"+Math.random().toString(36).slice(2,7).toUpperCase();obj.opens=0;obj.visits=0;s.agents=s.agents||[];s.agents.push(obj);theId=obj.id;}
+      await Store.saveAll();
+      toast("已保存，专属链接："+location.origin+location.pathname+"?ref="+theId);
+      renderAgentTab(document.getElementById("pbody"));
+    }});
+}
+
+/* ---------- 分享卡片：一页填完 + 图片手机上传 ---------- */
+async function _editShareCard(id,kind){
+  var s=STATE.settings.shareCards;var arr=kind==="page"?s.page:s.product;var t=id?arr.find(function(x){return x.id===id;}):null;
+  openSheet({title:(t?"编辑":"添加")+"分享卡片模板",help:"缩略图和头像直接从手机相册选。",
+    fields:[
+      {k:"title",label:"分享标题",value:t?t.title:"",required:true,ph:"如：LESLEY 秋季焕肤季"},
+      {k:"desc",label:"分享描述",type:"textarea",rows:2,value:t?t.desc:"",ph:"一句话说清吸引点"},
+      {k:"thumb",label:"缩略图（手机相册选，可留空）",type:"image",value:t?t.thumb:"",maxW:600},
+      {k:"avatar",label:"分享头像（可留空）",type:"image",value:t?t.avatar:"",maxW:200}
+    ],
+    onSave:async function(v){
+      var obj={title:v.title,desc:v.desc,thumb:v.thumb,avatar:v.avatar};
+      if(t){Object.assign(t,obj);}else{obj.id=uid();arr.push(obj);}
+      await Store.saveAll();toast("已保存");renderShareCardTab(document.getElementById("pbody"));
+    }});
+}
+
+/* ---------- 分享话术：一页填完 ---------- */
+async function _editScript(id){
+  var s=STATE.settings.scripts;var it=id?(s.items||[]).find(function(x){return x.id===id;}):null;
+  openSheet({title:(it?"编辑":"添加")+"话术模板",
+    fields:[
+      {k:"scene",label:"场景",type:"select",value:it?it.scene:"新品推荐",opts:["新品推荐","活动促销","自用推荐","回购提醒","节日祝福","通用"]},
+      {k:"text",label:"话术内容",type:"textarea",rows:5,value:it?it.text:"",required:true,ph:"客户点「话术模板」可一键复制这段文字"}
+    ],
+    onSave:async function(v){
+      var obj={scene:v.scene,text:v.text};
+      if(it){Object.assign(it,obj);}else{obj.id=uid();s.items=s.items||[];s.items.push(obj);}
+      await Store.saveAll();toast("已保存");renderScriptTab(document.getElementById("pbody"));
+    }});
+}
+
+/* ---------- 虚拟评论：一页填完 ---------- */
+async function addVirtualComment(postId,virtualId){
+  var p=STATE.settings.moments.posts.find(function(x){return x.id===postId;});if(!p)return;
+  var v=STATE.settings.virtualUsers.find(function(x){return x.id===virtualId;});if(!v)return;
+  openSheet({title:"以「"+(v.nickname||"虚拟身份")+"」发表评论",
+    fields:[
+      {k:"txt",label:"评论内容",type:"textarea",rows:3,value:"",required:true,ph:"如：用了两周，脸真的透亮了"},
+      {k:"days",label:"发布时间（几天前，0=刚刚）",type:"number",value:"0"}
+    ],
+    onSave:async function(val){
+      var daysAgo=parseFloat(val.days)||0;
+      var ts=Date.now()-daysAgo*86400000;
+      p.comments=p.comments||[];
+      p.comments.push({id:uid(),uid:virtualId,virtual:true,name:v.nickname,avatar:v.avatar,text:val.txt,ts:ts,status:"approved",reply:""});
+      await Store.saveAll();toast("虚拟评论已发布");
+      if(typeof renderMomentsTab==="function")renderMomentsTab(document.getElementById("pbody"));
+    }});
+}
 
 </script>
 </body>
