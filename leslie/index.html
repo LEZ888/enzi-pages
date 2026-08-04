@@ -165,6 +165,14 @@
   @media(min-width:768px){.panel{width:min(92vw,860px)}.pbody{padding:20px 24px}.ptabs .t{padding:13px 14px;font-size:14px}.panel .phead h2{font-size:18px}.phead{padding:18px 22px}.panel .field input,.panel .field textarea,.panel .field select{font-size:14px}}
   .field{margin-bottom:13px}
   .field label{display:block;font-size:12px;color:var(--c-sub);margin-bottom:5px}
+  /* 活动标签 chip 选择器（替代原生select，避免手机上打不开） */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:8px 14px;border:1px solid var(--c-line);border-radius:20px;background:#fff;font-size:14px;color:var(--c-text);cursor:pointer;line-height:1;min-height:36px;box-sizing:border-box}
+  .chip.on{background:var(--c-primary);border-color:var(--c-primary);color:#fff}
+  /* 第10条：放大所有文字输入模板，支持舒适换行 */
+  textarea{min-height:88px;font-size:15px;line-height:1.6;padding:10px;border:1px solid var(--c-line);border-radius:8px;box-sizing:border-box;width:100%;resize:vertical}
+  .modal textarea{min-height:88px}
+  input[type=text],input[type=password],input[type=number],input[type=url],input[type=email]{font-size:15px;padding:9px 10px;border:1px solid var(--c-line);border-radius:8px;box-sizing:border-box;width:100%}
   .switch-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--c-line)}
   .switch{position:relative;width:44px;height:24px;background:#ddd;border-radius:24px;transition:.2s;flex:0 0 auto}
   .switch.on{background:var(--c-primary)}
@@ -395,7 +403,7 @@
 
 <div class="modal hidden" id="formModal"><div class="box">
   <h3 id="formTitle">新增产品</h3>
-  <div class="btn-row" id="formActionBar" style="margin-bottom:12px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别</button><button class="btn sm" id="importBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">🔗 链接抓取</button></div>
+  <div class="btn-row" id="formActionBar" style="margin-bottom:12px;padding:10px;background:#fafafa;border:1px solid var(--c-line);border-radius:8px;gap:8px"><button class="btn sm primary" id="pasteFillBtn" type="button" style="flex:1;justify-content:center;padding:9px 0;font-size:14px">📋 一键粘贴识别填框</button></div>
   <div id="pasteHint" style="font-size:12px;color:var(--c-sub);text-align:center;margin-bottom:10px"></div>
   <div class="field"><label>产品标题 *（也建议填，但不强制）</label><input id="f_name" placeholder="如：烟酰胺光感精华"></div>
   <div class="field"><label>品牌</label><input id="f_brand" placeholder="如：LESLEY"></div>
@@ -403,7 +411,7 @@
   <div class="field"><label>系列</label><select id="f_series"><option value="">不选择</option></select></div>
   <div class="field"><label>功效标签（逗号分隔，可点筛选）</label><input id="f_tags" placeholder="美白, 补水, 提亮"></div>
   <div class="field"><label>活动标签（白字红底，替代价格）</label>
-    <select id="f_act"><option value="">无</option><option value="爆款">爆款</option><option value="秒杀">秒杀</option><option value="有活动">有活动</option><option value="新品">新品</option><option value="推荐">推荐</option><option value="__custom__">自定义…</option></select>
+    <div id="f_act_chips" class="chips"></div>
     <input id="f_act_custom" class="hidden" style="margin-top:6px" placeholder="自定义标签文字">
   </div>
   <div class="field"><label>产品描述（富文本，可不填）</label><button class="btn sm" id="f_desc_edit" type="button">打开富文本编辑器</button><div id="f_desc_preview" style="font-size:12px;color:var(--c-sub);margin-top:6px"></div></div>
@@ -426,7 +434,7 @@
   <div class="field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="f_shelf" checked style="width:auto"> 上架销售（取消=下架，前端不显示）</label></div>
   <div class="field"><label>排序（数字越小越靠前）</label><input id="f_order" type="number" value="0"></div>
   <div id="draftTip" class="help hidden"></div>
-  <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="formCancel">取消</button><button class="btn primary" id="formSave">保存</button></div>
+  <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="formCancel">取消</button><button class="btn" id="formPreview">📱 预览前台效果</button><button class="btn primary" id="formSave">保存</button></div>
 </div></div>
 
 <div class="mask hidden" id="mask"></div>
@@ -442,6 +450,7 @@ const DEFAULT_PWD="admin888";
 const DEF=(o)=>JSON.parse(JSON.stringify(o));
 const DEFAULT_SETTINGS={
   adminPassword:DEFAULT_PWD,
+  loginMinutes:120,
   switches:{search:true,category:true,activityTag:true,video:true,collections:true,browseHistory:true,points:true,longImage:true,buyButton:true,bottomNav:true,banner:true,series:true,moments:true,mall:true,scripts:true,welcome:true,consult:true,compare:true,activityCountdown:true,tutorial:true,shareCard:true,guide:true,imgEdit:true,videoEdit:true},
   supabase:{url:"",key:"",enabled:false},
   shop:{name:"LESLEY",subtitle:"",logo:"",theme:"light",colors:{primary:"#e4393c",bg:"#f5f5f7",text:"#222",btn:"#e4393c"},fontScale:1,radius:4,spacing:12,bgImage:null,contact:{wechat:"",phone:""}},
@@ -705,7 +714,7 @@ function renderMall(){
   document.getElementById("mallBody").innerHTML=`<h2 style="margin-top:0">积分商城</h2>
     <div class="stat"><div class="s"><b>${STATE.identity.points||0}</b><span>我的积分</span></div></div>
     <p style="color:var(--c-sub);font-size:13px;margin:12px 0">可用积分兑换下方礼品（后台「店铺装修→积分商城」添加兑换项）：</p>
-    ${items.length?items.map(it=>`<div class="item-row"><div class="pi" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px">${it.icon||"🎁"}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分</span></div><button class="btn sm primary" data-r="${it.id}">兑换</button></div>`).join(""):`<div class="empty">暂未上架兑换礼品</div>`}`;
+    ${items.length?items.map(it=>`<div class="item-row"><div class="pi" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden">${it.img?`<img src="${it.img}" style="width:100%;height:100%;object-fit:cover">`:(it.icon||"🎁")}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分${it.stock>0?(" · 剩 "+it.stock+" 件"):(it.stock===0?" · 已兑完":"")}</span></div><button class="btn sm primary" data-r="${it.id}">${it.stock===0?"已兑完":"兑换"}</button></div>`).join(""):`<div class="empty">暂未上架兑换礼品</div>`}`;
   document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const it=items.find(x=>x.id===b.dataset.r);if((STATE.identity.points||0)<it.cost){toast("积分不足");return;}STATE.identity.points-=it.cost;STATE.identity.pointsLog=STATE.identity.pointsLog||[];STATE.identity.pointsLog.push({ts:Date.now(),type:"redeem",detail:"兑换："+(it.name||"礼品"),amount:-it.cost});STATE.identity.redeemed=STATE.identity.redeemed||[];STATE.identity.redeemed.push({id:it.id,name:it.name,cost:it.cost,ts:Date.now()});persistIdentity();renderMall();toast("兑换成功："+it.name);});
 }
 /* ============ 朋友圈动态（前端，微信风格） ============ */
@@ -864,6 +873,7 @@ function openMomentEditor(id){
     <div class="field"><label>文字内容${p?"":"（可空，纯图片/视频也行）"}</label><textarea id="meText" rows="4">${esc(f.text||"")}</textarea></div>
     <div class="field"><label>图片（1-9张，九宫格）</label><input type="file" id="meImgs" accept="image/*" multiple></div>
     <div id="meImgsN" style="font-size:12px;color:var(--c-sub)">${f.imgs&&f.imgs.length?f.imgs.length+" 张已选":"未选择"}</div>
+    <div id="meImgsPrev" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${(f.imgs||[]).map(src=>`<img src="${src}" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--c-line)">`).join("")}</div>
     <div class="field"><label>视频（可选，与图片二选一）</label><input type="file" id="meVideo" accept="video/*"><div id="meVideoN" style="font-size:12px;color:var(--c-sub)">${f.video?"已设置":"未选择"}</div></div>
     <div class="field"><label>关联产品（可选）</label><select id="meProd"><option value="">不关联</option>${prodOpts}</select></div>
     <div class="field"><label>发布时间</label><select id="meWhen"><option value="now">立即发布</option><option value="schedule">定时发布</option></select></div>
@@ -873,7 +883,7 @@ function openMomentEditor(id){
   document.body.appendChild(modal);
   let imgs=(f.imgs||[]).slice(),video=f.video||"",savedDraft=false;
   const saveDraft=()=>{localStorage.setItem(MOMENT_DRAFT_KEY,JSON.stringify({text:modal.querySelector("#meText").value,imgs,video,productId:modal.querySelector("#meProd").value}));};
-  modal.querySelector("#meImgs").onchange=async e=>{const fs=[...e.target.files].slice(0,9);imgs=[];for(const file of fs)imgs.push(await fileToCompressedDataURL(file,1200,0.82));modal.querySelector("#meImgsN").textContent=imgs.length+" 张已选";saveDraft();};
+  modal.querySelector("#meImgs").onchange=async e=>{const fs=[...e.target.files].slice(0,9);imgs=[];for(const file of fs)imgs.push(await fileToCompressedDataURL(file,1200,0.82));modal.querySelector("#meImgsN").textContent=imgs.length+" 张已选";if(modal.querySelector("#meImgsPrev"))modal.querySelector("#meImgsPrev").innerHTML=imgs.map(src=>`<img src="${src}" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--c-line)">`).join("");saveDraft();};
   modal.querySelector("#meVideo").onchange=async e=>{const file=e.target.files[0];if(file){video=await fileToDataURL(file);modal.querySelector("#meVideoN").textContent=file.name;saveDraft();}};
   modal.querySelector("#meWhen").onchange=()=>{modal.querySelector("#meSchWrap").style.display=modal.querySelector("#meWhen").value==="schedule"?"block":"none";};
   const close=()=>modal.remove();
@@ -927,15 +937,15 @@ function openVirtualUsers(){
     modal.querySelectorAll("[data-ve]").forEach(b=>b.onclick=()=>editV(+b.dataset.ve));
     modal.querySelectorAll("[data-vd]").forEach(b=>b.onclick=async()=>{vs.splice(+b.dataset.vd,1);await Store.saveAll();renderV();toast("已删除");});
   };
-  const editV=(idx)=>{const v=vs[idx]||{id:uid(),avatar:"",nickname:""};const fm=document.createElement("div");fm.className="modal";
-    fm.innerHTML=`<div class="box"><h3>${v.id?"编辑":"新增"}虚拟身份</h3>
+  const editV=(idx)=>{const isNew=idx<0;const v=isNew?{id:uid(),avatar:"",nickname:""}:vs[idx];const fm=document.createElement("div");fm.className="modal";
+    fm.innerHTML=`<div class="box"><h3>${isNew?"新增":"编辑"}虚拟身份</h3>
       <div class="field"><label>头像</label><input type="file" id="veAv" accept="image/*"><div id="veAn" style="font-size:12px;color:var(--c-sub)">${v.avatar?"已设置":"未设置"}</div></div>
       <div class="field"><label>昵称</label><input id="veNm" value="${esc(v.nickname||"")}" placeholder="如：小美 / 妆容达人Lisa"></div>
       <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="veC">取消</button><button class="btn primary" id="veS">保存</button></div></div>`;
-    document.body.appendChild(fm);let av=v.avatar;
+    document.body.appendChild(fm);let av=v.avatar||"";
     fm.querySelector("#veAv").onchange=async e=>{const f=e.target.files[0];if(f){av=await fileToCompressedDataURL(f,120,0.9);fm.querySelector("#veAn").textContent=f.name;}};
     fm.querySelector("#veC").onclick=()=>fm.remove();
-    fm.querySelector("#veS").onclick=async()=>{const nm=fm.querySelector("#veNm").value.trim();if(!nm){toast("请填昵称");return;}if(v.id){v.avatar=av;v.nickname=nm;}else vs.push({id:uid(),avatar:av,nickname:nm});await Store.saveAll();fm.remove();renderV();toast("已保存");};
+    fm.querySelector("#veS").onclick=async()=>{const nm=fm.querySelector("#veNm").value.trim();if(!nm){toast("请填昵称");return;}v.avatar=av;v.nickname=nm;if(isNew)vs.push(v);await Store.saveAll();fm.remove();renderV();toast("已保存");};
   };
   modal.querySelector("#vAdd").onclick=()=>editV(-1);
   modal.querySelector("#vClose").onclick=()=>{renderMomentsTab(document.getElementById("pbody"));modal.remove();};
@@ -960,9 +970,21 @@ async function addVirtualLike(postId,virtualId){
 
 /* ============ 管理面板 ============ */
 function openPanel(){document.getElementById("panel").classList.add("open");document.getElementById("mask").classList.remove("hidden");renderPanel();}
-function closePanel(){document.getElementById("panel").classList.remove("open");document.getElementById("mask").classList.add("hidden");STATE.isAdmin=false;updateModeTag();}
+function closePanel(){document.getElementById("panel").classList.remove("open");document.getElementById("mask").classList.add("hidden");/* 收起面板不再清空登录态，避免"返回/完成"后被迫重新登录 */
+  if(!STATE.isAdmin)updateModeTag();}
 document.getElementById("closePanel").onclick=closePanel;
 document.getElementById("mask").onclick=closePanel;
+/* ============ 管理登录会话（免二次验证时长可配） ============ */
+const ADMIN_SESSION_KEY="leslie_admin_session";
+function setAdminLogin(){try{localStorage.setItem(ADMIN_SESSION_KEY,String(Date.now()));}catch(e){}}
+function clearAdminLogin(){try{localStorage.removeItem(ADMIN_SESSION_KEY);}catch(e){}}
+function adminSessionValid(){
+  const mins=STATE.settings&&STATE.settings.loginMinutes;
+  if(!mins||mins<=0)return false; /* 0=不记住，关闭即需重登 */
+  let ts=0;try{ts=parseInt(localStorage.getItem(ADMIN_SESSION_KEY)||"0",10);}catch(e){ts=0;}
+  if(!ts)return false;
+  return (Date.now()-ts) < mins*60000;
+}
 let CUR_TAB="prod";
 document.querySelectorAll("#ptabs .t").forEach(el=>el.onclick=()=>{CUR_TAB=el.dataset.tab;document.querySelectorAll("#ptabs .t").forEach(x=>x.classList.toggle("on",x===el));renderPanel();});
 function renderPanel(){const b=document.getElementById("pbody");if(CUR_TAB==="prod")renderProdTab(b);else if(CUR_TAB==="cats")renderCatsTab(b);else if(CUR_TAB==="sections")renderSectionsTab(b);else if(CUR_TAB==="moments")renderMomentsTab(b);else if(CUR_TAB==="nav")renderNavTab(b);else if(CUR_TAB==="decor")renderDecorTab(b);else if(CUR_TAB==="switch")renderSwitchTab(b);else if(CUR_TAB==="points")renderPointsTab(b);else if(CUR_TAB==="agent")renderAgentTab(b);else if(CUR_TAB==="sharecard")renderShareCardTab(b);else if(CUR_TAB==="script")renderScriptTab(b);else renderSysTab(b);}
@@ -972,14 +994,12 @@ let SEL=[];
 function renderProdTab(b){
   b.innerHTML=`<div class="btn-row" style="margin-bottom:10px"><button class="btn primary sm" id="addProd">+ 新增产品</button>
     <button class="btn sm" id="pasteNew">📋 粘贴新建</button>
-    <button class="btn sm" id="importNew">🔗 链接抓取新建</button>
     <button class="btn sm" id="batchBtn">批量操作(<span id="selN">0</span>)</button></div>
     <div id="plist"></div>`;
   const list=STATE.products.slice().sort((a,b)=>(a.order||0)-(b.order||0));
   if(!list.length)b.insertAdjacentHTML("beforeend",`<div class="empty">还没有产品，点上方按钮添加。</div>`);
   b.querySelector("#addProd").onclick=()=>openForm(null);
   b.querySelector("#pasteNew").onclick=()=>{openForm(null);setTimeout(()=>doPasteFill(),0);};
-  b.querySelector("#importNew").onclick=()=>{openForm(null);setTimeout(()=>openImportModal(),0);};
   b.querySelector("#batchBtn").onclick=openBatch;
   const box=b.querySelector("#plist");
   list.forEach(p=>{
@@ -1044,8 +1064,9 @@ function openForm(p){
   // 分类/系列下拉
   const fc=document.getElementById("f_cat");fc.innerHTML=`<option value="">不选择</option>`+STATE.settings.categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join("");fc.value=p?p.cat||"":"";
   const fs=document.getElementById("f_series");fs.innerHTML=`<option value="">不选择</option>`+STATE.settings.series.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join("");fs.value=p?p.series||"":"";
-  const act=p?p.activity:"";const sel=document.getElementById("f_act");
-  if(act&&["爆款","秒杀","有活动","新品","推荐"].includes(act))sel.value=act;else if(act){sel.value="__custom__";fill("f_act_custom",act);document.getElementById("f_act_custom").classList.remove("hidden");}else sel.value="";
+  const act=p?p.activity:"";
+  if(act&&["爆款","秒杀","有活动","新品","推荐"].includes(act)){}else if(act){document.getElementById("f_act_custom").value=act;document.getElementById("f_act_custom").classList.remove("hidden");}
+  renderActChips(act);
   fill("f_desc_preview",p&&p.desc?plain(p.desc).slice(0,40)+"…":"");
   document.getElementById("f_video_name").textContent=p&&p.video?"已存在视频":"";
   document.getElementById("f_long_name").textContent=p&&p.longImage?"已存在长图":"";
@@ -1066,21 +1087,39 @@ function loadDraftIntoForm(){
   const fc=document.getElementById("f_cat");if(FORM.cat)fc.value=FORM.cat;const fs=document.getElementById("f_series");if(FORM.series)fs.value=FORM.series;
   document.getElementById("f_desc_preview").textContent=FORM.desc?plain(FORM.desc).slice(0,40)+"…":"";renderThumbs();
 }
-function saveDraft(){const dkey="draft_"+(FORM.id||"new");const snap={ts:Date.now(),form:{id:FORM.id,images:FORM.images,video:FORM.video,longImage:FORM.longImage,desc:FORM.desc,name:val("f_name"),brand:val("f_brand"),cat:val("f_cat"),series:val("f_series"),tags:val("f_tags"),stock:val("f_stock"),end:val("f_end"),buytxt:val("f_buytxt"),buylink:val("f_buylink"),order:val("f_order"),activity:document.getElementById("f_act").value,actcustom:val("f_act_custom"),shelf:document.getElementById("f_shelf").checked}};localStorage.setItem(dkey,JSON.stringify(snap));}
+function saveDraft(){const dkey="draft_"+(FORM.id||"new");const snap={ts:Date.now(),form:{id:FORM.id,images:FORM.images,video:FORM.video,longImage:FORM.longImage,desc:FORM.desc,name:val("f_name"),brand:val("f_brand"),cat:val("f_cat"),series:val("f_series"),tags:val("f_tags"),stock:val("f_stock"),end:val("f_end"),buytxt:val("f_buytxt"),buylink:val("f_buylink"),order:val("f_order"),activity:getActValue(),actcustom:val("f_act_custom"),shelf:document.getElementById("f_shelf").checked}};localStorage.setItem(dkey,JSON.stringify(snap));}
 function val(id){const el=document.getElementById(id);return el?el.value:"";}
 function renderThumbs(){const w=document.getElementById("f_thumbs");w.innerHTML=FORM.images.map((s,i)=>`<div class="th"><img src="${s}"><div class="x" data-i="${i}">×</div><div class="edit" data-i="${i}" style="position:absolute;bottom:1px;left:1px;width:18px;height:18px;background:rgba(0,0,0,.6);color:#fff;border-radius:3px;font-size:11px;display:flex;align-items:center;justify-content:center">✎</div></div>`).join("");
   w.querySelectorAll(".x").forEach(el=>el.onclick=()=>{FORM.images.splice(+el.dataset.i,1);renderThumbs();});
   w.querySelectorAll(".edit").forEach(el=>el.onclick=()=>openImageEditor(FORM.images[+el.dataset.i],(out)=>{FORM.images[+el.dataset.i]=out;renderThumbs();}));}
-document.getElementById("f_act").onchange=e=>document.getElementById("f_act_custom").classList.toggle("hidden",e.target.value!=="__custom__");
+document.getElementById("f_act_custom").addEventListener("input",()=>{renderActChips("__custom__");});
+const ACT_PRESETS=['爆款','秒杀','有活动','新品','推荐'];
+function renderActChips(cur){
+  const box=document.getElementById('f_act_chips');
+  const customEl=document.getElementById('f_act_custom');
+  const sel=(cur===undefined||cur===null)?'':String(cur);
+  box.innerHTML=ACT_PRESETS.map(a=>`<button type="button" class="chip ${sel===a?'on':''}" data-act="${a}">${a}</button>`).join('')+`<button type="button" class="chip ${sel==='__custom__'?'on':''}" data-act="__custom__">自定义…</button>`;
+  box.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    if(c.dataset.act==='__custom__'){customEl.classList.remove('hidden');customEl.focus();renderActChips('__custom__');}
+    else{customEl.classList.add('hidden');customEl.value='';renderActChips(c.dataset.act);}
+  });
+}
+function getActValue(){
+  const customEl=document.getElementById('f_act_custom');
+  const onChip=document.querySelector('#f_act_chips .chip.on');
+  if(onChip&&onChip.dataset.act==='__custom__')return customEl.value.trim();
+  if(onChip)return onChip.dataset.act;
+  return '';
+}
 document.getElementById("f_desc_edit").onclick=()=>openRichEditor(FORM.desc||"",html=>{FORM.desc=html;document.getElementById("f_desc_preview").textContent=plain(html).slice(0,40)+"…";});
 document.getElementById("f_imgs").onchange=async e=>{for(const f of Array.from(e.target.files||[]))if(f.type.startsWith("image/"))FORM.images.push(await fileToCompressedDataURL(f));renderThumbs();toast("图片已加入（可点✎在线编辑）");};
 document.getElementById("f_video").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;if(f.size>30*1024*1024){toast("视频超过30MB，建议压缩");return;}FORM.video=await fileToDataURL(f);document.getElementById("f_video_name").textContent=f.name;};
 document.getElementById("f_long").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;FORM.longImage=await fileToCompressedDataURL(f,1600,0.85);document.getElementById("f_long_name").textContent=f.name;};
 document.getElementById("formCancel").onclick=()=>{document.getElementById("formModal").classList.add("hidden");};
+document.getElementById("formPreview").onclick=()=>previewProduct();
 document.getElementById("formSave").onclick=async()=>{
   const name=val("f_name").trim();
-  const actSel=document.getElementById("f_act").value;
-  const act=actSel==="__custom__"?val("f_act_custom").trim():actSel;
+  const act=getActValue();
   const stockRaw=val("f_stock").trim();
   const obj={name:name||"未命名产品",brand:val("f_brand").trim(),cat:val("f_cat")||"",series:val("f_series")||"",
     tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),activity:act||"",desc:FORM.desc,
@@ -1095,6 +1134,38 @@ document.getElementById("formSave").onclick=async()=>{
   document.getElementById("formModal").classList.add("hidden");document.getElementById("mask").classList.add("hidden");
   renderPanel();renderHome();toast("已保存");
 };
+/* --- 新增商品：前台效果预览（与客户看到的详情页样式完全一致） --- */
+function previewProduct(){
+  const obj={
+    name:val("f_name").trim()||"未命名产品",brand:val("f_brand").trim(),
+    cat:val("f_cat")||"",series:val("f_series")||"",
+    tags:val("f_tags").split(/[,，]/).map(t=>t.trim()).filter(Boolean),
+    activity:getActValue(),desc:FORM.desc,images:FORM.images,video:FORM.video,longImage:FORM.longImage,
+    stock:(val("f_stock").trim()===""?null:parseInt(val("f_stock"))),endTime:val("f_end")||"",
+    buyText:val("f_buytxt").trim()||"去购买",buyLink:val("f_buylink").trim(),onShelf:document.getElementById("f_shelf").checked
+  };
+  const media=(obj.images||[]).slice();
+  if(STATE.settings.switches.video&&obj.video)media.push("__video__");
+  const cur=media[0]||"";
+  const slide=cur==="__video__"?`<video src="${obj.video}" controls style="max-width:100%"></video>`:(cur?`<img src="${cur}" style="width:100%;display:block">`:`<div style="padding:48px;text-align:center;color:#bbb">未添加图片</div>`);
+  const act=(STATE.settings.switches.activityTag&&obj.activity)?`<span class="badge" style="position:static;display:inline-block;margin-bottom:8px">${esc(obj.activity)}</span>`:"";
+  const tags=(obj.tags||[]).map(t=>`<span class="et">#${esc(t)}</span>`).join("");
+  let stock="";if(obj.stock!==null&&obj.stock!==""){stock=`<div class="stock">库存：<span class="${obj.stock>0?"ok":"no"}">${obj.stock>0?obj.stock+" 件（有货）":"缺货"}</span></div>`;}
+  let end="";if(obj.endTime){const diff=new Date(obj.endTime).getTime()-Date.now();if(diff>0){const d=Math.floor(diff/86400000),h=Math.floor(diff%86400000/3600000);end=`<div class="stock">活动倒计时：<span class="ok">${d}天${h}时</span></div>`;}}
+  const long=STATE.settings.switches.longImage&&obj.longImage?`<div class="longimg"><img src="${obj.longImage}" style="width:100%;display:block"></div>`:"";
+  const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="box" style="max-width:480px"><h3>📱 前台效果预览</h3>
+    <div style="border:1px solid var(--c-line);border-radius:10px;overflow:hidden;background:#fff;margin-bottom:12px">
+      <div class="slider" style="position:relative;background:#f3f3f3">${slide}</div>
+      <div style="padding:12px">
+        <div class="d-name">${esc(obj.name)}</div>${obj.brand?`<div class="d-brand">品牌：${esc(obj.brand)}</div>`:""}
+        ${act}<div class="eff-tags">${tags}</div>${stock}${end}
+        <div class="d-desc">${obj.desc||'<span style="color:#bbb">暂无描述</span>'}</div>${long}
+      </div>
+    </div>
+    <div class="btn-row" style="justify-content:flex-end;margin:0"><button class="btn" id="pvClose">关闭</button></div></div>`;
+  document.body.appendChild(m);
+  m.querySelector("#pvClose").onclick=()=>m.remove();
+}
 // 退出前自动存草稿（表单打开时）
 setInterval(()=>{if(!document.getElementById("formModal").classList.contains("hidden"))saveDraft();},4000);
 
@@ -1140,7 +1211,7 @@ function parseProductText(text){
   if(!r.buyLink){const all=raw.match(/https?:\/\/[^\s"'<>]*/i);if(all)r.buyLink=all[0];}
 
   /* ---- 价格（新增） ---- */
-  const priceMatch=raw.match(/[￥¥]\s*(\d+\.?\d*)\s*元?|[价格售价]\s*[:：]\s*(\d+\.?\d*)|(\d+)\s*元\s*(?:\/)?/);
+  const priceMatch=raw.match(/[￥¥]\s*(\d+\.?\d*)\s*元?|[价格售价]\s*[:：]\s*[￥¥]?\s*(\d+\.?\d*)|(\d+)\s*元\s*(?:\/)?/);
   if(priceMatch){const p=priceMatch[1]||priceMatch[2]||priceMatch[3];if(p)r.price=p;}
 
   /* ---- 分享信息 ---- */
@@ -1177,7 +1248,7 @@ function applyParsed(r){
   if(r.cat){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(c){return c.name&&(c.name===r.cat||c.name.indexOf(r.cat)>=0||r.cat.indexOf(c.name)>=0);});if(c){fc.value=c.id;filled.push('分类');}}
   if(r.series){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(s){return s.name&&(s.name===r.series||s.name.indexOf(r.series)>=0||r.series.indexOf(s.name)>=0);});if(s){fs.value=s.id;filled.push('系列');}}
   if(r.tags){fill('f_tags',r.tags.join(','));filled.push('功效标签');}
-  if(r.activity){const sel=document.getElementById('f_act');const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===r.activity||r.activity.indexOf(k)>=0;});if(hit){sel.value=hit;filled.push('活动标签');}else{sel.value='__custom__';fill('f_act_custom',r.activity);document.getElementById('f_act_custom').classList.remove('hidden');filled.push('活动标签');}}
+  if(r.activity){const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===r.activity||r.activity.indexOf(k)>=0;});if(hit){renderActChips(hit);filled.push('活动标签');}else{document.getElementById('f_act_custom').value=r.activity;document.getElementById('f_act_custom').classList.remove('hidden');renderActChips('__custom__');filled.push('活动标签');}}
   if(r.stock!==undefined&&r.stock!==null){fill('f_stock',r.stock);filled.push('库存');}
   if(r.endTime){fill('f_end',r.endTime);filled.push('结束时间');}
   if(r.buyText){fill('f_buytxt',r.buyText);filled.push('按钮文字');}
@@ -1194,7 +1265,7 @@ async function doPasteFill(){
   let text=null;
   try{if(navigator.clipboard&&navigator.clipboard.readText)text=await navigator.clipboard.readText();}catch(e){text=null;}
   if(!text||!text.trim()){openPasteModal();return;}
-  if(isPureUrl(text.trim())){const im=openImportModal();const ta=im.querySelector('#imfInput');ta.value=text.trim();const st=im.querySelector('#imfStatus');if(st)st.textContent='检测到是商品链接，点「识别」即可自动抓取（抓取失败会自动改用文案解析）。';return;}
+  // 链接抓取功能已移除：纯链接也按文案解析（自动提取其中可识别的字段，如购买链接）
   const filled=applyParsed(parseProductText(text));
   const hint=document.getElementById('pasteHint');
   if(filled.length){toast('已自动填入：'+filled.join('、'));if(hint)hint.textContent='已识别 '+filled.length+' 项';}
@@ -1211,260 +1282,7 @@ function openPasteModal(){
   m.querySelector('#pmOk').onclick=function(){const txt=ta.value;m.remove();const filled=applyParsed(parseProductText(txt));toast(filled.length?('已自动填入：'+filled.join('、')):'未识别到字段');};
 }
 document.getElementById('pasteFillBtn').onclick=doPasteFill;
-document.getElementById('importBtn').onclick=openImportFromForm;
 
-/* --- 从链接抓取产品 + 可勾选导入预览 --- */
-function unescapeHtml(s){if(!s)return s;const d=document.createElement('div');d.innerHTML=String(s).replace(/<\/?[^>]*>/g,'');return (d.textContent||String(s)).replace(/\s+/g,' ').trim();}
-function isProductUrl(s){return /https?:\/\/[^\s"'<>]*?(taobao\.com|tmall\.com|1688\.com|alibaba\.com|yangkeduo\.com|pinduoduo\.com)/i.test(s);}
-function isPureUrl(s){return /^\s*https?:\/\/\S+\s*$/.test(s);}
-function firstUrl(s){const m=String(s||'').match(/https?:\/\/[^\s"'<>]+/i);return m?m[0]:null;}
-function looksStructured(t){if(/[\u4e00-\u9fa5]{2,}[:：]/.test(String(t||'')))return true;if(/^(product|name|brand|title|category|tags?|description)[:：]/im.test(String(t||'').trim()))return true;return false;}
-const IMPORT_TARGETS=[
- {v:'f_name',t:'标题'},
- {v:'f_brand',t:'品牌'},
- {v:'f_cat',t:'分类'},
- {v:'f_series',t:'系列'},
- {v:'f_tags',t:'功效标签'},
- {v:'f_act',t:'活动标签'},
- {v:'f_stock',t:'库存'},
- {v:'f_end',t:'结束时间'},
- {v:'f_buytxt',t:'购买按钮文字'},
- {v:'f_buylink',t:'购买链接'},
- {v:'f_sharetitle',t:'分享标题'},
- {v:'f_sharedesc',t:'分享描述'},
- {v:'f_sharethumb',t:'分享缩略图(URL)'},
- {v:'desc',t:'产品描述'},
- {v:'',t:'不导入'}
-];
-function defaultTarget(label){
-  if(/分享标题/.test(label))return 'f_sharetitle';
-  if(/分享描述|分享说明/.test(label))return 'f_sharedesc';
-  if(/标题|名称|品名/.test(label))return 'f_name';
-  if(/价格|售价/.test(label))return '';
-  if(/品牌/.test(label))return 'f_brand';
-  if(/分类/.test(label))return 'f_cat';
-  if(/系列/.test(label))return 'f_series';
-  if(/功效/.test(label))return 'f_tags';
-  if(/活动/.test(label))return 'f_act';
-  if(/标签|卖点|特点/.test(label))return 'f_tags';
-  if(/库存/.test(label))return 'f_stock';
-  if(/结束|截止|到期/.test(label))return 'f_end';
-  if(/购买文字|按钮文字/.test(label))return 'f_buytxt';
-  if(/链接|购买|下单/.test(label))return 'f_buylink';
-  if(/缩略|主图|图片|封面/.test(label))return 'f_sharethumb';
-  if(/描述|详情|介绍|说明|文案|正文/.test(label))return 'desc';
-  return '';
-}
-function objectToFields(r){
-  const map=[['name','标题'],['price','价格'],['brand','品牌'],['cat','分类'],['series','系列'],['tags','功效标签'],['activity','活动标签'],['stock','库存'],['endTime','结束时间'],['buyText','购买按钮文字'],['buyLink','购买链接'],['shareTitle','分享标题'],['shareDesc','分享描述'],['desc','产品描述']];
-  const out=[];
-  map.forEach(function(kv){let v=r[kv[0]];if(v===undefined||v===null||v==='')return;if(Array.isArray(v))v=v.join(', ');out.push({label:kv[1],value:String(v),target:defaultTarget(kv[1])});});
-  return out;
-}
-function getMeta(html,prop){
-  let m=html.match(new RegExp('<meta[^>]*?(property|name)\\s*=\\s*["\']'+prop+'["\'][^>]*?content\\s*=\\s*["\']([^"\']*)["\']','i'));
-  if(m)return m[2];
-  m=html.match(new RegExp('<meta[^>]*?content\\s*=\\s*["\']([^"\']*)["\'][^>]*?(property|name)\\s*=\\s*["\']'+prop+'["\']','i'));
-  if(m)return m[1];
-  return null;
-}
-function parseProductHtml(html,url){
-  const fields=[];
-  let title=getMeta(html,'og:title');
-  if(!title){const m=html.match(/<title>([^<]*)<\/title>/i);if(m){title=m[1].replace(/\s*[-–|｜]\s*(淘宝|天猫|阿里巴巴|1688|拼多多|PDD|Taobao|Tmall|Alibaba|Pinduoduo).*$/i,'').trim();}}
-  if(!title){const m=html.match(/goodsName["']?\s*:\s*["']([^"']+)["']/i);if(m)title=m[1];}
-  if(title)fields.push({label:'标题',value:unescapeHtml(title),target:'f_name'});
-  const pm=html.match(/"price"\s*:\s*"?(\d+\.?\d*)"?(?:\s*[,}])/i)||html.match(/"minGroupPrice"\s*:\s*"?(\d+)"/i)||html.match(/"minNormalPrice"\s*:\s*"?(\d+)"/i)||html.match(/￥\s*(\d+\.?\d*)/)||html.match(/class="tb-rmb-num"[^>]*>([\d.]+)/i)||html.match(/offerPrice["']?\s*:\s*"?(\d+\.?\d*)/i);
-  if(pm){let p=pm[1];if(/^\d+$/.test(p)&&Number(p)>1000)p=(Number(p)/100).toFixed(2).replace(/\.00$/,'');fields.push({label:'价格',value:p,target:''});}
-  let img=getMeta(html,'og:image');if(img)fields.push({label:'主图',value:img,target:'f_sharethumb'});
-  let desc=getMeta(html,'og:description')||getMeta(html,'description');if(desc)fields.push({label:'产品描述',value:unescapeHtml(desc),target:'desc'});
-  let brand=getMeta(html,'og:brand');if(brand)fields.push({label:'品牌',value:unescapeHtml(brand),target:'f_brand'});
-  return fields;
-}
-async function fetchProductPage(url){
-  const PROXIES=[u=>'https://api.codetabs.com/v1/proxy/?quest='+encodeURIComponent(u),u=>'https://api.allorigins.win/raw?url='+encodeURIComponent(u),u=>'https://corsproxy.io/?url='+encodeURIComponent(u),u=>'https://thingproxy.freeboard.io/fetch/'+u];
-  for(let i=0;i<PROXIES.length;i++){
-    try{
-      const ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
-      const to=ctrl?setTimeout(function(){ctrl.abort();},12000):null;
-      const r=await fetch(PROXIES[i](url),{mode:'cors',signal:ctrl?ctrl.signal:undefined});
-      if(to)clearTimeout(to);
-      if(r&&r.ok){const t=await r.text();if(t&&t.length>500)return t;}
-    }catch(e){}
-  }
-  return null;
-}
-function importByTarget(target,value){
-  value=(value||'').trim();if(!value||!target)return;
-  if(target==='desc'){FORM.desc=value;const pv=document.getElementById('f_desc_preview');if(pv)pv.textContent=plain(value).slice(0,40)+(value.length>40?'…':'');return;}
-  if(target==='f_cat'){const fc=document.getElementById('f_cat');const c=(STATE.settings.categories||[]).find(function(x){return x.name&&(x.name===value||x.name.indexOf(value)>=0||value.indexOf(x.name)>=0);});fc.value=c?c.id:'';return;}
-  if(target==='f_series'){const fs=document.getElementById('f_series');const s=(STATE.settings.series||[]).find(function(x){return x.name&&(x.name===value||x.name.indexOf(value)>=0||value.indexOf(x.name)>=0);});fs.value=s?s.id:'';return;}
-  if(target==='f_act'){const sel=document.getElementById('f_act');const known=['爆款','秒杀','有活动','新品','推荐'];const hit=known.find(function(k){return k===value||value.indexOf(k)>=0;});const cu=document.getElementById('f_act_custom');if(hit){sel.value=hit;cu.classList.add('hidden');}else{sel.value='__custom__';cu.value=value;cu.classList.remove('hidden');}return;}
-  if(target==='f_end'){const dt=parseDateTime(value);fill(target,dt||value);return;}
-  if(target==='f_stock'){const m=value.match(/\d+/);if(m)fill(target,m[0]);return;}
-  const el=document.getElementById(target);if(el)el.value=value;
-}
-let _importModal=null;
-function openImportModal(){
-  if(_importModal)_importModal.remove();
-  const m=document.createElement('div');m.className='modal';m.id='importModal';
-  m.innerHTML='<div class="box" style="max-width:560px">'+
-    '<h3 style="margin:0 0 12px;font-size:17px;display:flex;align-items:center;gap:8px">🔗 <span>智能识别产品信息</span></h3>'+
-    '<div class="help" id="imfStatus" style="margin-bottom:10px">粘贴<b>商品链接</b>或<b>商品文案</b>，点击「开始识别」自动提取字段。</div>'+
-    /* 步骤1：输入区 */
-    '<textarea id="imfInput" class="imf-input" placeholder="支持以下任意格式：&#10;&#10;① 商品链接（淘宝/天猫/1688/拼多多等）&#10;② 带标签的文案：&#10;   产品名称：xxx&#10;   品牌：xxx&#10;   描述：...&#10;③ 任意商品文字（自动智能识别）"></textarea>'+
-    '<div class="imf-step1-btns"><button class="btn" id="imfCancel">取消</button><button class="btn primary" id="imfRecognize">🔍 开始识别</button></div>'+
-    /* 步骤分隔（识别后显示） */
-    '<div id="imfDivider" class="imf-divider hidden"></div>'+
-    /* 步骤2：结果区（识别后显示） */
-    '<div id="imfResultArea" class="hidden">'+
-      '<div class="imf-result-head"><span id="imfResultCount">已识别 0 项字段</span><button id="imfToggleInput">✏️ 修改输入</button></div>'+
-      '<div id="imfRows" class="imf-rows"></div>'+
-      '<div style="margin-top:8px;text-align:right"><button class="btn sm" id="imfAdd" style="font-size:13px">+ 添加自定义字段</button></div>'+
-      /* 底部操作栏 */
-      '<div class="imf-actions"><button class="btn" id="imfClose">关闭</button><button class="btn primary" id="imfImport">✅ 确认导入勾选项</button></div>'+
-    '</div>'+
-    /* 折叠的输入区（点"修改输入"展开） */
-    '<div id="imfCollapsedInput" class="imf-input-collapsed"></div>'+
-  '</div>';
-  document.body.appendChild(m);_importModal=m;
-  const ta=m.querySelector('#imfInput');
-  ta.addEventListener('paste',function(){setTimeout(function(){const s=m.querySelector('#imfStatus');if(s&&!ta.value.trim())s.textContent='✅ 已粘贴内容，请点击「开始识别」';},50);},false);
-  setTimeout(function(){ta.focus();},150);
-  ta.addEventListener('click',function(){ta.focus();},false);
-  /* 按钮：取消 */
-  m.querySelector('#imfCancel').onclick=function(){m.remove();_importModal=null;};
-  /* 按钮：开始识别 */
-  m.querySelector('#imfRecognize').onclick=function(){runRecognition(m);};
-  /* 按钮：关闭（结果区） */
-  m.querySelector('#imfClose').onclick=function(){m.remove();_importModal=null;};
-  /* 按钮：添加字段 */
-  m.querySelector('#imfAdd').onclick=function(){
-    const box=m.querySelector('#imfRows');
-    box.appendChild(makeRow({label:'自定义字段',value:'',target:''}));
-    updateResultCount(m);
-  };
-  /* 按钮：确认导入 */
-  m.querySelector('#imfImport').onclick=function(){gatherAndImport(m);};
-  /* 按钮：切换展开/折叠输入区 */
-  m.querySelector('#imfToggleInput').onclick=function(){
-    const ci=m.querySelector('#imfCollapsedInput');
-    const ta2=m.querySelector('#imfInput');
-    if(ci.classList.contains('show')){ci.classList.remove('show');ci.innerHTML='';this.textContent='✏️ 修改输入';}
-    else{ci.classList.add('show');ci.innerHTML=ta2.outerHTML;this.textContent='▲ 收起输入';const nta=ci.querySelector('textarea');if(nta)nta.focus();}
-  };
-  return m;
-}
-/* 更新识别结果计数 */
-function updateResultCount(m){
-  const rows=m.querySelectorAll('.imf-row');
-  const checked=m.querySelectorAll('.imf-row .imf-cb:checked');
-  const cntEl=m.querySelector('#imfResultCount');
-  if(cntEl)cntEl.textContent='已识别 '+rows.length+' 项字段（已勾选 '+checked.length+' 项）';
-}
-async function runRecognition(m){
-  const ta=m.querySelector('#imfInput');const text=ta.value.trim();
-  const status=m.querySelector('#imfStatus');
-  const recBtn=m.querySelector('#imfRecognize');
-  if(!text){status.innerHTML='⚠️ <b>请先粘贴</b>商品链接或文案，再点「开始识别」。';ta.focus();return;}
-  /* 重置按钮状态（支持重试） */
-  recBtn.disabled=false;recBtn.style.display='';recBtn.textContent='⏳ 识别中…';
-  status.innerHTML='🔍 正在分析内容，请稍候…';
-  try{
-    const url=firstUrl(text);
-    const stripped=text.replace(url||'','').replace(/\s+/g,'');
-    const looksDesc=text.split(/\r?\n/).length>=2||/价格|￥|¥|标题|名称|品牌|功效|卖点|描述|详情|规格|库存|券|促销|参数|材质|产地|颜色|尺寸|重量|店铺/i.test(text)||stripped.length>15;
-    let fields=[];
-    /* 尝试链接抓取 */
-    if(url&&!looksDesc&&!looksStructured(text)){
-      const isPd=/yangkeduo\.com|pinduoduo\.com/i.test(url);
-      const kind=isPd?'拼多多':(isProductUrl(url)?'电商':'链接');
-      status.textContent='正在抓取 '+kind+' 页面…';
-      const html=await fetchProductPage(url);
-      if(html){
-        const pf=parseProductHtml(html,url);
-        if(pf.length){fields=pf;status.textContent='✅ 从 '+kind+' 链接抓取成功';}
-      }
-      if(!fields.length)status.textContent='⚠️ 链接抓取失败，已自动切换为文案解析模式';
-    }
-    /* 文案解析（兜底或首选） */
-    if(!fields.length){
-      status.textContent='📝 正在解析文案字段…';
-      const r=parseProductText(text);fields=objectToFields(r);
-      /* 排除纯链接被当成标题的无效情况 */
-      const onlyUrlTitle=fields.length===1&&fields[0].target==='f_name'&&/^https?:\/\//i.test(fields[0].value);
-      if(!fields.length||onlyUrlTitle){
-        status.innerHTML='❌ <b>未识别到有效字段</b><br><br>建议：① 复制商品页面的<b>文字介绍</b>（非链接）<br>② 或使用带标签格式：<code>产品名称：xxx</code><br>③ 也可点下方「+添加自定义字段」手动填写';
-        recBtn.disabled=false;recBtn.textContent='🔍 开始识别';recBtn.style.display='';return;
-      }
-      status.textContent='✅ 文案解析完成，已识别 '+fields.length+' 个字段';
-    }
-    /* 显示结果区（步骤2） */
-    showStep2(m,fields);
-  }catch(e){
-    status.innerHTML='❌ 识别过程出错：'+(e.message||'未知错误')+'，请重试';
-    recBtn.disabled=false;recBtn.textContent='🔍 开始识别';
-  }
-}
-/* 显示步骤2：结果区 */
-function showStep2(m,fields){
-  const divider=m.querySelector('#imfDivider');
-  const resultArea=m.querySelector('#imfResultArea');
-  const recBtn=m.querySelector('#imfRecognize');
-  const cancelBtn=m.querySelector('#imfCancel');
-  /* 隐藏步骤1按钮，显示分隔和结果区 */
-  if(recBtn){recBtn.style.display='none';}
-  if(cancelBtn){cancelBtn.style.display='none';}
-  divider.classList.remove('hidden');
-  resultArea.classList.remove('hidden');
-  /* 渲染行 */
-  renderImportRows(m,fields);
-  updateResultCount(m);
-}
-function renderImportRows(m,fields){
-  const box=m.querySelector('#imfRows');box.innerHTML='';
-  if(!fields.length){box.innerHTML='<div style="text-align:center;padding:24px 0;color:var(--c-sub);font-size:14px">📭 没有可导入的字段</div>';return;}
-  fields.forEach(function(f){box.appendChild(makeRow(f));});
-}
-function makeRow(f){
-  const row=document.createElement('div');row.className='imf-row';
-  /* 左侧勾选框 */
-  const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.className='imf-cb';
-  cb.addEventListener('change',function(){updateResultCount(row.closest('.modal'));});
-  /* 中间：标签(只读显示) + 值(可编辑) */
-  const mid=document.createElement('div');mid.className='imf-mid';
-  const lab=document.createElement('div');lab.className='imf-lab';lab.textContent=f.label||'字段';
-  const val=document.createElement('textarea');val.value=f.value||'';val.className='imf-val';
-  val.placeholder='在此编辑字段内容…';
-  /* 按内容自动撑高 */
-  const txt=f.value||'';const nl=txt.split('\n').length;
-  const cjk=(txt.match(/[\u4e00-\u9fa5]/g)||[]).length;const nonCjk=txt.length-cjk;
-  const est=Math.max(2,Math.min(20,nl,Math.ceil(cjk/18)+Math.ceil(nonCjk/40)));
-  val.rows=est;
-  mid.appendChild(lab);mid.appendChild(val);
-  /* 右侧：目标下拉 + 删除 */
-  const right=document.createElement('div');right.className='imf-right';
-  const sel=document.createElement('select');
-  IMPORT_TARGETS.forEach(function(t){const o=document.createElement('option');o.value=t.v;o.textContent=t.t;if(t.v===(f.target||''))o.selected=true;sel.appendChild(o);});
-  sel.className='imf-sel';
-  sel.addEventListener('change',function(){updateResultCount(row.closest('.modal'));});
-  const del=document.createElement('button');del.textContent='✕';del.type='button';del.className='btn sm imf-del';
-  del.title='删除此字段';
-  del.onclick=function(){row.remove();updateResultCount(row.closest('.modal'));};
-  right.appendChild(sel);right.appendChild(del);
-  row.appendChild(cb);row.appendChild(mid);row.appendChild(right);
-  row._data={cb:cb,val:val,sel:sel};
-  return row;
-}
-function gatherAndImport(m){
-  const box=m.querySelector('#imfRows');const rows=Array.from(box.querySelectorAll('.imf-row'));
-  let n=0;
-  rows.forEach(function(row){const d=row._data;if(!d.cb.checked)return;const target=d.sel.value;if(!target)return;importByTarget(target,d.val.value);n++;});
-  m.remove();_importModal=null;
-  toast('✅ 已导入 '+n+' 个字段到表单');
-  const hint=document.getElementById('pasteHint');if(hint)hint.textContent='已导入 '+n+' 项';
-}
-function openImportFromForm(){const fm=document.getElementById('formModal');if(fm.classList.contains('hidden'))openForm(null);openImportModal();}
 
 /* --- 富文本编辑器 --- */
 function openRichEditor(initial,onSave){
@@ -1637,13 +1455,25 @@ function openSecForm(s){
 }
 
 /* --- 底部导航编辑 --- */
+const NAV_TEMPLATES=[
+  {type:'home',name:'产品展示',icon:'🛍️'},
+  {type:'moments',name:'朋友圈动态',icon:'💬'},
+  {type:'mall',name:'积分商城',icon:'🎁'},
+  {type:'profile',name:'个人中心',icon:'👤'},
+  {type:'tutorial',name:'教程视频',icon:'🎬'},
+  {type:'cats',name:'分类导购',icon:'📑'},
+  {type:'series',name:'系列专区',icon:'🧴'},
+  {type:'consult',name:'联系客服',icon:'📞'},
+  {type:'share',name:'分享有礼',icon:'🔗'},
+  {type:'custom',name:'自定义页',icon:'⭐'}
+];
 function renderNavTab(b){
   const n=STATE.settings.nav;
   b.innerHTML=`<div class="field"><label>导航样式</label><select id="nv_style"><option value="bottom" ${n.style==="bottom"?"selected":""}>经典底部Tab</option><option value="side" ${n.style==="side"?"selected":""}>侧边栏</option></select></div>
     <div class="field btn-row"><div style="flex:1"><label>栏背景色</label><input type="color" id="nv_bar" value="${n.barColor}"></div><div style="flex:1"><label>选中色</label><input type="color" id="nv_act" value="${n.activeColor}"></div><div style="flex:1"><label>未选中色</label><input type="color" id="nv_inact" value="${n.inactiveColor}"></div></div>
     <hr class="sep"><button class="btn sm primary" id="nv_add">+ 添加板块</button>
     <div id="nvList" style="margin-top:10px"></div>
-    <div class="help">拖动排序、隐藏或删除板块；自定义板块可选图标与跳转内容（home/moments/mall/profile 为内置页）。</div>`;
+    <div class="help">点「+ 添加板块」直接选择模块（无需手输）；点「编辑」可改名、改图标。</div>`;
   const box=b.querySelector("#nvList");n.items.forEach((it,i)=>{const d=document.createElement("div");d.className="item-row draggable";d.draggable=true;d.dataset.id=it.id;
     d.innerHTML=`<span style="font-size:18px">${it.icon||"•"}</span><div class="pn">${esc(it.name)}<br><span style="font-size:12px;color:var(--c-sub)">${it.type}</span></div>
       <button class="btn sm" data-e="${it.id}">编辑</button><button class="btn sm danger" data-d="${it.id}">删</button><button class="btn sm" data-h="${it.id}">${it.hidden?"显示":"隐藏"}</button>`;
@@ -1651,8 +1481,26 @@ function renderNavTab(b){
   bindListDnD(box,n.items);
   b.querySelector("#nv_style").onchange=async e=>{n.style=e.target.value;await Store.saveAll();applyTheme();renderNav();renderHome();};
   ["nv_bar","nv_act","nv_inact"].forEach(id=>b.querySelector("#"+id).oninput=async e=>{if(id==="nv_bar")n.barColor=e.target.value;if(id==="nv_act")n.activeColor=e.target.value;if(id==="nv_inact")n.inactiveColor=e.target.value;applyTheme();renderNav();});
-  b.querySelector("#nv_add").onclick=()=>{const name=prompt("板块名称：");if(!name)return;const icon=prompt("图标(emoji)：","⭐")||"⭐";const type=prompt("跳转类型(home/moments/mall/profile 或自定义key)：","profile");n.items.push({id:uid(),name,icon,type});Store.saveAll().then(()=>{renderPanel();renderNav();renderHome();});};
-  box.querySelectorAll("[data-e]").forEach(x=>x.onclick=()=>{const it=n.items.find(i=>i.id===x.dataset.e);const name=prompt("名称：",it.name);if(name){it.name=name;it.icon=prompt("图标：",it.icon)||it.icon;Store.saveAll().then(()=>{renderPanel();renderNav();});}});
+  b.querySelector("#nv_add").onclick=()=>{
+    const m=document.createElement("div");m.className="modal";
+    m.innerHTML='<div class="box" style="max-width:420px"><h3>选择要添加的模块</h3><div id="nvTpl" class="chips"></div><div class="btn-row" style="justify-content:flex-end;margin-top:10px"><button class="btn" id="nvTplClose">取消</button></div></div>';
+    document.body.appendChild(m);
+    const tp=m.querySelector('#nvTpl');
+    tp.innerHTML=NAV_TEMPLATES.map(t=>`<button type="button" class="chip" data-t="${t.type}">${t.icon} ${t.name}</button>`).join('');
+    tp.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{const t=NAV_TEMPLATES.find(x=>x.type===c.dataset.t);n.items.push({id:uid(),name:t.name,icon:t.icon,type:t.type});Store.saveAll().then(()=>{m.remove();renderPanel();renderNav();renderHome();});});
+    m.querySelector('#nvTplClose').onclick=()=>m.remove();
+  };
+  box.querySelectorAll("[data-e]").forEach(x=>x.onclick=()=>{
+    const it=n.items.find(i=>i.id===x.dataset.e);
+    const m=document.createElement("div");m.className="modal";
+    m.innerHTML=`<div class="box" style="max-width:420px"><h3>编辑板块</h3>
+      <div class="field"><label>板块名称</label><input id="nvName" value="${esc(it.name)}"></div>
+      <div class="field"><label>图标（emoji）</label><input id="nvIcon" value="${esc(it.icon||"")}"></div>
+      <div class="btn-row" style="justify-content:flex-end;margin-top:8px"><button class="btn" id="nvEditCancel">取消</button><button class="btn primary" id="nvEditSave">保存</button></div></div>`;
+    document.body.appendChild(m);
+    m.querySelector('#nvEditCancel').onclick=()=>m.remove();
+    m.querySelector('#nvEditSave').onclick=async()=>{const nm=m.querySelector('#nvName').value.trim();if(nm){it.name=nm;}it.icon=m.querySelector('#nvIcon').value.trim()||it.icon;await Store.saveAll();m.remove();renderPanel();renderNav();renderHome();};
+  });
   box.querySelectorAll("[data-d]").forEach(x=>x.onclick=async()=>{if(!confirm("删除板块？"))return;n.items=n.items.filter(i=>i.id!==x.dataset.d);await Store.saveAll();renderPanel();renderNav();});
   box.querySelectorAll("[data-h]").forEach(x=>x.onclick=async()=>{const it=n.items.find(i=>i.id===x.dataset.e);if(it){it.hidden=!it.hidden;await Store.saveAll();renderPanel();renderNav();}});
 }
@@ -1714,12 +1562,15 @@ function renderSwitchTab(b){
 function renderSysTab(b){
   const s=STATE.settings;const cloud=s.supabase;const idstat=STATE.identity||{};
   b.innerHTML=`<div class="field"><label>修改管理密码</label><input id="set_pwd" type="password" placeholder="输入新密码"><div class="btn-row" style="margin-top:8px"><button class="btn primary sm" id="setPwdBtn">更新密码</button></div></div>
+    <hr class="sep"><div class="field"><label>后台登录免验证时长</label><select id="set_login_min"><option value="0">关闭（每次都重登）</option><option value="60">1 小时</option><option value="120">2 小时</option></select><div class="help">在设定时间内回到后台、刷新页面都无需重新输入密码；超时或选"关闭"才需再登。</div></div>
     <hr class="sep"><div class="field"><label>云端配置（Supabase 免费 · 跨设备）</label><input id="sb_url" placeholder="Project URL" value="${esc(cloud.url)}"><input id="sb_key" placeholder="anon public key" value="${esc(cloud.key)}" style="margin-top:8px"><div class="btn-row" style="margin-top:8px"><button class="btn sm ${cloud.enabled?"":"primary"}" id="sbToggle">${cloud.enabled?"已启用云端 · 点此关闭":"启用云端"}</button></div>
     <div class="help">supabase.com 免费项目 → 建表：<br>create table app_state ( id text primary key, value jsonb );<br>开启 RLS 后加允许 anon 读写的 policy。</div></div>
     <hr class="sep"><div class="field"><label>数据导出</label><button class="btn sm" id="exportBtn">导出 products.json</button></div>
     <hr class="sep"><div class="field"><label>本机身份</label><div class="stat"><div class="s"><b>${esc(idstat.id||"-")}</b><span>ID</span></div><div class="s"><b>${(idstat.collections||[]).length}</b><span>收藏</span></div><div class="s"><b>${(idstat.history||[]).length}</b><span>浏览</span></div><div class="s"><b>${idstat.points||0}</b><span>积分</span></div></div></div>
     <hr class="sep"><div>当前模式：<span class="mode-tag ${cloud.enabled?"cloud":""}">${cloud.enabled?"云端模式":"本地模式"}</span></div>`;
   b.querySelector("#setPwdBtn").onclick=async()=>{const v=b.querySelector("#set_pwd").value;if(!v){toast("密码不能为空");return;}s.adminPassword=v;await Store.saveAll();toast("密码已更新");b.querySelector("#set_pwd").value="";};
+  b.querySelector("#set_login_min").value=String(s.loginMinutes||0);
+  b.querySelector("#set_login_min").onchange=async()=>{s.loginMinutes=parseInt(b.querySelector("#set_login_min").value)||0;await Store.saveAll();if(s.loginMinutes>0)setAdminLogin();toast("免验证时长已设置");};
   b.querySelector("#sbToggle").onclick=async()=>{cloud.enabled=!cloud.enabled;cloud.url=b.querySelector("#sb_url").value;cloud.key=b.querySelector("#sb_key").value;if(cloud.enabled&&(!cloud.url||!cloud.key)){toast("请先填写 URL 和 Key");cloud.enabled=false;renderPanel();return;}await Store.saveAll();await Store.init();updateModeTag();renderPanel();renderHome();toast(cloud.enabled?"已切换云端":"已切回本地");};
   b.querySelector("#exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(STATE.products,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="products.json";a.click();toast("已导出");};
 }
@@ -1730,10 +1581,12 @@ logo.addEventListener("pointerdown",()=>{pressTimer=setTimeout(()=>{showPwd();na
 ["pointerup","pointerleave","pointercancel"].forEach(ev=>logo.addEventListener(ev,()=>clearTimeout(pressTimer)));
 let cornerClicks=0,cornerTimer=null;
 document.getElementById("corner").addEventListener("click",()=>{cornerClicks++;clearTimeout(cornerTimer);cornerTimer=setTimeout(()=>cornerClicks=0,2000);if(cornerClicks>=5){cornerClicks=0;showPwd();}});
-function showPwd(){document.getElementById("pwdInput").value="";document.getElementById("pwdModal").classList.remove("hidden");document.getElementById("pwdInput").focus();}
+function showPwd(){if(STATE.isAdmin||adminSessionValid()){openPanel();updateModeTag();return;}document.getElementById("pwdInput").value="";document.getElementById("pwdModal").classList.remove("hidden");document.getElementById("pwdInput").focus();}
 document.getElementById("pwdCancel").onclick=()=>document.getElementById("pwdModal").classList.add("hidden");
-document.getElementById("pwdOk").onclick=async()=>{const v=document.getElementById("pwdInput").value;if(v===STATE.settings.adminPassword){STATE.isAdmin=true;document.getElementById("pwdModal").classList.add("hidden");openPanel();updateModeTag();toast("管理已解锁");}else toast("密码错误");};
+document.getElementById("pwdOk").onclick=async()=>{const v=document.getElementById("pwdInput").value;if(v===STATE.settings.adminPassword){STATE.isAdmin=true;setAdminLogin();document.getElementById("pwdModal").classList.add("hidden");openPanel();updateModeTag();toast("管理已解锁");}else toast("密码错误");};
 document.getElementById("pwdInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("pwdOk").click();});
+/* 第10条：在文本框/富文本里按回车只换行，绝不关闭弹窗 */
+document.addEventListener("keydown",e=>{if(e.key==="Enter"){const t=e.target;const tag=(t&&t.tagName||"").toUpperCase();if(tag==="TEXTAREA"||(t&&t.isContentEditable))e.stopPropagation();}},true);
 /* ============ 修改管理密码（顶部常驻入口） ============ */
 document.getElementById("chgPwdBtn").onclick=()=>{document.getElementById("chgPwdInput").value="";document.getElementById("chgPwdInput2").value="";document.getElementById("chgPwdModal").classList.remove("hidden");document.getElementById("chgPwdInput").focus();};
 document.getElementById("chgPwdCancel").onclick=()=>document.getElementById("chgPwdModal").classList.add("hidden");
@@ -1775,6 +1628,7 @@ async function init(){
   STATE.settings.customers=d.settings&&d.settings.customers||DEFAULT_SETTINGS.customers;
   STATE.settings.messages=STATE.settings.messages||[];
   STATE.products=d.products||[];
+  STATE.isAdmin=adminSessionValid(); /* 恢复登录会话，免二次验证 */
   await Store.init();await ensureIdentity();applyTheme();updateModeTag();renderNav();renderHome();
   // 定时发布：扫描到点的 scheduled 动态自动转 published
   const checkScheduled=async()=>{let ch=false;const now=Date.now();(STATE.settings.moments.posts||[]).forEach(p=>{if(p.status==="scheduled"&&p.ts<=now){p.status="published";ch=true;}});if(ch){await Store.saveAll();renderMoments();renderNav();}};
@@ -4210,6 +4064,7 @@ function awardForwardPoints(){
 /* ---- 积分商城兑换 ---- */
 function doRedeem(it){
   if((STATE.identity.points||0)<it.cost){toast("积分不足");return;}
+  if(it.stock===0){toast("该礼品已兑完");return;}
   STATE.identity.points-=it.cost;
   STATE.identity.pointsLog=STATE.identity.pointsLog||[];
   STATE.identity.pointsLog.push({ts:Date.now(),type:"redeem",detail:"兑换："+it.name,amount:-it.cost});
@@ -4218,7 +4073,9 @@ function doRedeem(it){
   STATE.identity.redeemed.push(rec);
   STATE.settings.redeemRecords=STATE.settings.redeemRecords||[];
   STATE.settings.redeemRecords.push(rec);
-  persistIdentity(); Store.saveAll(); renderMall(); toast("兑换成功："+it.name);
+  if(it.stock>0){it.stock=it.stock-1;if(it.stock===0)toast("兑换成功："+it.name+"（该礼品已兑完）");else toast("兑换成功："+it.name);}
+  else toast("兑换成功："+it.name);
+  persistIdentity(); Store.saveAll(); renderMall();
 }
 
 /* ============ 前端：个人中心（覆盖主导脚本 renderProfile） ============ */
@@ -4287,7 +4144,7 @@ async function renderPointsTab(b){
   const recs=s.redeemRecords||[];
   const recHtml=recs.length?recs.slice().reverse().map(r=>`<div class="pl-row"><span class="pl-d">${esc(r.name||"礼品")} · ${esc(r.phone||(r.customer||"").slice(0,8))}</span><span class="pl-t">${fmtFull(r.ts)}</span><button class="btn sm ${r.status==='已发货'?'':'primary'}" data-ship="${r.id}">${r.status==='已发货'?'已发货':'标记发货'}</button></div>`).join(""):`<div class="empty">暂无兑换记录</div>`;
   const items=s.redeemItems||[];
-  const prodHtml=items.length?items.map(it=>`<div class="item-row"><div class="pi" style="display:flex;align-items:center;justify-content:center;font-size:20px">${it.icon||"🎁"}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分</span></div><button class="btn sm" data-edr="${it.id}">编辑</button><button class="btn sm" data-delr="${it.id}">删除</button></div>`).join(""):`<div class="empty">未添加兑换礼品</div>`;
+  const prodHtml=items.length?items.map(it=>`<div class="item-row"><div class="pi" style="display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;background:#f0f0f0">${it.img?`<img src="${it.img}" style="width:100%;height:100%;object-fit:cover">`:(it.icon||"🎁")}</div><div class="pn">${esc(it.name)}<br><span style="color:var(--c-sub);font-size:12px">${it.cost} 积分${it.stock>0?(" · 剩 "+it.stock+" 件"):(it.stock===0?" · 已兑完":"")}</span></div><button class="btn sm" data-edr="${it.id}">编辑</button><button class="btn sm" data-delr="${it.id}">删除</button></div>`).join(""):`<div class="empty">未添加兑换礼品</div>`;
   b.innerHTML=`<h3>积分规则</h3>
     <div class="field btn-row"><div style="flex:1"><label>浏览产品得积分</label><input id="rpBrowse" type="number" value="${pts.perBrowse||1}"></div><div style="flex:1"><label>邀请1人打开得积分</label><input id="rpInv" type="number" value="${pts.perInviteOpen||10}"></div></div>
     <div class="field btn-row"><div style="flex:1"><label>转发动态得积分</label><input id="rpFwd" type="number" value="${pts.perForward||5}"></div><div style="flex:1;display:flex;align-items:flex-end"><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="rpFwdOn" ${pts.enabledForward!==false?'checked':''} style="width:auto"> 开启转发得积分</label></div></div>
@@ -4311,12 +4168,27 @@ async function renderPointsTab(b){
 }
 async function _editRedeemItem(id){
   const s=STATE.settings; const it=id?s.redeemItems.find(x=>x.id===id):null;
-  const name=prompt("礼品名称：",it?it.name:""); if(name===null)return;
-  const cost=prompt("所需积分：",it?(it.cost):"100"); if(cost===null)return;
-  const icon=prompt("图标emoji（可留空）：",it?(it.icon||"🎁"):"🎁");
-  const obj={name:name.trim(),cost:parseInt(cost)||0,icon:(icon||"🎁").trim()};
-  if(it){Object.assign(it,obj);}else{obj.id=uid();s.redeemItems=s.redeemItems||[];s.redeemItems.push(obj);}
-  await Store.saveAll(); toast("已保存"); renderPointsTab(document.getElementById("pbody"));
+  const modal=document.createElement("div");modal.className="modal";
+  const stockVal=it&&it.stock!=null?it.stock:"";
+  modal.innerHTML=`<div class="box" style="max-height:90vh;overflow:auto"><h3>${it?"编辑":"添加"}兑换礼品</h3>
+    <div class="field"><label>礼品图片</label><input type="file" id="riImg" accept="image/*"><div id="riImgN" style="font-size:12px;color:var(--c-sub)">${it&&it.img?"已设置":"未选择（也可留空用emoji）"}</div></div>
+    <div class="field"><label>礼品名称</label><input id="riName" value="${esc(it?it.name:"")}" placeholder="如：定制化妆镜"></div>
+    <div class="field"><label>数量（库存）— 填 -1 或留空 = 不限量</label><input id="riStock" type="number" value="${stockVal}" placeholder="-1 不限量"></div>
+    <div class="field"><label>所需积分</label><input id="riCost" type="number" value="${it?(it.cost):"100"}"></div>
+    <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="riCancel">取消</button><button class="btn primary" id="riSave">保存</button></div></div>`;
+  document.body.appendChild(modal);
+  let img=it&&it.img||"",icon=it&&it.icon||"🎁";
+  modal.querySelector("#riImg").onchange=async e=>{const f=e.target.files[0];if(f){img=await fileToCompressedDataURL(f,600,0.82);modal.querySelector("#riImgN").textContent=f.name;}};
+  modal.querySelector("#riCancel").onclick=()=>modal.remove();
+  modal.querySelector("#riSave").onclick=async()=>{
+    const name=modal.querySelector("#riName").value.trim();if(!name){toast("请填礼品名称");return;}
+    const cost=parseInt(modal.querySelector("#riCost").value)||0;
+    const stockRaw=modal.querySelector("#riStock").value.trim();
+    const stock=stockRaw===""?-1:parseInt(stockRaw);
+    const obj={name,img,cost,icon,stock:(isNaN(stock)?-1:stock)};
+    if(it){Object.assign(it,obj);}else{obj.id=uid();s.redeemItems=s.redeemItems||[];s.redeemItems.push(obj);}
+    await Store.saveAll(); modal.remove(); toast("已保存"); renderPointsTab(document.getElementById("pbody"));
+  };
 }
 
 /* ============ 后台：代理 / 分销员管理 ============ */
@@ -4830,13 +4702,33 @@ function renderTutorialTab(b){
 }
 async function editTutorial(id){
   var list=STATE.settings.tutorials;var t=id?list.find(function(x){return x.id===id;}):null;
-  var title=prompt("教程标题：",t?t.title:"");if(title===null)return;
-  var url=prompt("视频地址（mp4/链接）：",t?t.url:"");if(url===null)return;
-  var pid=prompt("关联产品ID（可留空）：",t?t.pid:"");if(pid===null)return;
-  var cover=prompt("封面图URL（可留空）：",t?t.cover:"");if(cover===null)return;
-  var obj={title:title.trim(),url:url.trim(),pid:(pid||"").trim(),cover:(cover||"").trim()};
-  if(t){Object.assign(t,obj);}else{obj.id=uid();list.push(obj);}
-  await Store.saveAll();toast("已保存");renderTutorialTab(document.getElementById("pbody"));
+  var prodOpts=STATE.products.map(function(pr){return '<option value="'+pr.id+'" '+(t&&t.pid===pr.id?"selected":"")+'>'+esc(pr.name||"未命名")+'</option>';}).join("");
+  var modal=document.createElement("div");modal.className="modal";
+  modal.innerHTML=`<div class="box" style="max-height:90vh;overflow:auto"><h3>${t?"编辑":"添加"}教程视频</h3>
+    <div class="field"><label>教程标题</label><input id="tuTitle" value="${esc(t?t.title:"")}" placeholder="如：神仙水正确使用手法"></div>
+    <div class="field"><label>视频（手机本地，建议 &lt; 60MB）</label><input type="file" id="tuFile" accept="video/*"><div id="tuFileN" style="font-size:12px;color:var(--c-sub)">${t&&t.url&&!t._fromUrl?"已选本地视频":(t&&t.url?"已设链接":"未选择")}</div></div>
+    <div class="field"><label>或填视频链接（mp4 / 外链，与上面二选一）</label><input id="tuUrl" value="${esc(t?t.url:"")}" placeholder="https://..."></div>
+    <div class="field"><label>关联产品（点选，可不选）</label><select id="tuPid"><option value="">不关联</option>${prodOpts}</select></div>
+    <div class="field"><label>封面图（手机图片，可留空）</label><input type="file" id="tuCover" accept="image/*"><div id="tuCoverN" style="font-size:12px;color:var(--c-sub)">${t&&t.cover?"已设置":"未选择"}</div></div>
+    <div class="btn-row"><button class="btn sm" id="tuUseProd">用关联产品首图做封面</button></div>
+    <div class="btn-row" style="justify-content:flex-end"><button class="btn" id="tuCancel">取消</button><button class="btn primary" id="tuSave">保存</button></div></div>`;
+  document.body.appendChild(modal);
+  var url=t?t.url:"",cover=t?t.cover:"",videoFile="";
+  modal.querySelector("#tuFile").onchange=async function(e){var f=e.target.files[0];if(!f)return;if(f.size>60*1024*1024){toast("视频超过60MB，建议压缩或用链接");return;}videoFile=await fileToDataURL(f);modal.querySelector("#tuFileN").textContent=f.name;modal.querySelector("#tuUrl").value="";};
+  modal.querySelector("#tuUrl").oninput=function(){if(modal.querySelector("#tuUrl").value.trim()){videoFile="";modal.querySelector("#tuFileN").textContent="改用链接";}};
+  modal.querySelector("#tuCover").onchange=async function(e){var f=e.target.files[0];if(f){cover=await fileToCompressedDataURL(f,800,0.82);modal.querySelector("#tuCoverN").textContent=f.name;}};
+  modal.querySelector("#tuUseProd").onclick=function(){var pid=modal.querySelector("#tuPid").value;var pr=STATE.products.find(function(x){return x.id===pid;});if(pr&&pr.images&&pr.images[0]){cover=pr.images[0];modal.querySelector("#tuCoverN").textContent="已用产品图";toast("已用关联产品首图");}else toast("请先选择有关联图的产品");};
+  modal.querySelector("#tuCancel").onclick=function(){modal.remove();};
+  modal.querySelector("#tuSave").onclick=async function(){
+    var title=modal.querySelector("#tuTitle").value.trim();if(!title){toast("请填标题");return;}
+    var finalUrl=videoFile||modal.querySelector("#tuUrl").value.trim();
+    if(!finalUrl){toast("请上传视频或填视频链接");return;}
+    var pid=modal.querySelector("#tuPid").value.trim();
+    if(!cover&&pid){var pr=STATE.products.find(function(x){return x.id===pid;});if(pr&&pr.images&&pr.images[0])cover=pr.images[0];}
+    var obj={title:title,url:finalUrl,pid:pid,cover:cover};
+    if(t){Object.assign(t,obj);}else{obj.id=uid();list.push(obj);}
+    await Store.saveAll();modal.remove();toast("已保存");renderTutorialTab(document.getElementById("pbody"));
+  };
 }
 
 /* ============ 九、首页轮播海报管理 ============ */
