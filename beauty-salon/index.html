@@ -160,7 +160,7 @@
   .ac-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
   .ac-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff; }
   .ac-thumbwrap { margin-bottom: 8px; }
-  .ac-thumb { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
+  .ac-thumb { width: 100%; height: 96px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; }
   .ac-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; word-break: break-all; }
   .case-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px; background: #fff; }
   .case-thumb { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; cursor: pointer; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; overflow: hidden; }
@@ -174,7 +174,7 @@
   .ac-cats { font-size: 12px; color: #6b7280; margin-bottom: 8px; min-height: 16px; }
   .xbtn { width: 18px; height: 18px; border-radius: 50%; background: #f3f4f6; color: #9ca3af; border: none; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; }
   .xbtn:hover { background: #fee2e2; color: #ef4444; }
-  .kg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+  .kg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
   .kg-card { border: 1px solid #eee; border-radius: 10px; overflow: hidden; background: #fff; }
   .kg-card .row-act { margin-top: 8px; }
   /* ============================================================
@@ -463,6 +463,80 @@
     text-overflow: ellipsis;
     word-break: keep-all;
   }
+  /* —— 修用户图1"分类（多选）"里"测试"竖排：产品表单内联分类横排 —— */
+  .pf-cats, .ac-cat-list, .case-cat-list, .k-cat-list {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    align-items: center;
+  }
+  .pf-cats > label, .ac-cat-list > label, .case-cat-list > label, .k-cat-list > label {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    margin: 0 !important;
+    background: #f3f4f6;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 13px;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    flex-wrap: nowrap;
+    max-width: 100%;
+  }
+  .pf-cats > label > span, .ac-cat-list > label > span, .case-cat-list > label > span, .k-cat-list > label > span {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: keep-all !important;
+  }
+  /* —— 产品表单内 chip 右侧删除键：远离文字、默认灰、hover 变红 —— */
+  .pf-cats > label .pf-cat-x, .ac-cat-list > label .pf-cat-x {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: #d1d5db;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .pf-cats > label .pf-cat-x:hover, .ac-cat-list > label .pf-cat-x:hover { color: #ef4444; }
+  /* —— 修用户图5/6"A级/C级"竖排：薪资徽章加大、加内边距、不换行 —— */
+  .sc-card .lvl {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+  /* —— 修用户图4"正常"圆形底图小：低/高库存横条 lvl 加大 —— */
+  .low-stock-banner .lvl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 24px;
+    padding: 0 12px;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .low-stock-banner.normal .lvl { background: #16a34a; }
   /* 侧栏（分类树容器）在窄屏下占满宽度，避免被 flex 挤压 */
   #acCatTree, #kCatTree, #caseCatTree, #supCatTree {
     width: 100%;
@@ -596,7 +670,7 @@
     gap: 8px;
     flex-wrap: wrap;
   }
-  .low-stock-banner .lvl { background: #dc2626; color: #fff; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  /* 店内用品横幅 lvl 药丸由上方 .low-stock-banner .lvl（更大绿色/红色）统一控制，此处不再覆盖字号 */
   /* —— 店内用品「分类管理」折叠面板内分类行 —— */
   .sup-cat-list { display: flex; flex-direction: column; gap: 6px; }
   .sup-cat-row {
@@ -613,6 +687,7 @@
     white-space: normal;
   }
   .mini-row .mr-meta { font-size: 12px; line-height: 1.5; }
+  .shChk { width: 18px; height: 18px; flex: 0 0 auto; accent-color: #6d28d9; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -1041,7 +1116,7 @@ function renderDashboard(c) {
       <div class="stat"><div class="label">今日营收</div><div class="value">¥${money(todayRevenue)}</div></div>
       <div class="stat"><div class="label">今日开单数</div><div class="value">${todayOrders.length}</div></div>
       <div class="stat" style="cursor:pointer" onclick="goModule('stock')" title="点击查看库存"><div class="label">库存预警</div><div class="value" style="color:${stockWarn ? '#dc2626' : '#15803d'}">${stockWarn}</div></div>
-      ${App.role === 'owner' ? `<div class="stat" style="cursor:pointer" onclick="App.productFastExpire=true;goModule('products')" title="点击查看快到期产品"><div class="label">保质期预警</div><div class="value" style="color:${shelfWarn ? '#dc2626' : '#15803d'}">${shelfWarn}</div></div>` : ''}
+      ${App.role === 'owner' ? `<div class="stat" style="cursor:pointer" onclick="App.productFilter='fast';goModule('products')" title="点击查看快到期产品"><div class="label">保质期预警</div><div class="value" style="color:${shelfWarn ? '#dc2626' : '#15803d'}">${shelfWarn}</div></div>` : ''}
       <div class="stat"><div class="label">本月工资</div><div class="value" style="font-size:18px">${salaryState}</div></div>
     </div>
     <div class="card">
@@ -1094,10 +1169,14 @@ function renderProducts(c) {
   c.innerHTML = `
     <div class="card">
       <div class="page-head">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1 1 240px;min-width:0">
-          <input id="pSearch" placeholder="搜索名称" value="${esc(App.productSearch)}" style="max-width:170px">
-          <select id="pCat" style="max-width:150px">${catOptions}</select>
-          ${isOwner ? `<button class="btn sm ${App.productFastExpire ? '' : 'ghost'}" onclick="App.productFastExpire=!App.productFastExpire;renderProducts(document.getElementById('content'))">快到期</button>` : ''}
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 240px;min-width:0">
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <input id="pSearch" placeholder="搜索名称" value="${esc(App.productSearch)}" style="max-width:170px">
+            <select id="pCat" style="max-width:150px">${catOptions}</select>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+            ${[['', '全部'], ['internal', '对内'], ['external', '对外']].concat(isOwner ? [['fast', '快到期'], ['normal', '正常日期']] : []).map(([v, l]) => `<button class="btn sm ${App.productFilter === v ? '' : 'ghost'}" onclick="App.productFilter='${v}';renderProducts(document.getElementById('content'))">${l}</button>`).join('')}
+          </div>
         </div>
         <div class="m-exports">
           <button class="btn sm ghost" onclick="downloadProductsTemplate()">下载模板</button>
@@ -1125,8 +1204,12 @@ function renderProductTable() {
   if (App.productSearch) list = list.filter(p => (p.name || '').toLowerCase().indexOf(App.productSearch.toLowerCase()) >= 0);
   if (App.productCat) list = list.filter(p => (p.category_ids || []).includes(App.productCat));
   if (App.productFastExpire) list = list.filter(p => { const st = shelfStatus(p); return st && (st.cls === 'red' || st.cls === 'gray'); });
+  if (App.productFilter === 'internal') list = list.filter(p => p.is_internal);
+  else if (App.productFilter === 'external') list = list.filter(p => !p.is_internal);
+  else if (App.productFilter === 'fast') list = list.filter(p => { const st = shelfStatus(p); return st && (st.cls === 'red' || st.cls === 'gray'); });
+  else if (App.productFilter === 'normal') list = list.filter(p => { const st = shelfStatus(p); return !st || st.cls === 'green'; });
   list.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-  const canDrag = !App.productSearch && !App.productCat && !App.productFastExpire;
+  const canDrag = !App.productSearch && !App.productCat && !App.productFastExpire && !App.productFilter;
 
   wrap.innerHTML = (canDrag ? '' : '<div style="font-size:12px;color:#9ca3af;margin-bottom:8px">清除筛选后可拖拽排序</div>') + `
     <div class="mini-list">
@@ -1276,7 +1359,7 @@ function openProductForm(id) {
       <div id="pf_detail" contenteditable="true" style="border:1px solid #d1d5db;border-radius:8px;padding:8px;min-height:60px">${p && p.detail ? p.detail : ''}</div>
     </div>
     <div class="field full"><label>分类（多选）</label>
-      <div id="pf_cats" style="margin-bottom:6px">${catChecks}</div>
+      <div id="pf_cats" class="pf-cats" style="margin-bottom:6px">${catChecks}</div>
       <div class="row"><input id="pf_newcat" placeholder="新建分类名" style="flex:1"><button type="button" class="btn sm ghost" onclick="addProductCategory()">+ 新增分类</button></div>
     </div>
     <div class="row" style="margin-top:10px">
@@ -1685,10 +1768,7 @@ function productCategoryChecks(selectedIds) {
   if (!cats.length) return '<span style="color:#9ca3af;font-size:13px">暂无分类，可在下方新建</span>';
   return cats.map(c => {
     const checked = (selectedIds || []).includes(c.id) ? 'checked' : '';
-    return `<span style="display:inline-flex;align-items:center;gap:4px;margin:0 8px 6px 0;font-size:13px;background:#f3f4f6;border-radius:8px;padding:3px 6px">
-      <label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" value="${c.id}" ${checked}> ${esc(c.name)}</label>
-      <button type="button" onclick="deleteProductCategory('${c.id}')" title="删除该分类" style="border:none;background:transparent;color:#ef4444;cursor:pointer;font-size:15px;line-height:1;padding:0 2px">×</button>
-    </span>`;
+    return `<label><input type="checkbox" value="${c.id}" ${checked}><span>${esc(c.name)}</span><button type="button" class="pf-cat-x" title="删除该分类" onclick="event.stopPropagation();deleteProductCategory('${c.id}')">×</button></label>`;
   }).join('');
 }
 function addProductCategory() {
@@ -3564,7 +3644,7 @@ function renderActivityCards(c) {
       <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
         <div class="cat-side" style="width:200px;min-width:160px">
           <h3 style="margin:0 0 8px">分类（自建，可多选筛选）</h3>
-          <div id="acCatTree"></div>
+          <div id="acCatTree" class="ac-cat-list"></div>
           <div class="row" style="margin-top:8px">
             <input id="ac_newcat" placeholder="新建分类名" style="flex:1" maxlength="20">
             <button type="button" class="btn sm ghost" onclick="addAcCategory()">+ 新增</button>
@@ -3631,7 +3711,7 @@ function renderAcCatTree() {
   if (!tree) return;
   const cats = DB.getList('activity_card_categories');
   tree.innerHTML = cats.map(cat => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0">
+    <label>
       <input type="checkbox" ${App.acCats.includes(cat.id) ? 'checked' : ''} onchange="toggleAcCat('${cat.id}')"> <span>${esc(cat.name)}</span>
       <button type="button" class="xbtn" title="删除分类" onclick="event.stopPropagation();deleteAcCategory('${cat.id}')">×</button>
     </label>`).join('') || '<div style="font-size:12px;color:#9ca3af">暂无分类，可在下方新建</div>';
@@ -3731,7 +3811,7 @@ function openActivityCardForm(id, copyData) {
   const cats = DB.getList('activity_card_categories');
   const val = (k, d) => a ? (a[k] != null ? a[k] : (d === undefined ? '' : d)) : (d === undefined ? '' : d);
   App._acImgs = (a && a.images) ? a.images.slice() : [];
-  const catChecks = cats.map(c => `<label style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;font-size:13px"><input type="checkbox" value="${c.id}" ${(a && (a.category_ids || []).includes(c.id)) ? 'checked' : ''}> ${esc(c.name)}</label>`).join('')
+  const catChecks = cats.map(c => `<label><input type="checkbox" value="${c.id}" ${(a && (a.category_ids || []).includes(c.id)) ? 'checked' : ''}> ${esc(c.name)}</label>`).join('')
     || '<span style="color:#9ca3af;font-size:13px">暂无分类，可在左侧新建</span>';
 
   const html = `
@@ -3749,7 +3829,7 @@ function openActivityCardForm(id, copyData) {
     <div class="field full"><label>销售方法 / 话术（选填）</label><textarea id="ac_method" rows="2">${esc(val('method'))}</textarea></div>
     <div class="field full"><label>卡详情（选填）</label><textarea id="ac_detail" rows="3">${esc(val('detail'))}</textarea></div>
     <div class="field full"><label>内部备注（选填）</label><textarea id="ac_note" rows="2">${esc(val('internal_note'))}</textarea></div>
-    <div class="field full"><label>分类（多选）</label><div id="ac_cats">${catChecks}</div></div>
+    <div class="field full"><label>分类（多选）</label><div id="ac_cats" class="ac-cat-list">${catChecks}</div></div>
     <div class="row" style="margin-top:10px">
       <button class="btn" style="flex:1" onclick="saveActivityCard('${isCopy ? '' : (id || '')}')">保存</button>
       <button class="btn ghost" style="flex:1" onclick="closeModal()">取消</button>
@@ -4163,22 +4243,26 @@ function deleteActivity(id) {
  * 5.11 知识管理（仅 owner）
  * ============================================================ */
 function renderKnowledge(c) {
+  if (App.kCatOpen === undefined) App.kCatOpen = false;
   App.kSearch = App.kSearch || '';
   App.kCats = App.kCats || [];
+  const cats = DB.getList('knowledge_categories');
   c.innerHTML = `
     <div class="card">
       <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start">
         <div class="cat-side" style="width:210px;min-width:160px">
-          <h3 style="margin:0 0 8px">分类（自建，可多选筛选）</h3>
-          <div id="kCatTree"></div>
-          <div style="display:flex;gap:6px;margin-top:8px">
-            <input id="k_newcat" class="inp" placeholder="新分类名" style="flex:1;min-width:0">
-            <button type="button" class="btn sm" onclick="addKCategory()">+ 新增</button>
+          <div class="cat-toggle ${App.kCatOpen ? 'exp' : ''}" onclick="App.kCatOpen=!App.kCatOpen;renderKnowledge(document.getElementById('content'))">分类筛选（${cats.length}）</div>
+          <div class="cat-body" style="${App.kCatOpen ? '' : 'display:none'}">
+            <div id="kCatTree" class="k-cat-list"></div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <input id="k_newcat" class="inp" placeholder="新分类名" style="flex:1;min-width:0">
+              <button type="button" class="btn sm" onclick="addKCategory()">+ 新增</button>
+            </div>
+            <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
+            <h3 style="margin:0 0 8px">专家简介模板</h3>
+            <div id="kExpList"></div>
+            <button type="button" class="btn sm ghost" style="margin-top:8px" onclick="openExpertForm(null)">+ 新增模板</button>
           </div>
-          <hr style="border:none;border-top:1px solid #eee;margin:14px 0">
-          <h3 style="margin:0 0 8px">专家简介模板</h3>
-          <div id="kExpList"></div>
-          <button type="button" class="btn sm ghost" style="margin-top:8px" onclick="openExpertForm(null)">+ 新增模板</button>
         </div>
         <div class="cat-main">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
@@ -4202,7 +4286,7 @@ function renderKCatTree() {
   if (!el) return;
   const cats = DB.getList('knowledge_categories');
   el.innerHTML = cats.map(cat => `
-    <label style="display:flex;align-items:center;gap:6px;font-size:13px;margin:4px 0">
+    <label>
       <input type="checkbox" ${App.kCats.includes(cat.id) ? 'checked' : ''} onchange="toggleKCat('${cat.id}')"> <span>${esc(cat.name)}</span>
       <button type="button" class="xbtn" title="删除分类" onclick="event.stopPropagation();deleteKCategory('${cat.id}')">×</button>
     </label>`).join('') || '<div style="font-size:12px;color:#9ca3af">暂无分类，可在下方新建</div>';
@@ -4308,7 +4392,7 @@ function renderKGrid() {
     const exp = DB.getList('expert_profiles').find(e => e.id === a.expert_profile_id);
     return `
       <div class="kg-card">
-        ${a.cover ? `<img src="${a.cover}" style="width:100%;height:120px;object-fit:cover" onclick="previewImg('${a.cover.replace(/'/g, "\\'")}')">` : ''}
+        ${a.cover ? `<img src="${a.cover}" style="width:100%;height:96px;object-fit:cover" onclick="previewImg('${a.cover.replace(/'/g, "\\'")}')">` : ''}
         <div style="padding:10px">
           <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
             <span class="tag ${a.type === 'external' ? 'green' : 'gray'}">${a.type === 'external' ? '对外' : '对内'}</span>
@@ -4447,6 +4531,7 @@ function previewImg(src) {
 function renderCases(c) {
   if (App.caseCats === undefined) App.caseCats = null;
   if (App.caseSearch === undefined) App.caseSearch = '';
+  if (App.caseCatOpen === undefined) App.caseCatOpen = false;
   const cats = DB.getList('case_categories');
   const catChips = [['', '全部分类']].concat(cats.map(cat => [cat.id, cat.name])).map(([id, name]) =>
     `<span class="m-chip ${App.caseCats === id ? 'active' : ''}" onclick="setCaseCat('${id}')">${esc(name)}${id ? ` <button type="button" class="xbtn" style="font-size:11px;padding:0 2px" onclick="event.stopPropagation();deleteCaseCategory('${id}')" title="删除分类">×</button>` : ''}</span>`
@@ -4460,10 +4545,13 @@ function renderCases(c) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <input id="caseSearch" class="inp" placeholder="搜索标题 / 内容" style="flex:1;min-width:160px" value="${esc(App.caseSearch || '')}" />
       </div>
-      <div class="m-chips">${catChips}</div>
-      <div style="display:flex;gap:6px;align-items:center;margin:8px 0 12px">
-        <input id="case_newcat" class="inp" placeholder="新增分类名" style="flex:1;min-width:120px" />
-        <button class="btn sm" onclick="addCaseCategory()">+ 分类</button>
+      <div class="cat-toggle ${App.caseCatOpen ? 'exp' : ''}" onclick="App.caseCatOpen=!App.caseCatOpen;renderCases(document.getElementById('content'))">分类筛选（${cats.length}）</div>
+      <div class="cat-body" style="${App.caseCatOpen ? '' : 'display:none'}">
+        <div class="m-chips">${catChips}</div>
+        <div style="display:flex;gap:6px;align-items:center;margin:8px 0 12px">
+          <input id="case_newcat" class="inp" placeholder="新增分类名" style="flex:1;min-width:120px" />
+          <button class="btn sm" onclick="addCaseCategory()">+ 分类</button>
+        </div>
       </div>
       <div id="caseGrid" class="ac-grid"></div>
     </div>`;
