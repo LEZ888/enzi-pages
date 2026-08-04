@@ -446,18 +446,26 @@
   .mini-row .mr-badge.hot { background: #fee2e2; color: #b91c1c; }
   /* 产品卡 meta 项标记（mobile 用 .mi-* 选择性隐藏） */
   .mi { display: inline; }
-  .mr-meta-status { display: none; }
+  .mr-meta-status { display: block; margin-top: 3px; }
+  .mr-meta-status .tag { display: inline-block; font-size: 11px; padding: 1px 8px; }
+  /* 修复产品卡标题与元信息重叠：title 允许 flex-wrap，文本可省略，badge 自然换行 */
+  .mini-row .mr-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+  .mini-row .mr-title .mr-title-text { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini-row .mr-title .mr-badge { flex: 0 0 auto; }
+  /* 修复：产品分类 × 按钮不触发 label 默认行为（避免 checkbox 被切换 + modal 异常关闭） */
+  .pf-cats .pf-cat-x { cursor: pointer; }
+  .pf-cats label.pf-cat-warn { background: #fee2e2 !important; border-color: #ef4444 !important; }
+  .pf-cats label.pf-cat-warn .pf-cat-x { background: #ef4444 !important; color: #fff !important; border-color: #ef4444 !important; }
   @media (max-width: 640px) {
     .mini-row { gap: 8px; padding: 8px; }
     .mini-row .mr-thumb { width: 44px; height: 44px; }
     .mini-row .mr-meta { font-size: 11.5px; max-width: 100%; }
-    /* mobile 只显示 分类 + 库存，其他挤掉避免换行 */
+    /* mobile 只显示 分类 + 库存 */
     .mini-row .mr-meta .mi-retail,
-    .mini-row .mr-meta .mi-member,
-    .mini-row .mr-meta .mi-badge { display: none; }
-    /* mobile 把状态徽章放独立行（保证可见） */
-    .mini-row .mr-meta-status { display: block; margin-top: 3px; }
-    .mini-row .mr-meta-status .tag { display: inline-block; font-size: 11px; padding: 1px 8px; }
+    .mini-row .mr-meta .mi-member { display: none; }
+    /* 状态徽章：在独立行（无论 mobile/desktop 都只渲染一次） */
+    .mini-row .mr-meta-status { display: block; }
+    .mini-row .mr-meta-status:empty { display: none; }
     /* actions 紧凑，4 个按钮单行不换 */
     .mini-row .mr-actions { flex-wrap: nowrap; gap: 4px; }
     .mini-row .mr-actions .btn { padding: 4px 8px; font-size: 12px; white-space: nowrap; }
@@ -1341,16 +1349,14 @@ function renderProductTable() {
         if (p.retail_price != null) meta.push(`<span class="mi mi-retail">零售 <b>¥${money(p.retail_price)}</b></span>`);
         if (p.member_price != null) meta.push(`<span class="mi mi-member">会员 <b>¥${money(p.member_price)}</b></span>`);
         meta.push(`<span class="mi mi-stock">库存 <b>${esc(p.stock || 0)}</b></span>`);
-        const statusBadge = (isOwner && st) ? `<span class="tag ${st.cls} mi mi-badge">${esc(st.text)}</span>` : '';
-        // mobile 显示独立状态行（不被裁掉），desktop 隐藏——badge 仍在 meta 内（顺序：分类>零售>会员>库存>badge）
-        const mobileStatus = statusBadge ? `<div class="mr-meta-status">${statusBadge}</div>` : '';
-        // mobile 隐藏 meta 里的 badge & 零售/会员；desktop 隐藏独立状态行（避免重复）
+        const statusBadge = (isOwner && st) ? `<span class="tag ${st.cls}">${esc(st.text)}</span>` : '';
+        // 状态徽章只渲染一次（独立行，desktop & mobile 都不重复）
         return `<div class="mini-row" draggable="${canDrag}" data-id="${p.id}" ondragstart="pdragStart(event,'${p.id}')" ondragover="event.preventDefault()" ondrop="pdragDrop(event,'${p.id}')">
           ${thumb}
           <div class="mr-info">
-            <div class="mr-title">${esc(p.name || '(未命名)')}${p.hot_badge ? ` <span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}${p.is_internal ? ` <span class="mr-badge int">对内</span>` : ''}</div>
-            <div class="mr-meta">${meta.join('<span class="sep">·</span>')}${statusBadge ? '<span class="sep">·</span>' + statusBadge : ''}</div>
-            ${mobileStatus}
+            <div class="mr-title"><span class="mr-title-text">${esc(p.name || '(未命名)')}</span>${p.hot_badge ? ` <span class="mr-badge hot">${esc(p.hot_badge)}</span>` : ''}${p.is_internal ? ` <span class="mr-badge int">对内</span>` : ''}</div>
+            <div class="mr-meta">${meta.join('<span class="sep">·</span>')}</div>
+            <div class="mr-meta-status">${statusBadge}</div>
           </div>
           <div class="mr-actions">
             <button class="btn sm ghost" onclick="previewProduct('${p.id}')">预览</button>
@@ -1889,7 +1895,7 @@ function productCategoryChecks(selectedIds) {
   if (!cats.length) return '<span style="color:#9ca3af;font-size:13px">暂无分类，可在下方新建</span>';
   return cats.map(c => {
     const checked = (selectedIds || []).includes(c.id) ? 'checked' : '';
-    return `<label><input type="checkbox" value="${c.id}" ${checked}><span>${esc(c.name)}</span><button type="button" class="pf-cat-x" title="删除该分类" onclick="event.stopPropagation();deleteProductCategory('${c.id}')">×</button></label>`;
+    return `<label data-pf-cat-id="${c.id}"><input type="checkbox" value="${c.id}" ${checked}><span>${esc(c.name)}</span><button type="button" class="pf-cat-x" title="删除该分类" onclick="event.preventDefault();event.stopPropagation();confirmDeleteProductCategory(this,'${c.id}')">×</button></label>`;
   }).join('');
 }
 function addProductCategory() {
@@ -1907,18 +1913,48 @@ function addProductCategory() {
 function deleteProductCategory(id) {
   const cat = DB.getList('product_categories').find(c => c.id === id);
   if (!cat) return;
-  confirmDialog('确定删除分类「' + cat.name + '」？\n该分类会从所有产品和店内用品中一并移除（不影响产品/用品本身）。', () => {
-    DB.getList('products').forEach(p => {
-      if ((p.category_ids || []).includes(id)) DB.update('products', p.id, { category_ids: p.category_ids.filter(x => x !== id) });
-    });
-    DB.getList('supplies').forEach(s => {
-      if (s.category_id === id) DB.update('supplies', s.id, { category_id: null });
-    });
-    DB.delete('product_categories', id);
-    const nowChecked = Array.from(document.querySelectorAll('#pf_cats input:checked')).map(c => c.value).filter(x => x !== id);
-    document.getElementById('pf_cats').innerHTML = productCategoryChecks(nowChecked);
-    toast('已删除分类：' + cat.name);
-  }, '删除分类');
+  // 同步执行（不调 confirmDialog，避免覆盖产品编辑 modal）
+  DB.getList('products').forEach(p => {
+    if ((p.category_ids || []).includes(id)) DB.update('products', p.id, { category_ids: p.category_ids.filter(x => x !== id) });
+  });
+  DB.getList('supplies').forEach(s => {
+    if (s.category_id === id) DB.update('supplies', s.id, { category_id: null });
+  });
+  DB.delete('product_categories', id);
+  const catsEl = document.getElementById('pf_cats');
+  if (catsEl) {
+    const nowChecked = Array.from(catsEl.querySelectorAll('input:checked')).map(c => c.value).filter(x => x !== id);
+    catsEl.innerHTML = productCategoryChecks(nowChecked);
+  }
+  toast('已删除分类：' + cat.name);
+}
+// × 按钮"再点一次确认"模式：第一次点变红+提示，3秒内再点才真删除；中途点别处自动取消
+let _pfCatPending = null; // { id, timer }
+function confirmDeleteProductCategory(btn, id) {
+  if (_pfCatPending && _pfCatPending.id === id) {
+    clearTimeout(_pfCatPending.timer);
+    _pfCatPending = null;
+    deleteProductCategory(id);
+    return;
+  }
+  if (_pfCatPending) {
+    clearTimeout(_pfCatPending.timer);
+    const old = document.querySelector(`.pf-cats label[data-pf-cat-id="${_pfCatPending.id}"]`);
+    if (old) { old.classList.remove('pf-cat-warn'); old.querySelector('.pf-cat-x').textContent = '×'; old.querySelector('.pf-cat-x').title = '删除该分类'; }
+  }
+  const label = btn.closest('label');
+  if (label) {
+    label.classList.add('pf-cat-warn');
+    btn.textContent = '删?';
+    btn.title = '再点一次确认删除';
+  }
+  _pfCatPending = { id, timer: setTimeout(() => {
+    if (_pfCatPending && _pfCatPending.id === id) {
+      const lbl = document.querySelector(`.pf-cats label[data-pf-cat-id="${id}"]`);
+      if (lbl) { lbl.classList.remove('pf-cat-warn'); lbl.querySelector('.pf-cat-x').textContent = '×'; lbl.querySelector('.pf-cat-x').title = '删除该分类'; }
+      _pfCatPending = null;
+    }
+  }, 3000) };
 }
 
 function saveProduct(id) {
@@ -1949,10 +1985,18 @@ function saveProduct(id) {
     p.production_date = null; p.shelf_life_months = null;
   }
   if (id) { DB.update('products', id, p); toast('已保存'); }
-  else { DB.insert('products', p); toast('已添加'); }
+  else {
+    DB.insert('products', p);
+    // 修复 Bug D：新建产品后重置筛选，确保新加的产品立刻可见（避免被对内/对某分类/搜索词过滤掉）
+    App.productSearch = '';
+    App.productCat = '';
+    App.productFilter = '';
+    App.productFastExpire = false;
+    toast('已添加：' + p.name);
+  }
   closeModal();
   try { renderProducts(document.getElementById('content') || document.body); }
-  catch (e) { /* 渲染失败不影响已落库，下次进入会看到 */ }
+  catch (e) { console.error('renderProducts failed:', e); toast('保存成功但列表刷新失败，请手动切换模块'); }
 }
 
 /* ---- 批量导入 / 模板 ---- */
