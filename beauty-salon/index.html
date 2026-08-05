@@ -893,8 +893,16 @@ const DB = {
         salary_records: [],
         customers: []
       };
-      localStorage.setItem(this.KEY, JSON.stringify(defaultData));
+        localStorage.setItem(this.KEY, JSON.stringify(defaultData));
     }
+    // 一次性迁移：旧占位店名自动升级为新品牌名（解决预览/旧数据残留旧名）
+    try {
+      const d = this.readAll();
+      if (d.settings && d.settings.store_name === '占位美学') {
+        d.settings.store_name = 'DKEXI.熹美学';
+        this.writeAll(d);
+      }
+    } catch (e) {}
   },
 
   readAll() {
