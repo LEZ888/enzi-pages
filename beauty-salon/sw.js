@@ -1,4 +1,4 @@
-const CACHE = 'beauty-salon-20260805182346';
+const CACHE = 'beauty-salon-20260805235549';
 const ORIGIN_SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(ORIGIN_SHELL);}).then(function(){return self.skipWaiting();}).catch(function(){return self.skipWaiting();}));

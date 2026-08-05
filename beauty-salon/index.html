@@ -2572,7 +2572,7 @@ function saveSupply(id) {
   const quantity = Number(document.getElementById('sfQty').value || 0);
   const warning_threshold = Number(document.getElementById('sfWarn').value || 0);
   const note = document.getElementById('sfNote').value.trim();
-  if (!name) { alert('请填写用品名称'); return; }
+  if (!name) { toast('请填写用品名称'); return; }
   if (id) {
     DB.update('supplies', id, { name, category_id, quantity, warning_threshold, note });
   } else {
@@ -2905,8 +2905,8 @@ function saveOrder() {
   const payment_channel = document.getElementById('ordPay').value;
   const note = document.getElementById('ordNote').value.trim();
 
-  if (!customer_name) { alert('请填写客户名'); return; }
-  if (orderItems.length === 0 || !orderItems.some(it => it.item_id)) { alert('请至少添加一笔有效明细（需从下拉选到具体项）'); return; }
+  if (!customer_name) { toast('请填写客户名'); return; }
+  if (orderItems.length === 0 || !orderItems.some(it => it.item_id)) { toast('请至少添加一笔有效明细（需从下拉选到具体项）'); return; }
 
   // 同步分成
   document.querySelectorAll('#orderSplits .ord-split').forEach((el, idx) => {
@@ -2918,8 +2918,8 @@ function saveOrder() {
   if (App.role === 'employee') orderSplits[0].employee_id = App.employeeId;
 
   const totalPct = orderSplits.reduce((s, x) => s + (Number(x.percentage) || 0), 0);
-  if (Math.round(totalPct) !== 100) { alert('分成合计必须为 100%，当前为 ' + totalPct + '%，请调整后再保存'); return; }
-  if (!orderSplits[0].employee_id) { alert('请选择主员工'); return; }
+  if (Math.round(totalPct) !== 100) { toast('分成合计必须为 100%，当前为 ' + totalPct + '%，请调整后再保存'); return; }
+  if (!orderSplits[0].employee_id) { toast('请选择主员工'); return; }
 
   const items = orderItems.filter(it => it.item_id).map(it => {
     // 卡类：快照佣金规则（commission_type/commission_value），供工资计算 5.7 卖卡提成使用
@@ -2961,7 +2961,7 @@ function saveOrder() {
   if (existing) DB.update('customers', existing.id, { last_visit: order_date, visit_count: (existing.visit_count || 0) + 1 });
   else DB.insert('customers', { name: cname, last_visit: order_date, visit_count: 1 });
 
-  alert('开单成功！已保存' + items.length + '笔明细，手工费将于月底重算。');
+  toast('开单成功！已保存' + items.length + '笔明细，手工费将于月底重算。');
   renderOrders(document.getElementById('content'));
 }
 
@@ -3794,16 +3794,29 @@ function collectSalaryFromDOM() {
 }
 
 function addSalaryField(level) {
-  const name = prompt('请输入新字段名（如：额外业绩、产品分销...）', '');
-  if (!name || !name.trim()) return;
+  openModal(`<div class="modal-card">
+    <h3>新增字段</h3>
+    <p style="margin:8px 0;color:#374151;font-size:13.5px">请输入新字段名（如：额外业绩、产品分销...）</p>
+    <input id="salaryFieldName" class="inp" placeholder="字段名" style="width:100%;margin-bottom:14px">
+    <div class="modal-act">
+      <button class="btn ghost" onclick="closeModal()">取消</button>
+      <button class="btn" onclick="confirmAddSalaryField('${level}')">确定</button>
+    </div>
+  </div>`);
+  setTimeout(() => { const i = document.getElementById('salaryFieldName'); if (i) i.focus(); }, 30);
+}
+function confirmAddSalaryField(level) {
+  const name = (document.getElementById('salaryFieldName').value || '').trim();
+  if (!name) { toast('请输入字段名'); return; }
+  closeModal();
   const cfg = collectSalaryFromDOM();
   const sc = cfg.find(x => x.level === level);
   if (!sc) return;
   sc.custom_fields = sc.custom_fields || [];
-  sc.custom_fields.push({ key: 'cf_' + level + '_' + Date.now(), label: name.trim(), value: 0 });
+  sc.custom_fields.push({ key: 'cf_' + level + '_' + Date.now(), label: name, value: 0 });
   DB.saveSalaryConfig(cfg);
   renderSalaryConfig(document.getElementById('content'));
-  toast('已新增字段：' + name.trim());
+  toast('已新增字段：' + name);
 }
 
 function removeSalaryField(level, idx) {
@@ -4410,7 +4423,7 @@ function openProjectForm(id) {
 
 function saveProject(id) {
   const name = document.getElementById('pj_name').value.trim();
-  if (!name) { alert('请填写项目名称'); return; }
+  if (!name) { toast('请填写项目名称'); return; }
   const data = {
     name,
     category_ids: document.getElementById('pj_cats').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
@@ -4499,7 +4512,7 @@ function openCardForm(id) {
 
 function saveCard(id) {
   const name = document.getElementById('cd_name').value.trim();
-  if (!name) { alert('请填写卡名称'); return; }
+  if (!name) { toast('请填写卡名称'); return; }
   const data = {
     name,
     commission_type: document.getElementById('cd_type').value,
