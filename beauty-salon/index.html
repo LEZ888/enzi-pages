@@ -1000,10 +1000,27 @@ function checkDBWriteQuota() {
     <p style="margin:8px 0 18px;white-space:pre-line;color:#374151;line-height:1.7;font-size:13.5px">${esc(msg)}</p>
     <div class="modal-act">
       <button class="btn ghost" onclick="closeModal()">关闭</button>
-      <button class="btn" onclick="closeModal();document.querySelector('[data-m=\\\'settings\\\']')&&document.querySelector('[data-m=\\\'settings\\\']').click()">去设置备份</button>
+      ${isQuota ? `<button class="btn" style="background:#16a34a" onclick="quotaSelfRescue()">🗜 压缩旧图并继续存</button>` : ''}
+      <button class="btn ghost" onclick="closeModal();document.querySelector('[data-m=\\\'settings\\\']')&&document.querySelector('[data-m=\\\'settings\\\']').click()">去设置备份</button>
     </div>
   </div>`);
   return true;
+}
+/* 存不进时的「一键自救」：压缩已有旧大图 → 自动重试当前模块的保存 */
+function quotaSelfRescue() {
+  const mod = App.currentModule;
+  closeModal();
+  toast('正在压缩旧图释放空间…');
+  compressExistingImages(() => {
+    setTimeout(() => {
+      try {
+        if (mod === 'products' && typeof saveProduct === 'function') saveProduct();
+        else if (mod === 'cases' && typeof saveCase === 'function') saveCase();
+        else if (mod === 'knowledge' && typeof saveKnowledge === 'function') saveKnowledge();
+        else toast('空间已释放，请重新点击保存');
+      } catch (e) { toast('空间已释放，请重新点击保存'); }
+    }, 400);
+  });
 }
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -1406,8 +1423,9 @@ function refreshStorageMeter() {
   }
 }
 
-/* 一键压缩已有图片（释放已占满的空间，让后续能继续加产品） */
-function compressExistingImages() {
+/* 一键压缩已有图片（释放已占满的空间，让后续能继续加产品）
+   onDone: 压缩写回完成后回调（用于「存不进→自救→自动重试保存」） */
+function compressExistingImages(onDone) {
   const data = DB.readAll();
   const jobs = [];
   const pushImgs = (col, rec) => {
@@ -1425,6 +1443,7 @@ function compressExistingImages() {
         try { DB.writeAll(data); } catch (e) {}
         toast('已压缩 ' + saved + ' 张图片，空间已释放 ✅');
         refreshStorageMeter();
+        if (typeof onDone === 'function') onDone();
         return;
       }
       const j = jobs[idx++];
