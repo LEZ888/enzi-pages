@@ -942,9 +942,8 @@ function removeFromCart(pid){STATE.cart=STATE.cart.filter(x=>x.pid!==pid);saveCa
 function setCartQty(pid,qty){const it=STATE.cart.find(x=>x.pid===pid);if(!it)return;it.qty=Math.max(1,qty);saveCart();renderCart();}
 function cartTotal(){return STATE.cart.reduce((s,it)=>s+it.qty*(parseFloat(it.price)||0),0);}
 function cartCount(){return STATE.cart.reduce((s,it)=>s+it.qty,0);}
-function saveCart(){try{localStorage.setItem(LS_KEY+"_cart",JSON.stringify(STATE.cart));}catch(e){}
-}
-function loadCart(){try{const d=JSON.parse(localStorage.getItem(LS_KEY+"_cart"));if(Array.isArray(d))STATE.cart=d;}catch(e){}}
+function saveCart(){try{localStorage.setItem(LS_KEY+"_cart",JSON.stringify(STATE.cart));}catch(e){}if(STATE.identity){STATE.identity.cart=STATE.cart;persistIdentity().catch(function(){});}}
+function loadCart(){try{const d=JSON.parse(localStorage.getItem(LS_KEY+"_cart"));if(Array.isArray(d))STATE.cart=d;}catch(e){}if(STATE.identity&&Array.isArray(STATE.identity.cart)&&STATE.identity.cart.length)STATE.cart=STATE.identity.cart;}
 function renderCart(){
   const items=STATE.cart;
   var h="<h2 style='margin-top:0'>\u{1f6d2} 购物车"+(items.length?" ("+cartCount()+"件)":"")+"</h2>";
@@ -961,12 +960,31 @@ function renderCart(){
         +'<button class="btn sm" style="color:#e4393c;font-size:11px;padding:2px 8px" onclick="removeFromCart(\''+it.pid+'\')">删除</button></div></div>';
     }).join("");
     h+='<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--c-line);display:flex;justify-content:space-between;align-items:center;font-size:15px"><span>合计</span><span style="color:var(--c-primary);font-weight:700;font-size:18px">\u00A5'+cartTotal().toFixed(2)+'</span></div>'
-      +'<button class="btn primary" style="width:100%;margin-top:12px" onclick="toast(\'下单功能开发中\')">结算 ('+cartCount()+'件)</button>';
+      +'<button class="btn primary" style="width:100%;margin-top:12px" onclick="checkoutCart()">结算 ('+cartCount()+'件)</button>';
   }
   document.getElementById("cartBody").innerHTML=h;
   /* bind card fav/cart inside cart page */
   document.querySelectorAll(".card-fav").forEach(el=>el.onclick=function(e){e.stopPropagation();toggleFav(this.dataset.pid);});
   document.querySelectorAll(".card-cart").forEach(el=>el.onclick=function(e){e.stopPropagation();addToCart(this.dataset.pid,1);});
+}
+function checkoutCart(){
+  const items=STATE.cart;
+  if(!items.length){toast("购物车是空的");return;}
+  const c=STATE.settings.shop.contact;
+  const rows=items.map(function(it){
+    var img=it.img?'<img src="'+it.img+'" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex:0 0 48px">':'<div style="width:48px;height:48px;background:#f0f0f0;border-radius:6px;flex:0 0 48px;display:flex;align-items:center;justify-content:center;font-size:20px">\u{1F4E6}</div>';
+    var price=(parseFloat(it.price)||0);
+    return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--c-line)">'+img+'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px">'+esc(it.name)+'</div>'+(it.brand?'<div style="font-size:12px;color:var(--c-sub)">'+esc(it.brand)+'</div>':'')+'</div><div style="text-align:right;font-size:13px"><div style="font-weight:700;color:var(--c-primary)">\u00A5'+(price*it.qty).toFixed(2)+'</div><div style="color:var(--c-sub)">×'+it.qty+'</div></div></div>';
+  }).join("");
+  const contactLine=(c.wechat?'微信：'+esc(c.wechat):'')+(c.phone?('　电话：'+esc(c.phone)):'');
+  const text='【购物清单】\n'+items.map(function(it,i){return (i+1)+'. '+it.name+(it.brand?'（'+it.brand+'）':'')+' ×'+it.qty+'  \u00A5'+((parseFloat(it.price)||0)*it.qty).toFixed(2);}).join('\n')+'\n合计：\u00A5'+cartTotal().toFixed(2)+(contactLine?('\n联系：'+contactLine):'')+(STATE.identity&&STATE.identity.phone?('\n我的手机号：'+STATE.identity.phone):'');
+  const modal=document.createElement('div');modal.className='modal';
+  modal.innerHTML='<div class="box" style="max-width:380px"><h3 style="margin-top:0">\u{1F9D6} 购物清单</h3><div style="max-height:46vh;overflow:auto">'+rows+'</div><div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:15px"><span>合计</span><span style="color:var(--c-primary);font-weight:700;font-size:18px">\u00A5'+cartTotal().toFixed(2)+'</span></div><div class="help">截图发给客服微信/电话，即可完成下单 \u2705</div><div class="btn-row" style="margin-top:10px"><button class="btn" id="ckCopy">复制文字清单</button><button class="btn" id="ckClear">清空</button><button class="btn primary" id="ckClose">关闭</button></div></div>';
+  document.body.appendChild(modal);
+  modal.onclick=function(e){if(e.target===modal)modal.remove();};
+  modal.querySelector('#ckClose').onclick=function(){modal.remove();};
+  modal.querySelector('#ckClear').onclick=function(){if(confirm('确认清空购物车？')){STATE.cart=[];saveCart();renderCart();renderNav();modal.remove();toast('已清空');}};
+  modal.querySelector('#ckCopy').onclick=function(){copyText(text,'已复制，去微信粘贴发给客服');};
 }
 
 /* ============ 收藏夹 ============ */
@@ -2034,8 +2052,7 @@ async function init(){
   STATE.settings.messages=STATE.settings.messages||[];
   STATE.products=d.products||[];
   STATE.isAdmin=adminSessionValid(); /* 恢复登录会话，免二次验证 */
-  loadCart();
-  await Store.init();await ensureIdentity();applyTheme();updateModeTag();renderNav();renderHome();
+  await Store.init();await ensureIdentity();loadCart();applyTheme();updateModeTag();renderNav();renderHome();
   // 定时发布：扫描到点的 scheduled 动态自动转 published
   const checkScheduled=async()=>{let ch=false;const now=Date.now();(STATE.settings.moments.posts||[]).forEach(p=>{if(p.status==="scheduled"&&p.ts<=now){p.status="published";ch=true;}});if(ch){await Store.saveAll();renderMoments();renderNav();}};
   checkScheduled();setInterval(checkScheduled,60000);
