@@ -858,7 +858,7 @@ const DB = {
     if (!localStorage.getItem(this.KEY)) {
       const defaultData = {
         settings: {
-          store_name: "占位美学",
+          store_name: "DKEXI.熹美学",
           store_password: "1234",
           employee_password: "8888",
           wechat_qr_url: "",
@@ -3624,7 +3624,7 @@ function renderSettings(c) {
       <section class="set-sec">
         <h3>店铺基础信息</h3>
         <div class="grid2">
-          <div class="field"><label>店名</label><input id="set_store_name" type="text" value="${esc(s.store_name || '')}" maxlength="40" placeholder="如：占位美学"></div>
+          <div class="field"><label>店名</label><input id="set_store_name" type="text" value="${esc(s.store_name || '')}" maxlength="40" placeholder="如：DKEXI.熹美学"></div>
           <div class="field"><label>品牌主题色</label>
             <div class="row">
               <input id="set_brand_color" type="color" value="${esc(s.brand_color || '#7c3aed')}" style="width:46px;height:38px;padding:2px;border:1px solid #e5e7eb;border-radius:8px" oninput="document.getElementById('set_brand_color_hex').value=this.value">
