@@ -1484,7 +1484,7 @@ function renderProducts(c) {
             <select id="pCat" style="max-width:150px">${catOptions}</select>
           </div>
           <div style="display:flex;flex-wrap:nowrap;gap:6px;align-items:center">
-            ${[['', '全部'], ['internal', '对内'], ['external', '对外']].concat(isOwner ? [['fast', '快到期'], ['normal', '正常日期']] : []).map(([v, l]) => `<button class="btn sm ${App.productFilter === v ? '' : 'ghost'}" onclick="App.productFilter='${v}';renderProducts(document.getElementById('content'))">${l}</button>`).join('')}
+            ${[['', '全部'], ['internal', '对内'], ['external', '对外']].concat(isOwner ? [['fast', '快到期'], ['normal', '正常日期']] : []).map(([v, l]) => `<button class="btn sm ${App.productFilter === v ? '' : 'ghost'}" style="white-space:nowrap;flex:0 0 auto" onclick="App.productFilter='${v}';renderProducts(document.getElementById('content'))">${l}</button>`).join('')}
           </div>
         </div>
         <div class="m-exports">
