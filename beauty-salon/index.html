@@ -1476,14 +1476,15 @@ function renderProducts(c) {
   const catOptions = `<option value="">全部分类</option>` + cats.map(cat => `<option value="${cat.id}" ${App.productCat === cat.id ? 'selected' : ''}>${esc(cat.name)}</option>`).join('');
   c.innerHTML = `
     <div class="card">
-      <div class="page-head">
+      <div class="page-head" style="align-items:flex-start">
         <div style="display:flex;flex-direction:column;gap:8px;flex:1 1 240px;min-width:0">
           <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
             <input id="pSearch" placeholder="搜索名称" value="${esc(App.productSearch)}" style="max-width:170px">
+            <button class="btn sm" type="button" onclick="document.getElementById('pSearch').focus();renderProductTable()" aria-label="搜索">搜索</button>
             <select id="pCat" style="max-width:150px">${catOptions}</select>
           </div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-            ${[['', '全部'], ['internal', '对内'], ['external', '对外']].concat(isOwner ? [['fast', '快到期'], ['normal', '正常日期']] : []).map(([v, l]) => `<button class="btn sm ${App.productFilter === v ? '' : 'ghost'}" onclick="App.productFilter='${v}';renderProducts(document.getElementById('content'))">${l}</button>`).join('')}
+          <div style="display:flex;flex-wrap:nowrap;gap:6px;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">
+            ${[['', '全部'], ['internal', '对内'], ['external', '对外']].concat(isOwner ? [['fast', '快到期'], ['normal', '正常日期']] : []).map(([v, l]) => `<button class="btn sm ${App.productFilter === v ? '' : 'ghost'}" style="flex:0 0 auto" onclick="App.productFilter='${v}';renderProducts(document.getElementById('content'))">${l}</button>`).join('')}
           </div>
         </div>
         <div class="m-exports">
