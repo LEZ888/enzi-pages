@@ -5258,46 +5258,133 @@ function deleteCase(id) {
 }
 
 /* ---- Canvas 图片编辑器（滤镜 / 加文字 / 裁剪）通用版 ---- */
-// arr: 图片数组（产品/案例/知识共用），index: 选中索引, opts: {allowText, title, afterSave(fn)}
-function openImageEditor(arr, index, opts) {
+// 微信式图片裁剪：选图后直接在手机上裁剪，不跳页、不丢数据
+// openImageCropper(src, onCropped, opts) —— 只负责裁剪并回调 onCropped(dataUrl)，绝不 re-render 表单
+function openImageCropper(src, onCropped, opts) {
   opts = opts || {};
-  const src = arr[index];
-  if (!src) return;
-  // 兼容旧字段：把 App._caseImgs 临时指向当前 arr（让现有 edDraw/edApplyCrop/edSaveImg 复用）
-  App._edArr = arr;
-  App._ed = { index, img: null, canvas: null, filters: { brightness: 100, contrast: 100, saturate: 100 }, texts: [], cropMode: false, cropStart: null, cropRect: null, dragging: null, allowText: opts.allowText !== false, afterSave: opts.afterSave || null };
-  const html = `
-    <h3>${opts.title || '图片编辑'}</h3>
-    <div class="case-imgedit">
-      <canvas id="edCanvas"></canvas>
-      <div id="edCrop" class="ed-cropbox" style="display:none"></div>
+  App._cropCb = onCropped;
+  const title = opts.title || '裁剪图片';
+  openModal(`
+    <h3>${title}</h3>
+    <div id="cropWrap" style="position:relative;margin:0 auto;background:#111;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none">
+      <img id="cropImg" src="${src}" style="display:block;max-width:100%;max-height:56vh;pointer-events:none;-webkit-user-select:none;user-select:none">
+      <div id="cropBox" style="position:absolute;border:2px solid #7c3aed;box-shadow:0 0 0 9999px rgba(0,0,0,.5);box-sizing:border-box;cursor:move">
+        <span class="crop-h" data-h="nw" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;left:-10px;top:-10px;cursor:nwse-resize;touch-action:none"></span>
+        <span class="crop-h" data-h="ne" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;right:-10px;top:-10px;cursor:nesw-resize;touch-action:none"></span>
+        <span class="crop-h" data-h="sw" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;left:-10px;bottom:-10px;cursor:nesw-resize;touch-action:none"></span>
+        <span class="crop-h" data-h="se" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;right:-10px;bottom:-10px;cursor:nwse-resize;touch-action:none"></span>
+      </div>
     </div>
-    <div class="ed-tool">
-      <label>亮度 <input type="range" id="edBright" min="0" max="200" value="100" oninput="edApplyFilters()"></label>
-      <label>对比度 <input type="range" id="edContrast" min="0" max="200" value="100" oninput="edApplyFilters()"></label>
-      <label>饱和度 <input type="range" id="edSat" min="0" max="200" value="100" oninput="edApplyFilters()"></label>
-    </div>
-    ${opts.allowText !== false ? `<div class="ed-tool">
-      <input id="edText" placeholder="输入文字" style="width:120px">
-      <input id="edTextSize" type="text" inputmode="numeric" value="28" style="width:48px">
-      <input id="edTextColor" type="color" value="#ffffff" style="width:38px;height:30px;border:none;background:none">
-      <button class="btn sm" onclick="edAddText()">添加文字</button>
-    </div>` : ''}
-    <div class="ed-tool">
-      <button class="btn sm ghost" onclick="edStartCrop()" id="edCropBtn">✂ 裁剪</button>
-      <button class="btn sm ghost" onclick="edReset()">重置</button>
-      <button class="btn" onclick="edSaveImg()">保存修改</button>
+    <div class="ed-tool" style="margin-top:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn sm ghost" onclick="cropReset()">全图</button>
+      <button class="btn" onclick="cropConfirm()">确认裁剪</button>
       <button class="btn sm ghost" onclick="closeModal()">取消</button>
     </div>
-    <div style="font-size:12px;color:#9ca3af;margin-top:6px">拖动滑块调滤镜；输入文字点「添加文字」后可拖动位置；点「✂ 裁剪」后在图片上拖拽选区自动裁剪。</div>`;
-  openModal(html);
-  const canvas = document.getElementById('edCanvas');
-  App._ed.canvas = canvas;
-  const img = new Image();
-  img.onload = () => { canvas.width = img.naturalWidth; canvas.height = img.naturalHeight; App._ed.img = img; edDraw(); };
-  img.onerror = () => toast('图片加载失败');
-  img.src = src;
-  bindEdEvents(canvas);
+    <div style="font-size:12px;color:#9ca3af;margin-top:6px;text-align:center">拖动选框移动位置，拖动四角缩放；点「确认裁剪」即应用。</div>`);
+  const wrap = document.getElementById('cropWrap');
+  const img = document.getElementById('cropImg');
+  const box = document.getElementById('cropBox');
+  App._cropBox = null;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function paintBox() { const b = App._cropBox; if (!b) return; box.style.left = b.x + 'px'; box.style.top = b.y + 'px'; box.style.width = b.w + 'px'; box.style.height = b.h + 'px'; }
+  function fit() {
+    const r = img.getBoundingClientRect();
+    if (!r.width) { requestAnimationFrame(fit); return; }
+    wrap.style.width = r.width + 'px'; wrap.style.height = r.height + 'px';
+    const w = r.width * 0.82, h = r.height * 0.82;
+    App._cropBox = { x: (r.width - w) / 2, y: (r.height - h) / 2, w, h };
+    paintBox();
+  }
+  if (img.complete && img.naturalWidth) fit(); else img.onload = fit;
+  requestAnimationFrame(fit);
+  let mode = null, start = null;
+  function getXY(e) {
+    const rect = wrap.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return { x: cx, y: cy, w: rect.width, h: rect.height };
+  }
+  function onDown(e) {
+    const t = e.target;
+    const p = getXY(e);
+    if (t && t.classList && t.classList.contains('crop-h')) mode = 'resize:' + t.getAttribute('data-h');
+    else if (t === box || t === wrap) mode = 'move';
+    else return;
+    e.preventDefault();
+    start = { x: p.x, y: p.y, b: Object.assign({}, App._cropBox) };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+  }
+  function onMove(e) {
+    if (!mode) return;
+    e.preventDefault();
+    const p = getXY(e);
+    const dx = p.x - start.x, dy = p.y - start.y;
+    const W = p.w, H = p.h, MIN = 24;
+    let b = Object.assign({}, start.b);
+    if (mode === 'move') {
+      b.x = clamp(start.b.x + dx, 0, W - b.w);
+      b.y = clamp(start.b.y + dy, 0, H - b.h);
+    } else {
+      const c = mode.split(':')[1];
+      let left = b.x, top = b.y, right = b.x + b.w, bottom = b.y + b.h;
+      if (c.indexOf('w') >= 0) left = clamp(start.b.x + dx, 0, right - MIN);
+      if (c.indexOf('e') >= 0) right = clamp(start.b.x + start.b.w + dx, left + MIN, W);
+      if (c.indexOf('n') >= 0) top = clamp(start.b.y + dy, 0, bottom - MIN);
+      if (c.indexOf('s') >= 0) bottom = clamp(start.b.y + start.b.h + dy, top + MIN, H);
+      b = { x: left, y: top, w: right - left, h: bottom - top };
+    }
+    App._cropBox = b; paintBox();
+  }
+  function onUp() {
+    mode = null; start = null;
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onUp);
+  }
+  wrap.addEventListener('mousedown', onDown);
+  wrap.addEventListener('touchstart', onDown, { passive: false });
+}
+function cropReset() {
+  const wrap = document.getElementById('cropWrap'); if (!wrap) return;
+  const r = wrap.getBoundingClientRect();
+  App._cropBox = { x: 0, y: 0, w: r.width, h: r.height };
+  const box = document.getElementById('cropBox');
+  if (box) { box.style.left = '0px'; box.style.top = '0px'; box.style.width = r.width + 'px'; box.style.height = r.height + 'px'; }
+}
+function cropConfirm() {
+  const img = document.getElementById('cropImg');
+  const wrap = document.getElementById('cropWrap');
+  const b = App._cropBox;
+  if (!img || !wrap || !b) { closeModal(); return; }
+  let raw = img.src;
+  try {
+    const ir = img.getBoundingClientRect();
+    const sx = img.naturalWidth / ir.width, sy = img.naturalHeight / ir.height;
+    const cx = b.x * sx, cy = b.y * sy, cw = Math.max(1, b.w * sx), ch = Math.max(1, b.h * sy);
+    const tmp = document.createElement('canvas');
+    tmp.width = Math.round(cw); tmp.height = Math.round(ch);
+    const ctx = tmp.getContext('2d');
+    if (ctx) { ctx.drawImage(img, cx, cy, cw, ch, 0, 0, tmp.width, tmp.height); raw = tmp.toDataURL('image/jpeg', 0.92); }
+  } catch (err) { console.error('cropConfirm', err); }
+  const done = (d) => { if (typeof App._cropCb === 'function') App._cropCb(d); closeModal(); toast('已裁剪'); };
+  if (typeof optimizeImageSrc === 'function') optimizeImageSrc(raw, 1200, 0.72).then(done).catch(() => done(raw));
+  else done(raw);
+}
+// 兼容旧调用：openImageEditor 现复用微信式裁剪（选中即裁剪，不跳页、不丢数据）
+function openImageEditor(arr, index, opts) {
+  opts = opts || {};
+  const src = (arr && arr[index]) || '';
+  if (!src) return;
+  openImageCropper(src, function (d) {
+    if (arr) arr[index] = d;
+    if (arr === App._caseImgs) renderCaseImgPreview();
+    if (arr === App._pfImgs) renderImgPreview();
+    if (typeof opts.afterSave === 'function') opts.afterSave(d);
+  }, { title: opts.title || '裁剪图片' });
 }
 
 /* ---- 兼容旧 API：案例用 ---- */
