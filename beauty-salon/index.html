@@ -70,6 +70,21 @@
   .tag.green { background: #dcfce7; color: #15803d; }
   .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px; }
   .modal-mask.show { display: flex; }
+  /* —— 图片裁剪器：移动端全屏，桌面端居中卡片 —— */
+  .crop-mask { position: fixed; inset: 0; background: #0b0f1a; z-index: 60; display: none; flex-direction: column; padding: 0; }
+  .crop-mask.show { display: flex; }
+  .crop-mask .crop-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; color: #fff; background: rgba(0,0,0,.55); flex: 0 0 auto; }
+  .crop-mask .crop-head h3 { margin: 0; font-size: 16px; color: #fff; }
+  .crop-mask .crop-head .x { background: rgba(255,255,255,.18); color: #fff; border: none; border-radius: 50%; width: 34px; height: 34px; font-size: 20px; line-height: 1; cursor: pointer; }
+  .crop-mask .crop-body { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 8px; }
+  .crop-mask .crop-foot { display: flex; gap: 8px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); background: rgba(0,0,0,.55); flex: 0 0 auto; }
+  .crop-mask .crop-foot .btn { flex: 1; padding: 12px; font-size: 15px; }
+  .crop-mask .crop-hint { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 6px; }
+  @media (min-width: 768px) {
+    .crop-mask { padding: 24px; background: rgba(0,0,0,.55); align-items: center; justify-content: center; }
+    .crop-mask .crop-head, .crop-mask .crop-foot { background: transparent; padding: 0 8px; max-width: 760px; width: 100%; }
+    .crop-mask .crop-body { background: #111; border-radius: 12px; max-width: 760px; max-height: 78vh; padding: 12px; }
+  }
   .modal { background: #fff; border-radius: 12px; width: 100%; max-width: 460px; max-height: 90vh; overflow-y: auto; padding: 20px; }
   .modal h3 { margin-top: 0; }
   .field { margin-bottom: 14px; }
@@ -1903,10 +1918,9 @@ function openProductForm(id) {
 
 function renderImgPreview() {
   const box = document.getElementById('pf_imgs'); if (!box) return;
-  box.innerHTML = (App._pfImgs || []).map((u, i) => `<div style="position:relative">
-    <img src="${u}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openImageEditor(App._pfImgs,${i},{title:'产品图片编辑 · 可裁剪+加文字',allowText:true})">
-    <button type="button" title="编辑（裁剪/加文字）" onclick="openImageEditor(App._pfImgs,${i},{title:'产品图片编辑 · 可裁剪+加文字',allowText:true})" style="position:absolute;bottom:-6px;left:-6px;width:22px;height:22px;border-radius:50%;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">✎</button>
-    <button type="button" title="删除" onclick="removeImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+  box.innerHTML = (App._pfImgs || []).map((u, i) => `<div style="position:relative;display:inline-block">
+    <img src="${u}" style="width:88px;height:88px;object-fit:cover;border-radius:8px;cursor:pointer;display:block" onclick="openImageEditor(App._pfImgs,${i},{title:'产品图片编辑 · 可裁剪+加文字',allowText:true})">
+    <button type="button" title="删除" onclick="removeImg(${i})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.25)">×</button>
   </div>`).join('');
 }
 function addProductImages() {
@@ -4496,8 +4510,8 @@ App._acImgs = [];
 function renderAcImgPreview() {
   const box = document.getElementById('ac_imgs'); if (!box) return;
   box.innerHTML = (App._acImgs || []).map((u, i) =>
-    `<div style="position:relative"><img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px">
-      <button type="button" onclick="removeAcImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer" title="删除这张">×</button></div>`
+    `<div style="position:relative;display:inline-block"><img src="${u}" style="width:88px;height:88px;object-fit:cover;border-radius:8px;display:block">
+      <button type="button" onclick="removeAcImg(${i})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.25)" title="删除">×</button></div>`
   ).join('');
 }
 function addActivityCardImages() {
@@ -4724,8 +4738,8 @@ function removeProjectImg(i) { App._pjImgs.splice(i, 1); renderProjectImgPreview
 function renderProjectImgPreview() {
   const box = document.getElementById('pj_imgs'); if (!box) return;
   box.innerHTML = (App._pjImgs || []).map((u, i) =>
-    `<div style="position:relative"><img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px">
-      <button type="button" onclick="removeProjectImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer" title="删除">×</button></div>`
+    `<div style="position:relative;display:inline-block"><img src="${u}" style="width:88px;height:88px;object-fit:cover;border-radius:8px;display:block">
+      <button type="button" onclick="removeProjectImg(${i})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.25)" title="删除">×</button></div>`
   ).join('');
 }
 function addProjectVideo() {
@@ -5507,10 +5521,9 @@ function deleteCaseCategory(id) {
 function renderCaseImgPreview() {
   const box = document.getElementById('case_imgs'); if (!box) return;
   box.innerHTML = (App._caseImgs || []).map((u, i) =>
-    `<div style="position:relative">
-      <img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="openCaseImageEditor(${i})">
-      <button type="button" onclick="removeCaseImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer" title="删除">×</button>
-      <button type="button" onclick="openCaseImageEditor(${i})" style="position:absolute;bottom:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#7c3aed;color:#fff;border:none;cursor:pointer;font-size:11px" title="编辑">✎</button>
+    `<div style="position:relative;display:inline-block">
+      <img src="${u}" style="width:88px;height:88px;object-fit:cover;border-radius:8px;cursor:pointer;display:block" onclick="openCaseImageEditor(${i})">
+      <button type="button" onclick="removeCaseImg(${i})" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.25)" title="删除">×</button>
     </div>`).join('');
 }
 function addCaseImages() {
@@ -5627,28 +5640,34 @@ function openImageCropper(src, onCropped, opts) {
   const title = opts.title || '裁剪图片';
   let mask = document.getElementById('cropMask');
   if (!mask) {
-    mask = document.createElement('div'); mask.className = 'modal-mask'; mask.id = 'cropMask';
-    mask.style.zIndex = '60';
+    mask = document.createElement('div');
+    mask.id = 'cropMask';
     document.body.appendChild(mask);
     mask.addEventListener('click', e => { if (e.target === mask) closeCropModal(); });
   }
+  mask.className = 'crop-mask';
   mask.innerHTML = `
-    <h3>${title}</h3>
-    <div id="cropWrap" style="position:relative;margin:0 auto;background:#111;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none">
-      <img id="cropImg" src="${src}" style="display:block;max-width:100%;max-height:56vh;pointer-events:none;-webkit-user-select:none;user-select:none">
-      <div id="cropBox" style="position:absolute;border:2px solid #7c3aed;box-shadow:0 0 0 9999px rgba(0,0,0,.5);box-sizing:border-box;cursor:move">
-        <span class="crop-h" data-h="nw" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;left:-10px;top:-10px;cursor:nwse-resize;touch-action:none"></span>
-        <span class="crop-h" data-h="ne" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;right:-10px;top:-10px;cursor:nesw-resize;touch-action:none"></span>
-        <span class="crop-h" data-h="sw" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;left:-10px;bottom:-10px;cursor:nesw-resize;touch-action:none"></span>
-        <span class="crop-h" data-h="se" style="position:absolute;width:20px;height:20px;background:#7c3aed;border-radius:50%;right:-10px;bottom:-10px;cursor:nwse-resize;touch-action:none"></span>
+    <div class="crop-head">
+      <h3>${title}</h3>
+      <button type="button" class="x" aria-label="关闭" onclick="closeCropModal()">×</button>
+    </div>
+    <div class="crop-body">
+      <div id="cropWrap" style="position:relative;margin:0 auto;background:#111;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;max-width:100%;max-height:100%">
+        <img id="cropImg" src="${src}" style="display:block;max-width:100%;max-height:100%;pointer-events:none;-webkit-user-select:none;user-select:none">
+        <div id="cropBox" style="position:absolute;border:2px solid #a78bfa;box-shadow:0 0 0 9999px rgba(0,0,0,.5);box-sizing:border-box;cursor:move">
+          <span class="crop-h" data-h="nw" style="position:absolute;width:26px;height:26px;background:#a78bfa;border:2px solid #fff;border-radius:50%;left:-13px;top:-13px;cursor:nwse-resize;touch-action:none"></span>
+          <span class="crop-h" data-h="ne" style="position:absolute;width:26px;height:26px;background:#a78bfa;border:2px solid #fff;border-radius:50%;right:-13px;top:-13px;cursor:nesw-resize;touch-action:none"></span>
+          <span class="crop-h" data-h="sw" style="position:absolute;width:26px;height:26px;background:#a78bfa;border:2px solid #fff;border-radius:50%;left:-13px;bottom:-13px;cursor:nesw-resize;touch-action:none"></span>
+          <span class="crop-h" data-h="se" style="position:absolute;width:26px;height:26px;background:#a78bfa;border:2px solid #fff;border-radius:50%;right:-13px;bottom:-13px;cursor:nwse-resize;touch-action:none"></span>
+        </div>
       </div>
     </div>
-    <div class="ed-tool" style="margin-top:12px;justify-content:center;flex-wrap:wrap">
+    <div class="crop-foot">
       <button class="btn sm ghost" onclick="cropReset()">全图</button>
       <button class="btn" onclick="cropConfirm()">确认裁剪</button>
       <button class="btn sm ghost" onclick="closeCropModal()">取消</button>
     </div>
-    <div style="font-size:12px;color:#9ca3af;margin-top:6px;text-align:center">拖动选框移动位置，拖动四角缩放；点「确认裁剪」即应用。</div>`;
+    <div class="crop-hint" style="position:absolute;bottom:72px;left:0;right:0;color:#cbd5e1">拖动选框移动，拖动四角缩放</div>`;
   mask.classList.add('show');
   const wrap = document.getElementById('cropWrap');
   const img = document.getElementById('cropImg');
