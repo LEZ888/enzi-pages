@@ -17,11 +17,27 @@ html,body{margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
 img{max-width:100%;display:block;}
 button{font-family:inherit;cursor:pointer;}
-/* 顶部导航：横向一排（军规第八条） */
-.nav{position:sticky;top:0;z-index:30;display:flex;flex-direction:row;gap:6px;overflow-x:auto;padding:10px 12px;background:var(--brand);scrollbar-width:none;}
-.nav::-webkit-scrollbar{display:none;}
-.navitem{flex:0 0 auto;border:none;background:rgba(255,255,255,.18);color:#fff;padding:8px 16px;border-radius:999px;font-size:14px;white-space:nowrap;}
-.navitem.active{background:#fff;color:var(--brand);font-weight:700;}
+/* 底部固定 Tab 栏（全局，替代顶部导航） */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:row;justify-content:space-around;background:#fff;border-top:1px solid #eee;padding:6px 2px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,.06);}
+.tabitem{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:#9ca3af;font-size:11px;cursor:pointer;padding:2px 0;}
+.tabitem .ic{font-size:20px;line-height:1.1;}
+.tabitem.active{color:var(--brand);}
+.tabitem.active .ic{transform:scale(1.08);}
+/* 首页搜索框 */
+.searchbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:9px 14px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.04);}
+.searchbar input{flex:1;border:none;outline:none;font-size:15px;background:transparent;min-width:0;}
+.searchbar .ic{font-size:16px;opacity:.45;}
+/* Banner 轮播 */
+.banner{width:100%;height:172px;border-radius:16px;overflow:hidden;margin-bottom:16px;scroll-snap-type:x mandatory;background:#eee;}
+.banner img{width:100%;flex:0 0 100%;height:172px;object-fit:cover;scroll-snap-align:center;display:block;}
+/* 圆形胶囊导航（可在 settings.home_nav 配置） */
+.home-pills{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none;}
+.home-pills::-webkit-scrollbar{display:none;}
+.pillnav{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;width:62px;border:none;background:none;cursor:pointer;}
+.pillnav .pic{width:56px;height:56px;border-radius:50%;border:2px solid var(--brand);display:flex;align-items:center;justify-content:center;font-size:24px;background:#faf5ff;transition:.2s;}
+.pillnav.active .pic{border-color:#7c3aed;background:var(--brand);box-shadow:0 4px 12px rgba(124,58,237,.3);}
+.pillnav .pl{font-size:12px;color:#374151;white-space:nowrap;}
+.pillnav.active .pl{color:var(--brand);font-weight:600;}
 /* 按钮：默认横向并排（军规第八条） */
 .btn-row{display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;}
 .btn-row.center{justify-content:center;}
@@ -30,7 +46,7 @@ button{font-family:inherit;cursor:pointer;}
 .btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand);}
 .btn.sm{height:28px;padding:0 12px;font-size:13px;}
 /* 页面 */
-.page{padding:14px 12px 40px;max-width:760px;margin:0 auto;}
+.page{padding:14px 12px 82px;max-width:760px;margin:0 auto;}
 .page h2{font-size:18px;margin:6px 4px 12px;}
 .empty{color:var(--muted);text-align:center;padding:40px 0;}
 /* 首页 */
@@ -51,7 +67,7 @@ button{font-family:inherit;cursor:pointer;}
 .price{color:#e11d48;font-weight:700;font-size:15px;}
 .price-m{color:var(--brand);font-size:13px;}
 /* 详情 */
-.detail{max-width:760px;margin:0 auto;padding:0 0 50px;}
+.detail{max-width:760px;margin:0 auto;padding:0 0 82px;}
 .back{display:flex;flex-direction:row;align-items:center;gap:8px;padding:12px;color:var(--brand);font-size:15px;}
 .back button{border:none;background:none;color:var(--brand);font-size:22px;padding:0 6px;}
 .slider{display:flex;flex-direction:row;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
@@ -60,7 +76,7 @@ button{font-family:inherit;cursor:pointer;}
 .detail-title{font-size:21px;font-weight:700;margin:0 0 8px;}
 .detail-sub{color:var(--muted);font-size:13px;margin-bottom:12px;}
 .detail-desc{font-size:15px;line-height:1.7;color:#374151;white-space:pre-wrap;word-break:break-word;}
-.detail-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;padding:14px 16px;position:sticky;bottom:0;background:rgba(245,243,255,.96);backdrop-filter:blur(6px);}
+.detail-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;padding:14px 16px;position:sticky;bottom:58px;background:rgba(245,243,255,.96);backdrop-filter:blur(6px);}
 .detail-actions .btn{flex:0 0 auto;}
 /* 活动多模板 */
 .tpl-a .detail-title{color:var(--brand);}
@@ -91,11 +107,26 @@ function svgImg(label, c1, c2){
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 const SAMPLE = {
-  settings: { store_name: "DKEXI·熹美学", wechat: "DKEXI-beauty", douyin: "https://v.douyin.com/example" },
+  settings: {
+    store_name: "DKEXI·熹美学", wechat: "DKEXI-beauty", douyin: "https://v.douyin.com/example",
+    home_nav: [
+      { label:"全部商品", icon:"🛍️", view:"products" },
+      { label:"莱斯莉", icon:"🌿", view:"category", value:"莱斯莉" },
+      { label:"实验室", icon:"🔬", view:"category", value:"实验室" },
+      { label:"活动", icon:"🎉", view:"activity" },
+      { label:"案例", icon:"📸", view:"case" },
+      { label:"知识", icon:"📚", view:"knowledge" }
+    ],
+    banners: [
+      { img: svgImg("DKEXI·熹美学", "#7c3aed", "#a78bfa"), link:"" },
+      { img: svgImg("新客体验 ¥99", "#db2777", "#fbcfe8"), link:"?activity=a1" },
+      { img: svgImg("油痘肌逆袭", "#059669", "#a7f3d0"), link:"?case=c1" }
+    ]
+  },
   products: [
-    { id: "p1", name: "雪绒花修护精华", category: "护肤", retail_price: 398, member_price: 320, description: "深层补水，舒缓泛红，适合敏感肌日常修护。", images: [svgImg("精华", "#c4b5fd", "#7c3aed")] },
-    { id: "p2", name: "光感透白面膜", category: "面膜", retail_price: 128, member_price: 99, description: "一片提亮，熬夜急救，温和不刺激。", images: [svgImg("面膜", "#fbcfe8", "#db2777")] },
-    { id: "p3", name: "氨基酸洁面乳", category: "清洁", retail_price: 88, member_price: 69, description: "弱酸温和，洗后不紧绷。", images: [svgImg("洁面", "#bfdbfe", "#2563eb")] }
+    { id: "p1", name: "雪绒花修护精华", category: "莱斯莉", retail_price: 398, member_price: 320, description: "深层补水，舒缓泛红，适合敏感肌日常修护。", images: [svgImg("精华", "#c4b5fd", "#7c3aed")] },
+    { id: "p2", name: "光感透白面膜", category: "实验室", retail_price: 128, member_price: 99, description: "一片提亮，熬夜急救，温和不刺激。", images: [svgImg("面膜", "#fbcfe8", "#db2777")] },
+    { id: "p3", name: "氨基酸洁面乳", category: "莱斯莉", retail_price: 88, member_price: 69, description: "弱酸温和，洗后不紧绷。", images: [svgImg("洁面", "#bfdbfe", "#2563eb")] }
   ],
   projects: [
     { id: "pr1", name: "小气泡深层清洁", price: 268, description: "毛孔级清洁，去除黑头老废角质，皮肤瞬间通透。", images: [svgImg("小气泡", "#a7f3d0", "#059669")] },
@@ -114,6 +145,21 @@ const SAMPLE = {
     { id: "k1", title: "换季护肤三步法", summary: "降温了皮肤容易干，做好这三步稳过秋天。", content: "第一步：换成滋润型洁面，避免过度清洁。\n第二步：精华叠加，先补水再锁水。\n第三步：防晒不能停，秋日紫外线依然在。\n坚持一周就能感受到变化。", cover: svgImg("知识", "#ddd6fe", "#7c3aed") }
   ]
 };
+
+/* 首页导航/Banner 默认配置（后台 settings 未配时回退） */
+const DEFAULT_HOME_NAV = [
+  { label:"全部商品", icon:"🛍️", view:"products" },
+  { label:"莱斯莉", icon:"🌿", view:"category", value:"莱斯莉" },
+  { label:"实验室", icon:"🔬", view:"category", value:"实验室" },
+  { label:"活动", icon:"🎉", view:"activity" },
+  { label:"案例", icon:"📸", view:"case" },
+  { label:"知识", icon:"📚", view:"knowledge" }
+];
+const DEFAULT_BANNERS = [
+  { img: svgImg("DKEXI·熹美学", "#7c3aed", "#a78bfa"), link:"" },
+  { img: svgImg("新客体验 ¥99", "#db2777", "#fbcfe8"), link:"?activity=a1" },
+  { img: svgImg("油痘肌逆袭", "#059669", "#a7f3d0"), link:"?case=c1" }
+];
 
 /* ===== DataAPI：从 Supabase 后台库只读，失败回退示例 ===== */
 const DataAPI = {
@@ -137,7 +183,7 @@ const DataAPI = {
 };
 
 /* ===== 全局状态 ===== */
-const App = { module: "home", detail: null, showPrice: false, data: null };
+const App = { module: "home", detail: null, showPrice: false, data: null, homeView: null };
 
 /* ===== 工具 ===== */
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
@@ -147,13 +193,14 @@ function toast(msg){ const t = $("#toast"); if(!t) return; t.textContent = msg; 
 function copyText(t){ try { if (navigator.clipboard) { navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t)); return; } } catch(e){} fallbackCopy(t); }
 function fallbackCopy(t){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(e){} document.body.removeChild(ta); }
 
-/* ===== 导航（横向） ===== */
+/* ===== 底部 Tab 栏（全局固定） ===== */
 const NAV = [
   { key:"home", label:"首页" }, { key:"product", label:"产品" }, { key:"project", label:"项目" },
   { key:"activity", label:"活动" }, { key:"case", label:"案例" }, { key:"knowledge", label:"知识" }
 ];
+const NAV_ICON = { home:"🏠", product:"🛍️", project:"✨", activity:"🎉", case:"📸", knowledge:"📚" };
 function navBar(){
-  return '<div class="nav">' + NAV.map(n => '<button class="navitem '+(App.module===n.key?'active':'')+'" onclick="goModule(\''+n.key+'\')">'+n.label+'</button>').join('') + '</div>';
+  return '<nav class="tabbar">' + NAV.map(n => '<button class="tabitem '+(App.module===n.key?'active':'')+'" onclick="goModule(\''+n.key+'\')"><span class="ic">'+NAV_ICON[n.key]+'</span><span>'+n.label+'</span></button>').join('') + '</nav>';
 }
 
 /* ===== 路由 ===== */
@@ -294,27 +341,73 @@ async function exportKnowledge(id){
   } catch(e){ toast("导出失败：" + (e && e.message || e)); }
 }
 
-/* ===== 首页 ===== */
+/* ===== 首页（电商 / 小红书风格） ===== */
+function getHomeNav(){ return (App.data.settings && App.data.settings.home_nav) || DEFAULT_HOME_NAV; }
+function getBanners(){ return (App.data.settings && App.data.settings.banners) || DEFAULT_BANNERS; }
+
 function renderHome(){
-  const s = App.data.settings || {};
-  const name = esc(s.store_name || "DKEXI·熹美学");
-  let html = '<div class="page" style="padding-top:0">';
-  html += '<div class="hero"><h1>'+name+'</h1><p>专业美容 · 匠心美学</p>'
-    + '<div class="btn-row center">'
-    + '<button class="btn" onclick="goModule(\'product\')">看产品</button>'
-    + '<button class="btn ghost" onclick="togglePrice()">'+(App.showPrice?'隐藏价格':'店内价')+'</button>'
-    + '</div></div>';
-  html += '<div class="quick">';
-  NAV.filter(n => n.key !== "home").forEach(n => {
-    html += '<button class="qcard" onclick="goModule(\''+n.key+'\')">'+n.label+'</button>';
-  });
-  html += '</div>';
-  html += '<div class="contact btn-row center">'
-    + '<button class="btn" onclick="openWechat()">加微信</button>'
-    + '<button class="btn ghost" onclick="openDouyin()">抖音</button>'
-    + '</div>';
+  const nav = getHomeNav();
+  const banners = getBanners();
+  let html = '<div class="page home" style="padding-top:0">';
+  // 顶部搜索框
+  html += '<div class="searchbar"><span class="ic">🔍</span>'
+    + '<input id="homeSearchInput" placeholder="搜索产品 / 项目 / 活动..." onkeydown="if(event.key===\'Enter\')homeSearch(this.value)">'
+    + '<button class="btn sm" onclick="homeSearch(document.getElementById(\'homeSearchInput\').value)">搜索</button></div>';
+  // Banner 轮播
+  html += '<div class="banner slider" id="banner">' + banners.map(b => '<img loading="lazy" src="'+b.img+'"' + (b.link ? ' style="cursor:pointer" onclick="location.href=location.pathname+\''+b.link+'\'"' : '') + '>').join('') + '</div>';
+  // 圆形胶囊导航（可后台配置）
+  html += '<div class="home-pills">' + nav.map((n,i) => '<button class="pillnav'+(i===0?' active':'')+'" onclick="clickHomeNav('+i+')"><span class="pic">'+(n.icon||'•')+'</span><span class="pl">'+esc(n.label)+'</span></button>').join('') + '</div>';
+  // 内容区（胶囊切换 / 搜索结果）
+  html += '<div id="homeContent"></div>';
   html += '</div>';
   return html;
+}
+
+/* 中间内容区：根据选中的胶囊导航渲染 */
+function renderHomeContent(){
+  const box = document.getElementById('homeContent'); if (!box) return;
+  const nav = getHomeNav();
+  const v = App.homeView || nav[0];
+  let items = [], type = 'product';
+  if (v.view === 'category'){ items = (App.data.products||[]).filter(p => p.category === v.value); type = 'product'; }
+  else { items = App.data[v.view] || []; type = { products:'product', activity:'activity', case:'case', knowledge:'knowledge', project:'project' }[v.view] || 'product'; }
+  if (!items.length){ box.innerHTML = '<p class="empty">该分类暂无内容</p>'; return; }
+  box.innerHTML = '<div class="grid">' + items.map(it => {
+    const id = it.id, title = it.name || it.title || '';
+    const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
+    return '<div class="card" onclick="openDetail(\''+type+'\',\''+id+'\')"><img class="card-img" loading="lazy" src="'+img+'"><div class="card-body"><div class="card-title">'+esc(title)+'</div>'+priceHTML(it)+'</div></div>';
+  }).join('') + '</div>';
+}
+function clickHomeNav(idx){
+  const nav = getHomeNav();
+  App.homeView = nav[idx];
+  document.querySelectorAll('.pillnav').forEach((el,i) => el.classList.toggle('active', i === idx));
+  renderHomeContent();
+}
+
+/* 搜索：跨模块按名称过滤 */
+function homeSearch(q){
+  q = (q||'').trim().toLowerCase();
+  const box = document.getElementById('homeContent'); if (!box) return;
+  if (!q){ renderHomeContent(); return; }
+  const types = [['products','product'],['projects','project'],['activity_cards','activity'],['cases','case'],['knowledge_articles','knowledge']];
+  let items = [];
+  types.forEach(([k,t]) => (App.data[k]||[]).forEach(it => {
+    const name = (it.name || it.title || '').toLowerCase();
+    if (name.indexOf(q) >= 0) items.push({ t, id: it.id, title: it.name || it.title, img: (it.images&&it.images[0])||it.header_image||it.cover });
+  }));
+  if (!items.length){ box.innerHTML = '<p class="empty">没找到“'+esc(q)+'”相关内容</p>'; return; }
+  box.innerHTML = '<div class="grid">' + items.map(o => '<div class="card" onclick="openDetail(\''+o.t+'\',\''+o.id+'\')"><img class="card-img" loading="lazy" src="'+o.img+'"><div class="card-body"><div class="card-title">'+esc(o.title)+'</div></div></div>').join('') + '</div>';
+}
+
+/* Banner 自动轮播 */
+let _bannerInt = null;
+function startBanner(){
+  if (_bannerInt) clearInterval(_bannerInt);
+  const el = document.getElementById('banner'); if (!el) return;
+  const imgs = el.querySelectorAll('img'); if (imgs.length < 2) return;
+  let i = 0;
+  _bannerInt = setInterval(() => { i = (i+1) % imgs.length; try { el.scrollTo({ left: el.clientWidth * i, behavior: 'smooth' }); } catch(e){ el.scrollLeft = el.clientWidth * i; } }, 3200);
 }
 
 /* ===== 总渲染 ===== */
@@ -332,6 +425,7 @@ function render(){
   else html = navBar() + listHTML(App.module);
   root.innerHTML = html;
   window.scrollTo(0, 0);
+  if (App.module === "home" && !App.detail && !direct){ setTimeout(function(){ renderHomeContent(); startBanner(); }, 0); }
 }
 window.addEventListener("popstate", render);
 
