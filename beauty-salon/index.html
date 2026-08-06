@@ -5264,7 +5264,14 @@ function openImageCropper(src, onCropped, opts) {
   opts = opts || {};
   App._cropCb = onCropped;
   const title = opts.title || '裁剪图片';
-  openModal(`
+  let mask = document.getElementById('cropMask');
+  if (!mask) {
+    mask = document.createElement('div'); mask.className = 'modal-mask'; mask.id = 'cropMask';
+    mask.style.zIndex = '60';
+    document.body.appendChild(mask);
+    mask.addEventListener('click', e => { if (e.target === mask) closeCropModal(); });
+  }
+  mask.innerHTML = `
     <h3>${title}</h3>
     <div id="cropWrap" style="position:relative;margin:0 auto;background:#111;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none">
       <img id="cropImg" src="${src}" style="display:block;max-width:100%;max-height:56vh;pointer-events:none;-webkit-user-select:none;user-select:none">
@@ -5278,9 +5285,10 @@ function openImageCropper(src, onCropped, opts) {
     <div class="ed-tool" style="margin-top:12px;justify-content:center;flex-wrap:wrap">
       <button class="btn sm ghost" onclick="cropReset()">全图</button>
       <button class="btn" onclick="cropConfirm()">确认裁剪</button>
-      <button class="btn sm ghost" onclick="closeModal()">取消</button>
+      <button class="btn sm ghost" onclick="closeCropModal()">取消</button>
     </div>
-    <div style="font-size:12px;color:#9ca3af;margin-top:6px;text-align:center">拖动选框移动位置，拖动四角缩放；点「确认裁剪」即应用。</div>`);
+    <div style="font-size:12px;color:#9ca3af;margin-top:6px;text-align:center">拖动选框移动位置，拖动四角缩放；点「确认裁剪」即应用。</div>`;
+  mask.classList.add('show');
   const wrap = document.getElementById('cropWrap');
   const img = document.getElementById('cropImg');
   const box = document.getElementById('cropBox');
@@ -5348,6 +5356,7 @@ function openImageCropper(src, onCropped, opts) {
   wrap.addEventListener('mousedown', onDown);
   wrap.addEventListener('touchstart', onDown, { passive: false });
 }
+function closeCropModal() { const m = document.getElementById('cropMask'); if (m) m.classList.remove('show'); }
 function cropReset() {
   const wrap = document.getElementById('cropWrap'); if (!wrap) return;
   const r = wrap.getBoundingClientRect();
@@ -5370,7 +5379,7 @@ function cropConfirm() {
     const ctx = tmp.getContext('2d');
     if (ctx) { ctx.drawImage(img, cx, cy, cw, ch, 0, 0, tmp.width, tmp.height); raw = tmp.toDataURL('image/jpeg', 0.92); }
   } catch (err) { console.error('cropConfirm', err); }
-  const done = (d) => { if (typeof App._cropCb === 'function') App._cropCb(d); closeModal(); toast('已裁剪'); };
+  const done = (d) => { if (typeof App._cropCb === 'function') App._cropCb(d); closeCropModal(); toast('已裁剪'); };
   if (typeof optimizeImageSrc === 'function') optimizeImageSrc(raw, 1200, 0.72).then(done).catch(() => done(raw));
   else done(raw);
 }
