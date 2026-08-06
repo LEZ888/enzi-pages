@@ -30,14 +30,6 @@ button{font-family:inherit;cursor:pointer;}
 /* Banner 轮播 */
 .banner{width:100%;height:172px;border-radius:16px;overflow:hidden;margin-bottom:16px;scroll-snap-type:x mandatory;background:#eee;}
 .banner img{width:100%;flex:0 0 100%;height:172px;object-fit:cover;scroll-snap-align:center;display:block;}
-/* 圆形胶囊导航（可在 settings.home_nav 配置） */
-.home-pills{display:flex;flex-direction:row;gap:12px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none;}
-.home-pills::-webkit-scrollbar{display:none;}
-.pillnav{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;width:62px;border:none;background:none;cursor:pointer;}
-.pillnav .pic{width:56px;height:56px;border-radius:50%;border:2px solid var(--brand);display:flex;align-items:center;justify-content:center;font-size:24px;background:#faf5ff;transition:.2s;}
-.pillnav.active .pic{border-color:#7c3aed;background:var(--brand);box-shadow:0 4px 12px rgba(124,58,237,.3);}
-.pillnav .pl{font-size:12px;color:#374151;white-space:nowrap;}
-.pillnav.active .pl{color:var(--brand);font-weight:600;}
 /* 按钮：默认横向并排（军规第八条） */
 .btn-row{display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;}
 .btn-row.center{justify-content:center;}
@@ -89,7 +81,23 @@ button{font-family:inherit;cursor:pointer;}
 .kcard img{max-width:100%;border-radius:8px;margin:8px 0;}
 /* toast */
 #toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(20px);background:rgba(17,24,39,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:90vw;text-align:center;}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+/* 首页模块区（home_modules 自定义模块） */
+.mod{margin-bottom:22px;}
+.mod-head{display:flex;justify-content:space-between;align-items:center;margin:0 2px 10px;}
+.mod-head h3{margin:0;font-size:17px;font-weight:700;}
+.mod-head .more{font-size:13px;color:var(--brand);background:none;border:none;cursor:pointer;padding:4px 8px;white-space:nowrap;}
+.hscroll{display:flex;flex-direction:row;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;}
+.hscroll::-webkit-scrollbar{display:none;}
+.hscroll .card{width:160px;flex:0 0 auto;}
+.mlist{display:flex;flex-direction:column;gap:8px;}
+.mlist-item{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:8px;box-shadow:0 1px 6px rgba(124,58,237,.06);cursor:pointer;}
+.mlist-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;background:#eee;flex:0 0 auto;}
+.mlist-info{flex:1;min-width:0;}
+.mlist-info .card-title{margin-bottom:4px;}
+/* 轮播 slide（复用 .banner.slider） */
+.slide{flex:0 0 100%;height:172px;position:relative;scroll-snap-align:center;}
+.slide .slide-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;color:#fff;font-size:14px;font-weight:600;background:linear-gradient(transparent,rgba(0,0,0,.55));}
 </style>
 </head>
 <body>
@@ -109,14 +117,6 @@ function svgImg(label, c1, c2){
 const SAMPLE = {
   settings: {
     store_name: "DKEXI·熹美学", wechat: "DKEXI-beauty", douyin: "https://v.douyin.com/example",
-    home_nav: [
-      { label:"全部商品", icon:"🛍️", view:"products" },
-      { label:"莱斯莉", icon:"🌿", view:"category", value:"莱斯莉" },
-      { label:"实验室", icon:"🔬", view:"category", value:"实验室" },
-      { label:"活动", icon:"🎉", view:"activity" },
-      { label:"案例", icon:"📸", view:"case" },
-      { label:"知识", icon:"📚", view:"knowledge" }
-    ],
     banners: [
       { img: svgImg("DKEXI·熹美学", "#7c3aed", "#a78bfa"), link:"" },
       { img: svgImg("新客体验 ¥99", "#db2777", "#fbcfe8"), link:"?activity=a1" },
@@ -146,14 +146,11 @@ const SAMPLE = {
   ]
 };
 
-/* 首页导航/Banner 默认配置（后台 settings 未配时回退） */
-const DEFAULT_HOME_NAV = [
-  { label:"全部商品", icon:"🛍️", view:"products" },
-  { label:"莱斯莉", icon:"🌿", view:"category", value:"莱斯莉" },
-  { label:"实验室", icon:"🔬", view:"category", value:"实验室" },
-  { label:"活动", icon:"🎉", view:"activity" },
-  { label:"案例", icon:"📸", view:"case" },
-  { label:"知识", icon:"📚", view:"knowledge" }
+/* 首页模块/Banner 默认配置（后台 settings 未配时回退） */
+const DEFAULT_HOME_MODULES = [
+  { id:"m1", type:"products", title:"精选产品", limit:6, style:"card_grid", enabled:true },
+  { id:"m2", type:"cases", title:"客户案例", limit:3, style:"carousel", enabled:true },
+  { id:"m3", type:"activities", title:"热门活动", limit:4, style:"list", enabled:true }
 ];
 const DEFAULT_BANNERS = [
   { img: svgImg("DKEXI·熹美学", "#7c3aed", "#a78bfa"), link:"" },
@@ -341,55 +338,98 @@ async function exportKnowledge(id){
   } catch(e){ toast("导出失败：" + (e && e.message || e)); }
 }
 
-/* ===== 首页（电商 / 小红书风格） ===== */
-function getHomeNav(){ return (App.data.settings && App.data.settings.home_nav) || DEFAULT_HOME_NAV; }
+/* ===== 首页（模块区，由 settings.home_modules 配置） ===== */
+function getHomeModules(){ return (App.data.settings && Array.isArray(App.data.settings.home_modules) && App.data.settings.home_modules.length) ? App.data.settings.home_modules : DEFAULT_HOME_MODULES; }
 function getBanners(){ return (App.data.settings && App.data.settings.banners) || DEFAULT_BANNERS; }
 
 function renderHome(){
-  const nav = getHomeNav();
-  const banners = getBanners();
+  const s = App.data.settings || {};
+  const name = esc(s.store_name || "DKEXI·熹美学");
+  const slogan = esc(s.slogan || "专业美容 · 匠心美学");
   let html = '<div class="page home" style="padding-top:0">';
-  // 顶部搜索框
+  // 顶部搜索框（保持不变）
   html += '<div class="searchbar"><span class="ic">🔍</span>'
     + '<input id="homeSearchInput" placeholder="搜索产品 / 项目 / 活动..." onkeydown="if(event.key===\'Enter\')homeSearch(this.value)">'
     + '<button class="btn sm" onclick="homeSearch(document.getElementById(\'homeSearchInput\').value)">搜索</button></div>';
-  // Banner 轮播
-  html += '<div class="banner slider" id="banner">' + banners.map(b => '<img loading="lazy" src="'+b.img+'"' + (b.link ? ' style="cursor:pointer" onclick="location.href=location.pathname+\''+b.link+'\'"' : '') + '>').join('') + '</div>';
-  // 圆形胶囊导航（可后台配置）
-  html += '<div class="home-pills">' + nav.map((n,i) => '<button class="pillnav'+(i===0?' active':'')+'" onclick="clickHomeNav('+i+')"><span class="pic">'+(n.icon||'•')+'</span><span class="pl">'+esc(n.label)+'</span></button>').join('') + '</div>';
-  // 内容区（胶囊切换 / 搜索结果）
-  html += '<div id="homeContent"></div>';
+  // 品牌 hero：只有店名 + 标语，无任何功能按钮
+  html += '<div class="hero"><h1>'+name+'</h1><p>'+slogan+'</p></div>';
+  // 模块区（按 home_modules 顺序渲染）
+  html += '<div id="homeModules"></div>';
   html += '</div>';
   return html;
 }
 
-/* 中间内容区：根据选中的胶囊导航渲染 */
-function renderHomeContent(){
-  const box = document.getElementById('homeContent'); if (!box) return;
-  const nav = getHomeNav();
-  const v = App.homeView || nav[0];
-  let items = [], type = 'product';
-  if (v.view === 'category'){ items = (App.data.products||[]).filter(p => p.category === v.value); type = 'product'; }
-  else { items = App.data[v.view] || []; type = { products:'product', activity:'activity', case:'case', knowledge:'knowledge', project:'project' }[v.view] || 'product'; }
-  if (!items.length){ box.innerHTML = '<p class="empty">该分类暂无内容</p>'; return; }
-  box.innerHTML = '<div class="grid">' + items.map(it => {
-    const id = it.id, title = it.name || it.title || '';
-    const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
-    return '<div class="card" onclick="openDetail(\''+type+'\',\''+id+'\')"><img class="card-img" loading="lazy" src="'+img+'"><div class="card-body"><div class="card-title">'+esc(title)+'</div>'+priceHTML(it)+'</div></div>';
-  }).join('') + '</div>';
-}
-function clickHomeNav(idx){
-  const nav = getHomeNav();
-  App.homeView = nav[idx];
-  document.querySelectorAll('.pillnav').forEach((el,i) => el.classList.toggle('active', i === idx));
-  renderHomeContent();
+/* 模块区渲染：按 enabled 且有序的 home_modules 依次渲染 */
+function renderHomeModules(){
+  const box = document.getElementById('homeModules'); if (!box) return;
+  const mods = getHomeModules().filter(m => m && m.enabled !== false);
+  if (!mods.length){ box.innerHTML = '<p class="empty">首页暂未配置模块，请在后台「全局设置 → 首页模块管理」添加</p>'; return; }
+  box.innerHTML = mods.map(renderModule).join('');
+  startModuleCarousels();
 }
 
-/* 搜索：跨模块按名称过滤 */
+/* 单模块渲染 */
+function renderModule(m){
+  const TYPE = {
+    products:{ key:"products", dt:"product", name:"产品" },
+    projects:{ key:"projects", dt:"project", name:"项目" },
+    cases:{ key:"cases", dt:"case", name:"案例" },
+    activities:{ key:"activity_cards", dt:"activity", name:"活动" },
+    knowledge:{ key:"knowledge_articles", dt:"knowledge", name:"知识" }
+  };
+  // banner 类型：大图轮播（用 settings.banners）
+  if (m.type === "banner"){
+    const imgs = getBanners();
+    if (!imgs.length) return "";
+    const slides = imgs.map(b => {
+      const link = b.link ? " onclick=\"location.href=location.pathname+'" + String(b.link).replace(/'/g,"") + "'\"" : "";
+      return '<div class="slide"' + link + '><img loading="lazy" src="' + b.img + '"></div>';
+    }).join('');
+    return '<section class="mod"><div class="banner slider home-carousel">' + slides + '</div></section>';
+  }
+  const cfg = TYPE[m.type]; if (!cfg) return "";
+  const items = (App.data[cfg.key] || []).slice(0, Number(m.limit) || 6);
+  const title = m.title || cfg.name;
+  const more = '<button class="btn sm ghost more" onclick="goModule(\'' + cfg.dt + '\')">查看全部 ›</button>';
+  let body = "";
+  if (m.style === "list") body = renderList(items, cfg.dt);
+  else if (m.style === "horizontal_scroll") body = '<div class="hscroll">' + items.map(it => modCard(it, cfg.dt, true)).join('') + '</div>';
+  else if (m.style === "carousel") body = renderCarousel(items, cfg.dt);
+  else body = '<div class="grid">' + items.map(it => modCard(it, cfg.dt, true)).join('') + '</div>';
+  return '<section class="mod"><div class="mod-head"><h3>' + esc(title) + '</h3>' + more + '</div>' + body + '</section>';
+}
+function modCard(it, dt, withPrice){
+  const id = it.id, title = it.name || it.title || "";
+  const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
+  return '<div class="card" onclick="openDetail(\'' + dt + '\',\'' + id + '\')">'
+    + '<img class="card-img" loading="lazy" src="' + img + '">'
+    + '<div class="card-body"><div class="card-title">' + esc(title) + '</div>' + (withPrice ? priceHTML(it) : '') + '</div></div>';
+}
+function renderList(items, dt){
+  if (!items.length) return '<p class="empty">暂无内容</p>';
+  return '<div class="mlist">' + items.map(it => {
+    const id = it.id, title = it.name || it.title || "";
+    const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
+    return '<div class="mlist-item" onclick="openDetail(\'' + dt + '\',\'' + id + '\')">'
+      + '<img class="mlist-thumb" loading="lazy" src="' + img + '">'
+      + '<div class="mlist-info"><div class="card-title">' + esc(title) + '</div>' + priceHTML(it) + '</div></div>';
+  }).join('') + '</div>';
+}
+function renderCarousel(items, dt){
+  if (!items.length) return '<p class="empty">暂无内容</p>';
+  const slides = items.map(it => {
+    const id = it.id, title = it.name || it.title || "";
+    const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
+    return '<div class="slide" onclick="openDetail(\'' + dt + '\',\'' + id + '\')"><img loading="lazy" src="' + img + '"><div class="slide-cap">' + esc(title) + '</div></div>';
+  }).join('');
+  return '<div class="banner slider home-carousel">' + slides + '</div>';
+}
+
+/* 搜索：跨模块按名称过滤（结果覆盖模块区；清空恢复模块区） */
 function homeSearch(q){
   q = (q||'').trim().toLowerCase();
-  const box = document.getElementById('homeContent'); if (!box) return;
-  if (!q){ renderHomeContent(); return; }
+  const box = document.getElementById('homeModules'); if (!box) return;
+  if (!q){ renderHomeModules(); return; }
   const types = [['products','product'],['projects','project'],['activity_cards','activity'],['cases','case'],['knowledge_articles','knowledge']];
   let items = [];
   types.forEach(([k,t]) => (App.data[k]||[]).forEach(it => {
@@ -400,14 +440,14 @@ function homeSearch(q){
   box.innerHTML = '<div class="grid">' + items.map(o => '<div class="card" onclick="openDetail(\''+o.t+'\',\''+o.id+'\')"><img class="card-img" loading="lazy" src="'+o.img+'"><div class="card-body"><div class="card-title">'+esc(o.title)+'</div></div></div>').join('') + '</div>';
 }
 
-/* Banner 自动轮播 */
-let _bannerInt = null;
-function startBanner(){
-  if (_bannerInt) clearInterval(_bannerInt);
-  const el = document.getElementById('banner'); if (!el) return;
-  const imgs = el.querySelectorAll('img'); if (imgs.length < 2) return;
-  let i = 0;
-  _bannerInt = setInterval(() => { i = (i+1) % imgs.length; try { el.scrollTo({ left: el.clientWidth * i, behavior: 'smooth' }); } catch(e){ el.scrollLeft = el.clientWidth * i; } }, 3200);
+/* 轮播自动滚动（home_modules 中的 carousel / banner 模块） */
+function startModuleCarousels(){
+  document.querySelectorAll('.home-carousel').forEach(el => {
+    if (el._int) clearInterval(el._int);
+    const slides = el.querySelectorAll('.slide'); if (slides.length < 2) return;
+    let i = 0;
+    el._int = setInterval(() => { i = (i+1) % slides.length; try { el.scrollTo({ left: el.clientWidth * i, behavior: 'smooth' }); } catch(e){ el.scrollLeft = el.clientWidth * i; } }, 3200);
+  });
 }
 
 /* ===== 总渲染 ===== */
@@ -425,7 +465,7 @@ function render(){
   else html = navBar() + listHTML(App.module);
   root.innerHTML = html;
   window.scrollTo(0, 0);
-  if (App.module === "home" && !App.detail && !direct){ setTimeout(function(){ renderHomeContent(); startBanner(); }, 0); }
+  if (App.module === "home" && !App.detail && !direct){ setTimeout(function(){ renderHomeModules(); }, 0); }
 }
 window.addEventListener("popstate", render);
 
