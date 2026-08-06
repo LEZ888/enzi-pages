@@ -17,12 +17,11 @@ html,body{margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
 img{max-width:100%;display:block;}
 button{font-family:inherit;cursor:pointer;}
-/* 底部固定 Tab 栏（全局，替代顶部导航） */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:row;justify-content:space-around;background:#fff;border-top:1px solid #eee;padding:6px 2px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px rgba(0,0,0,.06);}
-.tabitem{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;color:#9ca3af;font-size:11px;cursor:pointer;padding:2px 0;}
-.tabitem .ic{font-size:20px;line-height:1.1;}
-.tabitem.active{color:var(--brand);}
-.tabitem.active .ic{transform:scale(1.08);}
+/* 底部固定 Tab 栏（全局，替代顶部导航，成熟电商风格） */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;flex-direction:row;justify-content:space-around;background:#fff;border-top:1px solid #f0f0f3;padding:5px 1px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -1px 8px rgba(0,0,0,.04);}
+.tabitem{flex:1 1 0;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#8a8f99;font-size:11px;line-height:1;cursor:pointer;padding:3px 0;min-width:0;}
+.tabitem .ic{font-size:20px;line-height:1;display:block;}
+.tabitem.active{color:var(--brand);font-weight:600;}
 /* 首页搜索框 */
 .searchbar{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:9px 14px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.04);}
 .searchbar input{flex:1;border:none;outline:none;font-size:15px;background:transparent;min-width:0;}
@@ -54,7 +53,7 @@ button{font-family:inherit;cursor:pointer;}
 .card-img{width:100%;height:150px;object-fit:cover;background:#eee;}
 .card-body{padding:10px 12px;}
 .card-title{font-size:14px;font-weight:600;line-height:1.35;margin-bottom:6px;}
-.price-lock{border:1px solid var(--brand);background:#fff;color:var(--brand);border-radius:8px;padding:5px 10px;font-size:13px;width:100%;}
+.price-lock{display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 14px;border:1px solid var(--brand);background:#fff;color:var(--brand);border-radius:999px;font-size:12px;line-height:1;white-space:nowrap;cursor:pointer;}
 .price-row{display:flex;flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap;}
 .price{color:#e11d48;font-weight:700;font-size:15px;}
 .price-m{color:var(--brand);font-size:13px;}
@@ -98,6 +97,20 @@ button{font-family:inherit;cursor:pointer;}
 /* 轮播 slide（复用 .banner.slider） */
 .slide{flex:0 0 100%;height:172px;position:relative;scroll-snap-align:center;}
 .slide .slide-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;color:#fff;font-size:14px;font-weight:600;background:linear-gradient(transparent,rgba(0,0,0,.55));}
+/* 个人中心 */
+.profile-head{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px 22px;background:linear-gradient(135deg,var(--brand),#a78bfa);border-radius:16px;color:#fff;margin-bottom:16px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.22);display:flex;align-items:center;justify-content:center;font-size:32px;}
+.profile-name{font-size:18px;font-weight:700;}
+.profile-sub{font-size:12px;opacity:.9;}
+.profile-card{background:#fff;border-radius:14px;padding:6px 14px;margin-bottom:16px;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+.pi{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;}
+.pi:last-child{border-bottom:none;}
+.pi-k{color:var(--muted);white-space:nowrap;}
+.pi .v{text-align:right;color:var(--text);}
+.profile-actions{justify-content:center;margin-bottom:6px;}
+.profile-qr{background:#fff;border-radius:14px;padding:16px;text-align:center;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+.profile-qr img{max-width:200px;margin:0 auto 8px;border-radius:8px;}
+.profile-qr p{color:var(--muted);font-size:13px;margin:0;}
 </style>
 </head>
 <body>
@@ -193,9 +206,10 @@ function fallbackCopy(t){ const ta=document.createElement("textarea"); ta.value=
 /* ===== 底部 Tab 栏（全局固定） ===== */
 const NAV = [
   { key:"home", label:"首页" }, { key:"product", label:"产品" }, { key:"project", label:"项目" },
-  { key:"activity", label:"活动" }, { key:"case", label:"案例" }, { key:"knowledge", label:"知识" }
+  { key:"activity", label:"活动" }, { key:"case", label:"案例" }, { key:"knowledge", label:"知识" },
+  { key:"profile", label:"我的" }
 ];
-const NAV_ICON = { home:"🏠", product:"🛍️", project:"✨", activity:"🎉", case:"📸", knowledge:"📚" };
+const NAV_ICON = { home:"🏠", product:"🛍️", project:"✨", activity:"🎉", case:"📸", knowledge:"📚", profile:"👤" };
 function navBar(){
   return '<nav class="tabbar">' + NAV.map(n => '<button class="tabitem '+(App.module===n.key?'active':'')+'" onclick="goModule(\''+n.key+'\')"><span class="ic">'+NAV_ICON[n.key]+'</span><span>'+n.label+'</span></button>').join('') + '</nav>';
 }
@@ -217,6 +231,14 @@ function openDetail(type, id){
   render();
 }
 function togglePrice(){ App.showPrice = !App.showPrice; render(); }
+
+/* 应用品牌主色（来自 settings.brand_color，未配则用默认紫） */
+function applyBrandColor(){
+  const c = App.data.settings && App.data.settings.brand_color;
+  if (c && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c.trim())){
+    document.documentElement.style.setProperty('--brand', c.trim());
+  }
+}
 
 /* ===== 价格（军规第七条：未解锁不进 DOM） ===== */
 function priceHTML(it){
@@ -322,6 +344,42 @@ function openWechat(){
 function openDouyin(){
   const d = (App.data.settings && App.data.settings.douyin) || "";
   if (d) window.open(d, "_blank"); else toast("抖音主页未配置");
+}
+
+/* 分享店铺主页 */
+function shareHome(){
+  const url = location.origin + location.pathname;
+  const title = (App.data.settings && App.data.settings.store_name) || "DKEXI·熹美学";
+  if (navigator.share){ navigator.share({ title: title, url: url }).catch(function(){}); }
+  copyText(url); toast("店铺链接已复制");
+}
+
+/* ===== 个人中心（我的） ===== */
+function renderProfile(){
+  const s = App.data.settings || {};
+  const name = esc(s.store_name || "DKEXI·熹美学");
+  const wechat = s.wechat || "DKEXI-beauty";
+  const douyin = s.douyin || "";
+  const addr = s.address || "";
+  const hours = s.business_hours || "";
+  const qr = s.wechat_qr_url || "";
+  let html = '<div class="page" style="padding-top:14px">';
+  html += '<div class="profile-head">'
+    + '<div class="profile-avatar">👤</div>'
+    + '<div class="profile-name">登录后查看更多</div>'
+    + '<div class="profile-sub">'+name+' · 会员中心</div></div>';
+  html += '<div class="profile-card">';
+  if (addr) html += '<div class="pi"><span class="pi-k">📍 地址</span><span class="v">'+esc(addr)+'</span></div>';
+  if (hours) html += '<div class="pi"><span class="pi-k">🕐 营业时间</span><span class="v">'+esc(hours)+'</span></div>';
+  html += '<div class="pi"><span class="pi-k">💬 微信</span><span class="v">'+esc(wechat)+'</span></div>';
+  html += '</div>';
+  html += '<div class="profile-actions btn-row">'
+    + '<button class="btn" onclick="openWechat()">加微信</button>'
+    + (douyin ? '<button class="btn ghost" onclick="openDouyin()">抖音主页</button>' : '')
+    + '<button class="btn ghost" onclick="shareHome()">分享店铺</button></div>';
+  if (qr) html += '<div class="profile-qr"><img loading="lazy" src="'+qr+'" alt="微信二维码"><p>长按识别加微信</p></div>';
+  html += '</div>';
+  return html;
 }
 
 /* ===== 知识长图导出（html-to-image 按需加载） ===== */
@@ -458,10 +516,12 @@ function render(){
   const qmap = { p:"product", project:"project", activity:"activity", case:"case", knowledge:"knowledge" };
   let direct = null;
   for (const k in qmap){ if (params.get(k)){ direct = { type: qmap[k], id: params.get(k) }; break; } }
+  if (!direct && params.get('page') === 'profile'){ App.module = 'profile'; }
   let html = "";
   if (direct) html = navBar() + detailHTML(direct.type, direct.id);
   else if (App.detail) html = navBar() + detailHTML(App.detail.type, App.detail.id);
   else if (App.module === "home") html = navBar() + renderHome();
+  else if (App.module === "profile") html = navBar() + renderProfile();
   else html = navBar() + listHTML(App.module);
   root.innerHTML = html;
   window.scrollTo(0, 0);
@@ -479,6 +539,7 @@ if ("serviceWorker" in navigator){
 /* ===== 启动 ===== */
 (async function init(){
   App.data = await DataAPI.load();
+  applyBrandColor();
   render();
 })();
 </script>
