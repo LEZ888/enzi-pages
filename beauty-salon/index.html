@@ -2185,12 +2185,17 @@ function saveProduct(id) {
   try {
     if (id) { DB.update('products', id, p); toast('已保存'); }
     else {
+      // 新建时继承当前视图上下文：在当前分类/对内对外视图下新建的商品，直接归类、直接可见，
+      // 避免「呆在某分类里新建却没勾分类 → 保存后该视图看不到」的困惑。
+      if (App.productCat && !p.category_ids.includes(App.productCat)) p.category_ids.push(App.productCat);
+      if (App.productFilter === 'internal') p.is_internal = true;
+      else if (App.productFilter === 'external') p.is_internal = false;
       DB.insert('products', p);
-      // 修复 Bug D：新建产品后重置筛选，确保新加的产品立刻可见（避免被对内/对某分类/搜索词过滤掉）
+      // 只清空「搜索词」和「保质期快到期/正常日期」（它们会隐藏新建项）；
+      // 保留分类与对内/对外筛选，让新商品在当前视图立刻可见。
       App.productSearch = '';
-      App.productCat = '';
-      App.productFilter = '';
       App.productFastExpire = false;
+      App.productFilter = (App.productFilter === 'fast' || App.productFilter === 'normal') ? '' : App.productFilter;
       toast('已添加：' + p.name);
     }
   } catch (err) {
