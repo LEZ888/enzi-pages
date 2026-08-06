@@ -1,0 +1,15 @@
+{
+  "name": "DKEXI·熹美学 · 前台展示",
+  "short_name": "DKEXI前台",
+  "start_url": "https://lez888.github.io/enzi-pages/beauty-frontend/",
+  "scope": "https://lez888.github.io/enzi-pages/beauty-frontend/",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "description": "DKEXI·熹美学 · 美容院前台展示系统",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DKEXI·熹美学 · 前台展示</title>
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="DKEXI·熹美学">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--brand:#7c3aed;--brand-d:#6d28d9;--bg:#f5f3ff;--card:#fff;--text:#1f2937;--muted:#6b7280;--line:#ece9f5;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+img{max-width:100%;display:block;}
+button{font-family:inherit;cursor:pointer;}
+/* 顶部导航：横向一排（军规第八条） */
+.nav{position:sticky;top:0;z-index:30;display:flex;flex-direction:row;gap:6px;overflow-x:auto;padding:10px 12px;background:var(--brand);scrollbar-width:none;}
+.nav::-webkit-scrollbar{display:none;}
+.navitem{flex:0 0 auto;border:none;background:rgba(255,255,255,.18);color:#fff;padding:8px 16px;border-radius:999px;font-size:14px;white-space:nowrap;}
+.navitem.active{background:#fff;color:var(--brand);font-weight:700;}
+/* 按钮：默认横向并排（军规第八条） */
+.btn-row{display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;}
+.btn-row.center{justify-content:center;}
+.btn{border:none;background:var(--brand);color:#fff;padding:11px 18px;border-radius:10px;font-size:15px;flex:1 1 auto;min-width:0;}
+.btn.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand);}
+.btn.sm{padding:8px 12px;font-size:13px;}
+/* 页面 */
+.page{padding:14px 12px 40px;max-width:760px;margin:0 auto;}
+.page h2{font-size:18px;margin:6px 4px 12px;}
+.empty{color:var(--muted);text-align:center;padding:40px 0;}
+/* 首页 */
+.hero{background:linear-gradient(135deg,var(--brand),#a78bfa);color:#fff;border-radius:16px;padding:28px 20px;text-align:center;margin-bottom:16px;}
+.hero h1{margin:0 0 6px;font-size:24px;}
+.hero p{margin:0 0 16px;opacity:.9;}
+.quick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+.qcard{border:none;background:var(--card);border-radius:14px;padding:22px 10px;font-size:16px;font-weight:600;color:var(--brand);box-shadow:0 2px 10px rgba(124,58,237,.08);}
+.contact{margin-top:8px;}
+/* 卡片网格 */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+.card{background:var(--card);border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(124,58,237,.08);}
+.card-img{width:100%;height:150px;object-fit:cover;background:#eee;}
+.card-body{padding:10px 12px;}
+.card-title{font-size:14px;font-weight:600;line-height:1.35;margin-bottom:6px;}
+.price-lock{border:1px solid var(--brand);background:#fff;color:var(--brand);border-radius:8px;padding:5px 10px;font-size:13px;width:100%;}
+.price-row{display:flex;flex-direction:row;align-items:baseline;gap:8px;flex-wrap:wrap;}
+.price{color:#e11d48;font-weight:700;font-size:15px;}
+.price-m{color:var(--brand);font-size:13px;}
+/* 详情 */
+.detail{max-width:760px;margin:0 auto;padding:0 0 50px;}
+.back{display:flex;flex-direction:row;align-items:center;gap:8px;padding:12px;color:var(--brand);font-size:15px;}
+.back button{border:none;background:none;color:var(--brand);font-size:22px;padding:0 6px;}
+.slider{display:flex;flex-direction:row;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.slider img{width:100%;flex:0 0 100%;scroll-snap-align:center;object-fit:cover;max-height:420px;}
+.detail-body{padding:14px 16px;}
+.detail-title{font-size:21px;font-weight:700;margin:0 0 8px;}
+.detail-sub{color:var(--muted);font-size:13px;margin-bottom:12px;}
+.detail-desc{font-size:15px;line-height:1.7;color:#374151;white-space:pre-wrap;word-break:break-word;}
+.detail-actions{display:flex;flex-direction:row;gap:8px;padding:14px 16px;position:sticky;bottom:0;background:rgba(245,243,255,.96);backdrop-filter:blur(6px);}
+.detail-actions .btn{flex:1;}
+/* 活动多模板 */
+.tpl-a .detail-title{color:var(--brand);}
+.tpl-b{background:linear-gradient(135deg,#fce7f3,#ede9fe);}
+.tpl-c{border:2px dashed var(--brand);}
+/* 知识长图卡片 */
+.kcard{background:#fff;border-radius:14px;padding:16px;margin:0 12px;}
+.kcard h3{margin:0 0 10px;font-size:19px;}
+.kcard .kc-body{font-size:15px;line-height:1.8;color:#374151;white-space:pre-wrap;}
+.kcard img{max-width:100%;border-radius:8px;margin:8px 0;}
+/* toast */
+#toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%) translateY(20px);background:rgba(17,24,39,.92);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:90vw;text-align:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast"></div>
+<script>
+"use strict";
+/* ===== 配置：复用 Supabase 后台库（只读） ===== */
+const SUPABASE_URL = "https://slqykvmjgyacducedfny.supabase.co";
+const SUPABASE_ANON = "sb_publishable_Q-mOMy4Zw4igQyXaVbc0CQ_3RcJVW9U";
+
+/* ===== 示例数据（未配置云端/离线时回退，方便先测 UI） ===== */
+function svgImg(label, c1, c2){
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='"+c1+"'/><stop offset='1' stop-color='"+c2+"'/></linearGradient></defs><rect width='600' height='600' fill='url(#g)'/><text x='50%' y='50%' fill='white' font-size='52' font-family='sans-serif' text-anchor='middle' dominant-baseline='middle'>"+label+"</text></svg>";
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+const SAMPLE = {
+  settings: { store_name: "DKEXI·熹美学", wechat: "DKEXI-beauty", douyin: "https://v.douyin.com/example" },
+  products: [
+    { id: "p1", name: "雪绒花修护精华", category: "护肤", retail_price: 398, member_price: 320, description: "深层补水，舒缓泛红，适合敏感肌日常修护。", images: [svgImg("精华", "#c4b5fd", "#7c3aed")] },
+    { id: "p2", name: "光感透白面膜", category: "面膜", retail_price: 128, member_price: 99, description: "一片提亮，熬夜急救，温和不刺激。", images: [svgImg("面膜", "#fbcfe8", "#db2777")] },
+    { id: "p3", name: "氨基酸洁面乳", category: "清洁", retail_price: 88, member_price: 69, description: "弱酸温和，洗后不紧绷。", images: [svgImg("洁面", "#bfdbfe", "#2563eb")] }
+  ],
+  projects: [
+    { id: "pr1", name: "小气泡深层清洁", price: 268, description: "毛孔级清洁，去除黑头老废角质，皮肤瞬间通透。", images: [svgImg("小气泡", "#a7f3d0", "#059669")] },
+    { id: "pr2", name: "光子嫩肤", price: 598, description: "淡化色斑痘印，提亮肤色，无创恢复期短。", images: [svgImg("光子", "#fde68a", "#d97706")] }
+  ],
+  activity_cards: [
+    { id: "a1", name: "新客体验卡 ¥99", template: "a", original_price: 398, price: 99, description: "限新客首单，含清洁+补水护理一次。", header_image: svgImg("体验卡", "#c4b5fd", "#7c3aed") },
+    { id: "a2", name: "闺蜜拼团 2人成团", template: "b", original_price: 1196, price: 836, description: "两人同行各享7折，赠面膜2片。", header_image: svgImg("拼团", "#fbcfe8", "#db2777") },
+    { id: "a3", name: "会员日充值送", template: "c", original_price: 0, price: 0, description: "充1000送200，充2000送500。", header_image: svgImg("会员日", "#bfdbfe", "#2563eb") }
+  ],
+  cases: [
+    { id: "c1", title: "油痘肌28天逆袭", project_name: "小气泡+光子", description: "从左脸密集闭口到干净透亮，坚持护理一个周期。", images: [svgImg("前", "#fca5a5", "#dc2626"), svgImg("中", "#fdba74", "#ea580c"), svgImg("后", "#86efac", "#16a34a")] },
+    { id: "c2", title: "敏感肌维稳记", project_name: "修护精华", description: "泛红减退，屏障重建。", images: [svgImg("case", "#c4b5fd", "#7c3aed")] }
+  ],
+  knowledge_articles: [
+    { id: "k1", title: "换季护肤三步法", summary: "降温了皮肤容易干，做好这三步稳过秋天。", content: "第一步：换成滋润型洁面，避免过度清洁。\n第二步：精华叠加，先补水再锁水。\n第三步：防晒不能停，秋日紫外线依然在。\n坚持一周就能感受到变化。", cover: svgImg("知识", "#ddd6fe", "#7c3aed") }
+  ]
+};
+
+/* ===== DataAPI：从 Supabase 后台库只读，失败回退示例 ===== */
+const DataAPI = {
+  data: null,
+  async load(){
+    const fallback = () => { this.data = SAMPLE; return SAMPLE; };
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 4000);
+      const url = SUPABASE_URL.replace(/\/+$/, "") + "/rest/v1/beauty_db?id=eq.main";
+      const res = await fetch(url, { headers: { "apikey": SUPABASE_ANON, "Authorization": "Bearer " + SUPABASE_ANON }, signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!res.ok) return fallback();
+      const arr = await res.json();
+      let d = arr && arr[0] && arr[0].data;
+      if (typeof d === "string") { try { d = JSON.parse(d); } catch (e) { return fallback(); } }
+      if (d && typeof d === "object" && (d.products || d.projects || d.activity_cards || d.cases || d.knowledge_articles)) { this.data = d; return d; }
+      return fallback();
+    } catch (e) { return fallback(); }
+  }
+};
+
+/* ===== 全局状态 ===== */
+const App = { module: "home", detail: null, showPrice: false, data: null };
+
+/* ===== 工具 ===== */
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
+function money(n){ n = Number(n) || 0; return n.toFixed(2); }
+function $(s){ return document.querySelector(s); }
+function toast(msg){ const t = $("#toast"); if(!t) return; t.textContent = msg; t.classList.add("show"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2200); }
+function copyText(t){ try { if (navigator.clipboard) { navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t)); return; } } catch(e){} fallbackCopy(t); }
+function fallbackCopy(t){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(e){} document.body.removeChild(ta); }
+
+/* ===== 导航（横向） ===== */
+const NAV = [
+  { key:"home", label:"首页" }, { key:"product", label:"产品" }, { key:"project", label:"项目" },
+  { key:"activity", label:"活动" }, { key:"case", label:"案例" }, { key:"knowledge", label:"知识" }
+];
+function navBar(){
+  return '<div class="nav">' + NAV.map(n => '<button class="navitem '+(App.module===n.key?'active':'')+'" onclick="goModule(\''+n.key+'\')">'+n.label+'</button>').join('') + '</div>';
+}
+
+/* ===== 路由 ===== */
+function goModule(k){
+  App.module = k; App.detail = null;
+  history.pushState({}, '', location.pathname);
+  render();
+}
+function goBack(){
+  if (App.detail){ App.detail = null; history.pushState({}, '', location.pathname); render(); }
+  else goModule("home");
+}
+function openDetail(type, id){
+  App.detail = { type, id };
+  const q = { product:"p", project:"project", activity:"activity", case:"case", knowledge:"knowledge" }[type];
+  history.pushState({}, '', location.pathname + "?" + q + "=" + id);
+  render();
+}
+function togglePrice(){ App.showPrice = !App.showPrice; render(); }
+
+/* ===== 价格（军规第七条：未解锁不进 DOM） ===== */
+function priceHTML(it){
+  if (!App.showPrice) return '<button class="price-lock" onclick="event.stopPropagation();togglePrice()">查看价格</button>';
+  let r = it.retail_price != null ? it.retail_price : it.price;
+  let m = it.member_price;
+  if (r == null && m == null) return "";
+  let h = "";
+  if (r != null) h += '<span class="price">¥'+money(r)+'</span>';
+  if (m != null) h += '<span class="price-m">会员¥'+money(m)+'</span>';
+  return '<div class="price-row">'+h+'</div>';
+}
+
+/* ===== 列表 ===== */
+const LIST_MAP = { product:["products","产品"], project:["projects","项目"], activity:["activity_cards","活动"], case:["cases","案例"], knowledge:["knowledge_articles","知识"] };
+function listHTML(type){
+  const arrKey = LIST_MAP[type][0];
+  const items = App.data[arrKey] || [];
+  let html = '<div class="page"><h2>'+LIST_MAP[type][1]+'</h2>';
+  if (!items.length){ html += '<p class="empty">暂无内容</p></div>'; return html; }
+  html += '<div class="grid">';
+  items.forEach(it => {
+    const id = it.id;
+    const title = it.name || it.title || "";
+    const img = (it.images && it.images[0]) || it.header_image || it.cover || svgImg("图","#c4b5fd","#7c3aed");
+    html += '<div class="card" onclick="openDetail(\''+type+'\',\''+id+'\')">'
+      + '<img class="card-img" loading="lazy" src="'+img+'" alt="">'
+      + '<div class="card-body"><div class="card-title">'+esc(title)+'</div>'+priceHTML(it)+'</div></div>';
+  });
+  html += '</div></div>';
+  return html;
+}
+
+/* ===== 详情 ===== */
+function detailHTML(type, id){
+  const arrKey = { product:"products", project:"projects", activity:"activity_cards", case:"cases", knowledge:"knowledge_articles" }[type];
+  const arr = App.data[arrKey] || [];
+  const it = arr.find(x => String(x.id) === String(id));
+  if (!it) return '<div class="page"><p class="empty">未找到内容</p></div>';
+  const title = it.name || it.title || "";
+  const back = '<div class="back"><button onclick="goBack()">‹</button><span>'+esc(title)+'</span></div>';
+
+  // 图片区
+  let media = "";
+  const imgs = (it.images && it.images.length) ? it.images : (it.header_image ? [it.header_image] : (it.cover ? [it.cover] : []));
+  if (type === "case" && imgs.length > 1){
+    media = '<div class="slider">' + imgs.map(u => '<img loading="lazy" src="'+u+'" alt="">').join('') + '</div>';
+  } else if (imgs.length){
+    media = '<div class="slider"><img loading="lazy" src="'+imgs[0]+'" alt=""></div>';
+  }
+
+  // 视频（项目）
+  let video = "";
+  if (type === "project" && it.video){
+    video = '<div style="padding:0 12px"><video src="'+it.video+'" controls style="width:100%;border-radius:12px"></video></div>';
+  }
+
+  // 活动模板样式
+  const tpl = type === "activity" ? (" tpl-"+((it.template)||"a")) : "";
+
+  // 描述
+  let bodyInner = '<div class="detail-body '+tpl+'">';
+  bodyInner += '<h1 class="detail-title">'+esc(title)+'</h1>';
+  if (it.project_name) bodyInner += '<div class="detail-sub">项目：'+esc(it.project_name)+'</div>';
+  if (it.category) bodyInner += '<div class="detail-sub">分类：'+esc(it.category)+'</div>';
+  bodyInner += priceHTML(it);
+  const desc = it.description || it.content || it.summary || "";
+  if (desc) bodyInner += '<div class="detail-desc">'+esc(desc)+'</div>';
+  bodyInner += '</div>';
+
+  // 知识长图卡片（导出用）
+  let knowledgeCard = "";
+  if (type === "knowledge"){
+    knowledgeCard = '<div class="kcard" id="knowledgeCard"><h3>'+esc(title)+'</h3><div class="kc-body">'+esc(it.content||it.summary||"")+'</div></div>';
+  }
+
+  // 底部操作（横向）
+  const actions = '<div class="detail-actions btn-row">'
+    + '<button class="btn" onclick="shareItem(\''+type+'\',\''+id+'\')">分享</button>'
+    + (type==="knowledge" ? '<button class="btn ghost" onclick="exportKnowledge(\''+id+'\')">导出长图</button>' : '')
+    + '<button class="btn ghost" onclick="openWechat()">加微信</button>'
+    + '</div>';
+
+  return '<div class="detail">'+back+media+video+knowledgeCard+bodyInner+actions+'</div>';
+}
+
+/* ===== 分享 ===== */
+function shareItem(type, id){
+  const arrKey = { product:"products", project:"projects", activity:"activity_cards", case:"cases", knowledge:"knowledge_articles" }[type];
+  const it = (App.data[arrKey] || []).find(x => String(x.id) === String(id)) || {};
+  const title = it.name || it.title || "DKEXI·熹美学";
+  const q = { product:"p", project:"project", activity:"activity", case:"case", knowledge:"knowledge" }[type];
+  const url = location.origin + location.pathname + "?" + q + "=" + id;
+  if (navigator.share){ navigator.share({ title: title, url: url }).catch(function(){}); }
+  copyText(url); toast("链接已复制，去粘贴分享");
+}
+function openWechat(){
+  const w = (App.data.settings && App.data.settings.wechat) || "DKEXI-beauty";
+  try { location.href = "weixin://contacts/profile/" + w; } catch(e){}
+  copyText(w); toast("微信号已复制：" + w);
+}
+function openDouyin(){
+  const d = (App.data.settings && App.data.settings.douyin) || "";
+  if (d) window.open(d, "_blank"); else toast("抖音主页未配置");
+}
+
+/* ===== 知识长图导出（html-to-image 按需加载） ===== */
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function exportKnowledge(id){
+  const node = document.getElementById("knowledgeCard");
+  if (!node){ toast("请先打开知识详情"); return; }
+  toast("生成中...");
+  try {
+    if (!window.htmlToImage) await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js");
+    const dataUrl = await window.htmlToImage.toPng(node, { pixelRatio: 2 });
+    const a = document.createElement("a"); a.href = dataUrl; a.download = "knowledge.png"; a.click();
+    toast("长图已生成，长按保存分享");
+  } catch(e){ toast("导出失败：" + (e && e.message || e)); }
+}
+
+/* ===== 首页 ===== */
+function renderHome(){
+  const s = App.data.settings || {};
+  const name = esc(s.store_name || "DKEXI·熹美学");
+  let html = '<div class="page" style="padding-top:0">';
+  html += '<div class="hero"><h1>'+name+'</h1><p>专业美容 · 匠心美学</p>'
+    + '<div class="btn-row center">'
+    + '<button class="btn" onclick="goModule(\'product\')">看产品</button>'
+    + '<button class="btn ghost" onclick="togglePrice()">'+(App.showPrice?'隐藏价格':'店内价')+'</button>'
+    + '</div></div>';
+  html += '<div class="quick">';
+  NAV.filter(n => n.key !== "home").forEach(n => {
+    html += '<button class="qcard" onclick="goModule(\''+n.key+'\')">'+n.label+'</button>';
+  });
+  html += '</div>';
+  html += '<div class="contact btn-row center">'
+    + '<button class="btn" onclick="openWechat()">加微信</button>'
+    + '<button class="btn ghost" onclick="openDouyin()">抖音</button>'
+    + '</div>';
+  html += '</div>';
+  return html;
+}
+
+/* ===== 总渲染 ===== */
+function render(){
+  const root = $("#app");
+  if (!root) return;
+  const params = new URLSearchParams(location.search);
+  const qmap = { p:"product", project:"project", activity:"activity", case:"case", knowledge:"knowledge" };
+  let direct = null;
+  for (const k in qmap){ if (params.get(k)){ direct = { type: qmap[k], id: params.get(k) }; break; } }
+  let html = "";
+  if (direct) html = navBar() + detailHTML(direct.type, direct.id);
+  else if (App.detail) html = navBar() + detailHTML(App.detail.type, App.detail.id);
+  else if (App.module === "home") html = navBar() + renderHome();
+  else html = navBar() + listHTML(App.module);
+  root.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+window.addEventListener("popstate", render);
+
+/* ===== PWA（线上生效，本地双击忽略） ===== */
+if ("serviceWorker" in navigator){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+
+/* ===== 启动 ===== */
+(async function init(){
+  App.data = await DataAPI.load();
+  render();
+})();
+</script>
+</body>
+</html>
