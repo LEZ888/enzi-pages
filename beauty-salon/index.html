@@ -4390,8 +4390,10 @@ function previewProject(id) {
   if (!p) return;
   const cover = (p.images && p.images[0]) ? `<img src="${p.images[0]}" style="width:100%;height:200px;object-fit:cover">` : '<div style="width:100%;height:200px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px">项目封面</div>';
   const moreImgs = (p.images || []).slice(1).map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="previewImage('${encodeURIComponent(u)}')">`).join('');
+  // 顶部加显眼的关闭按钮（iOS PWA / modal-mask 点击有时不灵敏）+ 底部也加一个
   openModal(`
-    <div style="max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+    <div style="position:relative;max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <button type="button" onclick="closeModal()" aria-label="关闭" style="position:absolute;top:8px;right:8px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)">×</button>
       ${cover}
       <div style="padding:14px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -4407,6 +4409,10 @@ function previewProject(id) {
         ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
         ${p.video_url ? `<div style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
         ${p.douyin_link ? `<div style="margin-top:6px"><a href="${esc(p.douyin_link)}" target="_blank" style="color:#7c3aed;font-size:13px">📕 抖音团购链接</a></div>` : ''}
+      </div>
+      <div style="padding:10px 16px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6">
+        <button class="btn ghost" onclick="closeModal()">关闭</button>
+        <button class="btn" onclick="closeModal();openProjectForm('${p.id}')">编辑</button>
       </div>
     </div>`);
 }
@@ -4601,8 +4607,10 @@ function previewActivity(id) {
   const tplLabel = { group: '团购', seckill: '秒杀', special: '特价', gift: '赠礼', trial: '体验', custom: '自定义' };
   const header = a.header_image ? `<img src="${a.header_image}" style="width:100%;height:200px;object-fit:cover">` : '<div style="width:100%;height:200px;background:linear-gradient(135deg,#7c3aed,#4c1d95);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px">活动头图</div>';
   const time = (a.start_date || '') + (a.end_date ? ' ~ ' + a.end_date : '') || '未设置时间';
+  // 顶部加显眼的关闭按钮（iOS PWA / modal-mask 点击有时不灵敏）+ 底部也加一个
   openModal(`
-    <div style="max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+    <div style="position:relative;max-width:380px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <button type="button" onclick="closeModal()" aria-label="关闭" style="position:absolute;top:8px;right:8px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)">×</button>
       ${header}
       <div style="padding:14px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -4616,6 +4624,10 @@ function previewActivity(id) {
         ${a.video_url ? `<div style="margin-top:10px"><a href="${esc(a.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
         ${a.douyin_link ? `<div style="margin-top:6px"><a href="${esc(a.douyin_link)}" target="_blank" style="color:#7c3aed;font-size:13px">📕 抖音团购链接</a></div>` : ''}
         ${(Number(a.fake_sold) || 0) || (Number(a.fake_joined) || 0) ? `<div style="margin-top:8px;font-size:12px;color:#9ca3af">已有 ${Number(a.fake_sold)||0} 人成交 · ${Number(a.fake_joined)||0} 人参与</div>` : ''}
+      </div>
+      <div style="padding:10px 16px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6">
+        <button class="btn ghost" onclick="closeModal()">关闭</button>
+        <button class="btn" onclick="closeModal();openActivityForm('${a.id}')">编辑</button>
       </div>
     </div>`);
 }
@@ -5111,8 +5123,10 @@ function previewCase(id) {
   const cat = DB.getList('case_categories').find(c => c.id === x.category_id);
   const cover = (x.images && x.images[0]) ? `<img src="${x.images[0]}" style="width:100%;max-height:220px;object-fit:cover">` : '';
   const moreImgs = (x.images || []).slice(1).map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="previewImg('${u}')">`).join('');
+  // 顶部加显眼的关闭按钮（iOS PWA / modal-mask 点击有时不灵敏）+ 底部也加一个
   openModal(`
-    <div style="max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+    <div style="position:relative;max-width:420px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12)">
+      <button type="button" onclick="closeModal()" aria-label="关闭" style="position:absolute;top:8px;right:8px;z-index:10;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)">×</button>
       ${cover}
       <div style="padding:16px">
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
@@ -5123,6 +5137,10 @@ function previewCase(id) {
         <div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:10px;line-height:1.7">${esc(stripHtml(x.content || ''))}</div>
         ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
         ${x.video_url ? `<div style="margin-top:10px"><a href="${esc(x.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
+      </div>
+      <div style="padding:10px 16px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6">
+        <button class="btn ghost" onclick="closeModal()">关闭</button>
+        <button class="btn" onclick="closeModal();openCaseForm('${x.id}')">编辑</button>
       </div>
     </div>`);
 }
