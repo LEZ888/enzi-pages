@@ -4706,6 +4706,7 @@ function previewActivity(id) {
 function openActivityForm(id) {
   const a = id ? DB.getList('activities').find(x => x.id === id) : null;
   const v = (key, d) => a ? (a[key] != null ? a[key] : (d === undefined ? '' : d)) : (d === undefined ? '' : d);
+  App._acHeader = a ? (a.header_image || '') : '';
   const html = `
     <h3>${id ? '编辑活动' : '新增活动'}</h3>
     <div class="field"><label>标题（选填）</label><input id="ac_title2" value="${esc(v('title'))}" placeholder="如：双11补水团购"></div>
@@ -4718,7 +4719,10 @@ function openActivityForm(id) {
         <option value="trial" ${v('template') === 'trial' ? 'selected' : ''}>体验</option>
         <option value="custom" ${v('template') === 'custom' ? 'selected' : ''}>自定义</option>
       </select></div>
-      <div class="field" style="flex:1"><label>头图URL（选填）</label><input id="ac_header" value="${esc(v('header_image'))}" placeholder="https://..."></div>
+      <div class="field" style="flex:1"><label>头图（选填，点下面按钮从手机选图）</label>
+        <input type="file" accept="image/*" onchange="acHeaderChange(this.files[0])">
+        <div id="acHeaderPrev" style="margin-top:6px">${App._acHeader ? renderAcHeaderPrev() : ''}</div>
+      </div>
     </div>
     <div class="row">
       <div class="field" style="flex:1"><label>价格（选填）</label><input id="ac_price2" type="number" step="0.01" value="${v('price') != null ? v('price') : ''}"></div>
@@ -4752,7 +4756,7 @@ function saveActivity(id) {
   const data = {
     title: document.getElementById('ac_title2').value.trim(),
     template: document.getElementById('ac_tpl').value,
-    header_image: document.getElementById('ac_header').value.trim(),
+    header_image: App._acHeader || '',
     price: (() => { const r = document.getElementById('ac_price2').value.trim(); return r === '' ? null : Number(r); })(),
     price_visible: document.getElementById('ac_pvis').checked,
     start_date: document.getElementById('ac_sd').value,
@@ -4770,6 +4774,22 @@ function saveActivity(id) {
   closeModal();
   renderActivities(document.getElementById('content'));
 }
+
+function renderAcHeaderPrev() {
+  return App._acHeader ? `<div style="position:relative;display:inline-block">
+    <img src="${App._acHeader}" style="max-width:140px;border-radius:8px">
+    <button type="button" class="xbtn" onclick="acHeaderClear()" style="position:absolute;top:-8px;right:-8px">×</button>
+  </div>` : '';
+}
+function acHeaderChange(file) {
+  if (!file) return;
+  fileToOptimizedBase64(file, 800, 0.75).then(b64 => {
+    App._acHeader = b64;
+    const prev = document.getElementById('acHeaderPrev');
+    if (prev) prev.innerHTML = renderAcHeaderPrev();
+  }).catch(e => { toast('图片处理失败'); });
+}
+function acHeaderClear() { App._acHeader = ''; const prev = document.getElementById('acHeaderPrev'); if (prev) prev.innerHTML = ''; }
 
 function deleteActivity(id) {
   const a = DB.getList('activities').find(x => x.id === id);
