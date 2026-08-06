@@ -1047,11 +1047,30 @@ const DB = {
       if (opts.rerender) safeRerender();
       return { mode: 'local-wins', pushed: pushed };
     }
-    // 云端有真实数据 → 采用云端，并镜像到本地兜底
-    this._cache = cloud;
-    this._writeLocal(cloud);
+    // 云端有真实数据 → 合并云端与本地（本地独有补回云端，避免覆盖丢失本地未同步的改动）
+    const merged = this._mergeData(cloud, local);
+    this._cache = merged;
+    this._writeLocal(merged);
+    await this.saveToCloud(merged);
     if (opts.rerender) safeRerender();
-    return { mode: 'cloud', pulled: true };
+    return { mode: 'cloud-merged', pulled: true };
+  },
+
+  // 合并云端与本地数据：以 id 去重并集，本地独有项补回云端；settings 以本地优先（密码/店名等设备级）
+  _mergeData(cloud, local) {
+    const out = JSON.parse(JSON.stringify(cloud || {}));
+    const cols = ['settings', 'employees', 'product_categories', 'products', 'projects', 'cards', 'activities', 'knowledge_articles', 'knowledge_categories', 'expert_profiles', 'cases', 'case_categories', 'supplies', 'supply_categories', 'activity_cards', 'activity_card_categories', 'orders', 'labor_configs', 'salary_config', 'salary_records', 'customers'];
+    cols.forEach(function (c) {
+      const cv = (cloud && cloud[c] != null) ? cloud[c] : null;
+      const lv = (local && local[c] != null) ? local[c] : null;
+      if (c === 'settings') { out[c] = Object.assign({}, cv || {}, lv || {}); return; }
+      if (!Array.isArray(cv) && !Array.isArray(lv)) { out[c] = (cv || lv || []); return; }
+      const map = {};
+      (Array.isArray(cv) ? cv : []).forEach(function (x) { if (x && x.id != null) map[x.id] = x; });
+      (Array.isArray(lv) ? lv : []).forEach(function (x) { if (x && x.id != null && !map[x.id]) map[x.id] = x; });
+      out[c] = Object.keys(map).map(function (k) { return map[k]; });
+    });
+    return out;
   },
 
   // 连接测试：仅检测云端是否可读
