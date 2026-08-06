@@ -856,69 +856,242 @@ const DB = {
 
   init() {
     if (!localStorage.getItem(this.KEY)) {
-      const defaultData = {
-        settings: {
-          store_name: "DKEXI.熹美学",
-          store_password: "1234",
-          employee_password: "8888",
-          wechat_qr_url: "",
-          brand_color: "#7c3aed",
-          logo_url: "",
-          stock_ample: 10,
-          stock_low: 1
-        },
-        employees: [],
-        product_categories: [],
-        products: [],
-        projects: [],
-        cards: [],
-        activities: [],
-        knowledge_articles: [],
-        knowledge_categories: [],
-        expert_profiles: [],
-        cases: [],
-        case_categories: [],
-        supplies: [],
-        supply_categories: [],
-        activity_cards: [],
-        activity_card_categories: [],
-        orders: [],
-        labor_configs: [],
-        salary_config: [
-          { level: "A", performance_threshold: 75000, base_salary: 3600, target: 75000, lesley_pct: 25, non_series_pct: 22, skin_treatment_pct: 10, basic_pct: 12, recharge_pct: 10 },
-          { level: "B", performance_threshold: 50000, base_salary: 2800, target: 50000, lesley_pct: 22, non_series_pct: 20, skin_treatment_pct: 8, basic_pct: 10, recharge_pct: 10 },
-          { level: "C", performance_threshold: 35000, base_salary: 2200, target: 35000, lesley_pct: 20, non_series_pct: 19, skin_treatment_pct: 7, basic_pct: 10, recharge_pct: 9 }
-        ],
-        salary_records: [],
-        salary_records: [],
-        customers: []
-      };
-        localStorage.setItem(this.KEY, JSON.stringify(defaultData));
+      localStorage.setItem(this.KEY, JSON.stringify(this._defaultData()));
     }
-    // 一次性迁移：旧占位店名自动升级为新品牌名（解决预览/旧数据残留旧名）
+    this.loadConfig();
+    this._cache = this._readLocal();
+    // 品牌迁移（仅改本地缓存，不触发云端推送，避免启动即覆盖云端）
     try {
-      const d = this.readAll();
+      const d = this._cache;
       if (d.settings && d.settings.store_name === '占位美学') {
         d.settings.store_name = 'DKEXI.熹美学';
-        this.writeAll(d);
+        this._writeLocal(d);
       }
     } catch (e) {}
   },
 
+  _defaultData() {
+    return {
+      settings: {
+        store_name: "DKEXI.熹美学",
+        store_password: "1234",
+        employee_password: "8888",
+        wechat_qr_url: "",
+        brand_color: "#7c3aed",
+        logo_url: "",
+        stock_ample: 10,
+        stock_low: 1
+      },
+      employees: [],
+      product_categories: [],
+      products: [],
+      projects: [],
+      cards: [],
+      activities: [],
+      knowledge_articles: [],
+      knowledge_categories: [],
+      expert_profiles: [],
+      cases: [],
+      case_categories: [],
+      supplies: [],
+      supply_categories: [],
+      activity_cards: [],
+      activity_card_categories: [],
+      orders: [],
+      labor_configs: [],
+      salary_config: [
+        { level: "A", performance_threshold: 75000, base_salary: 3600, target: 75000, lesley_pct: 25, non_series_pct: 22, skin_treatment_pct: 10, basic_pct: 12, recharge_pct: 10 },
+        { level: "B", performance_threshold: 50000, base_salary: 2800, target: 50000, lesley_pct: 22, non_series_pct: 20, skin_treatment_pct: 8, basic_pct: 10, recharge_pct: 10 },
+        { level: "C", performance_threshold: 35000, base_salary: 2200, target: 35000, lesley_pct: 20, non_series_pct: 19, skin_treatment_pct: 7, basic_pct: 10, recharge_pct: 9 }
+      ],
+      salary_records: [],
+      customers: []
+    };
+  },
+
+  loadConfig() {
+    try {
+      const cfg = JSON.parse(localStorage.getItem(this.CLOUD_KEY) || 'null');
+      if (cfg && cfg.url && cfg.key) { this.supabaseUrl = cfg.url; this.supabaseKey = cfg.key; }
+      else { this.supabaseUrl = null; this.supabaseKey = null; }
+    } catch (e) { this.supabaseUrl = null; this.supabaseKey = null; }
+  },
+
+  saveConfig(url, key) {
+    this.supabaseUrl = (url || '').trim();
+    this.supabaseKey = (key || '').trim();
+    localStorage.setItem(this.CLOUD_KEY, JSON.stringify({ url: this.supabaseUrl, key: this.supabaseKey }));
+  },
+
+  _headers() {
+    return { 'apikey': this.supabaseKey, 'Authorization': 'Bearer ' + this.supabaseKey };
+  },
+
+  _readLocal() {
+    try { return JSON.parse(localStorage.getItem(this.KEY) || '{}'); }
+    catch (e) { return {}; }
+  },
+
+  _writeLocal(data) {
+    localStorage.setItem(this.KEY, JSON.stringify(data));
+  },
+
+  _hasRealData(d) {
+    if (!d || typeof d !== 'object') return false;
+    const cols = ['products','orders','cases','projects','cards','activities','activity_cards','knowledge_articles','supplies','employees','customers','product_categories','supply_categories','activity_card_categories','case_categories','knowledge_categories','expert_profiles','labor_configs','salary_records'];
+    for (const c of cols) { if (Array.isArray(d[c]) && d[c].length) return true; }
+    if (Array.isArray(d.salary_config) && d.salary_config.length !== 3) return true;
+    if (d.settings && d.settings.store_name && d.settings.store_name !== 'DKEXI.熹美学') return true;
+    return false;
+  },
+
+  // 同步读取：全站同步调用均走内存缓存（云端拉取后填充）
   readAll() {
-    return JSON.parse(localStorage.getItem(this.KEY) || '{}');
+    return this._cache || this._readLocal();
   },
 
   writeAll(data) {
+    this._cache = data;
+    let ok = true;
+    try { this._writeLocal(data); }
+    catch (e) { DB._lastWriteError = e; ok = false; }
+    try { refreshStorageMeter(); } catch (e2) {}
+    if (ok && this.supabaseUrl && this.supabaseKey) {
+      this.saveToCloud(data).catch(function () {});
+    }
+    return ok;
+  },
+
+  // 异步：从 Supabase 读取 beauty_db 表 id='main' 的 data 字段
+  async loadFromCloud() {
+    if (!this.supabaseUrl || !this.supabaseKey) return null;
     try {
-      localStorage.setItem(this.KEY, JSON.stringify(data));
-      try { refreshStorageMeter(); } catch (e2) {}
-      return true;
-    } catch (e) {
-      // QuotaExceededError 或其他写入失败 → 全局暴露给 save 函数用
-      DB._lastWriteError = e;
+      const url = this.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/beauty_db?id=eq.main';
+      const res = await fetch(url, { headers: this._headers() });
+      if (!res.ok) { this._lastCloudError = 'HTTP ' + res.status; return null; }
+      const arr = await res.json();
+      if (Array.isArray(arr) && arr.length && arr[0].data != null) {
+        let d = arr[0].data;
+        if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return null; } }
+        return d;
+      }
+      return null;
+    } catch (e) { this._lastCloudError = String((e && e.message) || e); return null; }
+  },
+
+  // 异步：UPSERT 整库到 Supabase（单行医库 id='main'）；data 字段类型不兼容时自动退化为字符串重试
+  saveToCloud(data) {
+    if (!this.supabaseUrl || !this.supabaseKey) return Promise.resolve(false);
+    this._cloudData = data;
+    if (this._cloudT) clearTimeout(this._cloudT);
+    return new Promise((resolve) => {
+      this._cloudT = setTimeout(() => {
+        const d = this._cloudData; this._cloudData = null; this._cloudT = null;
+        this._doSaveCloud(d).then(resolve, function () { resolve(false); });
+      }, 400);
+    });
+  },
+
+  async _doSaveCloud(data) {
+    const url = this.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/beauty_db?on_conflict=id';
+    const headers = Object.assign(this._headers(), { 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates, return=representation' });
+    const send = (val) => fetch(url, { method: 'POST', headers: headers, body: JSON.stringify({ id: 'main', data: val }) });
+    let res = await send(data);
+    if (!res.ok) {
+      const txt = await res.text();
+      // 可能是 data 字段为 text 列不接受对象，退化为 JSON 字符串重试
+      if (/type|syntax|jsonb|cast|invalid|expected/i.test(txt)) {
+        res = await send(JSON.stringify(data));
+        if (res.ok) { this._lastCloudError = null; return true; }
+      }
+      this._lastCloudError = 'HTTP ' + res.status + ' ' + txt.slice(0, 140);
       return false;
     }
+    this._lastCloudError = null;
+    return true;
+  },
+
+  // 启动 / 保存配置后：拉取云端并与本地合并（首次升级自动迁移）
+  async loadCloudAndMigrate(opts) {
+    opts = opts || {};
+    if (!this.supabaseUrl || !this.supabaseKey) {
+      this._cache = this._readLocal();
+      if (opts.rerender) safeRerender();
+      return { mode: 'local' };
+    }
+    const cloud = await this.loadFromCloud();
+    const local = this._readLocal();
+    if (cloud == null) {
+      // 云端为空 → 用本地并写入云端（自动迁移）
+      this._cache = local;
+      const pushed = await this.saveToCloud(local);
+      if (opts.rerender) safeRerender();
+      return { mode: 'migrated', pushed: pushed };
+    }
+    const cloudReal = this._hasRealData(cloud);
+    const localReal = this._hasRealData(local);
+    if (!cloudReal && localReal) {
+      // 云端只有默认、本地有真实数据 → 本地优先，避免被空云端覆盖
+      this._cache = local;
+      const pushed = await this.saveToCloud(local);
+      if (opts.rerender) safeRerender();
+      return { mode: 'local-wins', pushed: pushed };
+    }
+    // 云端有真实数据 → 采用云端，并镜像到本地兜底
+    this._cache = cloud;
+    this._writeLocal(cloud);
+    if (opts.rerender) safeRerender();
+    return { mode: 'cloud', pulled: true };
+  },
+
+  // 连接测试：仅检测云端是否可读
+  async testConnection() {
+    const urlEl = document.getElementById('cloudUrl');
+    const keyEl = document.getElementById('cloudKey');
+    const url = urlEl ? urlEl.value.trim() : '';
+    const key = keyEl ? keyEl.value.trim() : '';
+    if (!url || !key) { toast('请先填写服务器地址和 API 密钥'); return; }
+    this.supabaseUrl = url; this.supabaseKey = key;
+    localStorage.setItem(this.CLOUD_KEY, JSON.stringify({ url: url, key: key }));
+    try {
+      const r = await fetch(this.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/beauty_db?id=eq.main', { headers: this._headers() });
+      if (r.ok) {
+        toast('✅ 连接成功');
+        const res = await this.loadCloudAndMigrate({ rerender: true });
+        this._setCloudStatus('✅ 连接成功，已开始云端同步（模式：' + res.mode + '）');
+      } else {
+        const msg = '❌ 连接失败：HTTP ' + r.status + (r.status === 401 ? '（读取被 RLS 拒绝，请在 Supabase SQL Editor 运行我提供的策略 SQL）' : '');
+        this._setCloudStatus(msg);
+        toast('❌ 连接失败：HTTP ' + r.status);
+      }
+    } catch (e) {
+      const msg = '❌ 连接失败：' + ((e && e.message) || e);
+      this._setCloudStatus(msg);
+      toast(msg);
+    }
+  },
+
+  async saveCloudConfig() {
+    const urlEl = document.getElementById('cloudUrl');
+    const keyEl = document.getElementById('cloudKey');
+    const url = urlEl ? urlEl.value.trim() : '';
+    const key = keyEl ? keyEl.value.trim() : '';
+    if (!url || !key) { toast('请先填写服务器地址和 API 密钥'); return; }
+    this.saveConfig(url, key);
+    toast('配置已保存，正在同步云端...');
+    const res = await this.loadCloudAndMigrate({ rerender: true });
+    let msg = '';
+    if (res.mode === 'migrated') msg = res.pushed ? '✅ 已配置，本地数据已自动迁移到云端' : '⚠️ 配置已保存，但写入云端失败（' + (this._lastCloudError || '未知') + '），请检查 RLS 策略';
+    else if (res.mode === 'cloud') msg = '✅ 已配置，已从云端拉取数据';
+    else if (res.mode === 'local-wins') msg = res.pushed ? '✅ 本地数据已优先同步到云端' : '⚠️ 同步失败，请检查 RLS 策略';
+    else msg = '✅ 已切换到云端模式';
+    this._setCloudStatus(msg);
+    toast(msg.replace(/^⚠️ /, ''));
+  },
+
+  _setCloudStatus(msg) {
+    const el = document.getElementById('cloudStatus');
+    if (el) el.textContent = msg;
   },
 
   getList(collection) {
@@ -979,13 +1152,31 @@ const DB = {
   },
 
   exportAll() {
-    return localStorage.getItem(this.KEY);
+    return JSON.stringify(this.readAll());
   },
 
   importAll(jsonStr) {
-    localStorage.setItem(this.KEY, jsonStr);
+    const d = JSON.parse(jsonStr);
+    this._cache = d;
+    this._writeLocal(d);
+    if (this.supabaseUrl && this.supabaseKey) this.saveToCloud(d).catch(function () {});
   }
 };
+
+// 云端拉取/迁移完成后安全重渲染（避免破坏打开中的弹窗）
+function safeRerender() {
+  try { render(); } catch (e) {}
+}
+
+// 数据源设置面板折叠/展开
+function toggleCloudSettings() {
+  const b = document.getElementById('cloudSettingsBody');
+  const i = document.getElementById('cloudToggleIcon');
+  if (!b) return;
+  const hidden = b.style.display === 'none';
+  b.style.display = hidden ? '' : 'none';
+  if (i) i.textContent = hidden ? '▾' : '▸';
+}
 
 /* ============================================================
  * 通用工具
@@ -3642,6 +3833,23 @@ function renderSettings(c) {
     <div class="card">
       <div class="page-head"><h2>全局设置</h2><span class="muted">系统级配置 · 仅老板可见</span></div>
 
+      <section class="set-sec" style="border:1px solid #c4b5fd;background:#f5f3ff">
+        <h3 onclick="toggleCloudSettings()" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px">
+          <span id="cloudToggleIcon">▾</span> 数据源设置（云端同步 Supabase）
+        </h3>
+        <div id="cloudSettingsBody">
+          <p class="muted" style="font-size:12px;margin:0 0 10px">配置后全站数据自动同步到 Supabase 云端，支持多设备/多人共享同一份数据；未配置时用浏览器本地存储兜底。填入下面信息并点「保存配置」即可开始同步。</p>
+          <div class="field"><label>服务器地址（Project URL）</label><input id="cloudUrl" type="text" value="${esc(DB.supabaseUrl || 'https://slqykvmjgyacducedfny.supabase.co')}" placeholder="https://xxxx.supabase.co"></div>
+          <div class="field"><label>API 密钥（anon key）</label><input id="cloudKey" type="text" value="${esc(DB.supabaseKey || 'sb_publishable_Q-mOMy4Zw4igQyXaVbc0CQ_3RcJVW9U')}" placeholder="sb_publishable_..."></div>
+          <div class="row">
+            <button class="btn" onclick="DB.saveCloudConfig()">保存配置</button>
+            <button class="btn secondary" onclick="DB.testConnection()">连接测试</button>
+          </div>
+          <div id="cloudStatus" style="margin-top:8px;font-size:13px;font-weight:600;color:#374151"></div>
+          <p class="muted" style="font-size:12px;margin-top:6px">若「连接测试」提示 HTTP 401，说明 Supabase 表 <code>beauty_db</code> 还没开放写入权限，需到 Supabase 后台 SQL Editor 运行我提供的策略 SQL（见交付说明）。</p>
+        </div>
+      </section>
+
       <section class="set-sec">
         <h3>店铺基础信息</h3>
         <div class="grid2">
@@ -3708,7 +3916,7 @@ function renderSettings(c) {
         <h3>关于本系统</h3>
         <p class="muted" style="line-height:1.9">
           美容院后台管理系统（纯 HTML 单文件版） v1.0<br>
-          数据存储：浏览器本地 localStorage，双击即用、无需联网<br>
+          数据存储：默认浏览器本地 localStorage；在顶部「数据源设置」填入 Supabase 信息后可同步到云端，支持多设备/多人共享同一份数据<br>
           模块：工作台 / 产品 / 库存 / 用品 / 开单 / 手工费 / 工资 / 薪资参数 / 员工 / 活动卡 / 知识 / 案例 / 股东报表 / 全局设置
         </p>
       </section>
@@ -3775,7 +3983,14 @@ function restoreAll(input) {
 function resetAllData() {
   confirmDialog('此操作将删除本地全部数据（订单 / 员工 / 工资等）并恢复初始空状态，确定吗？建议先导出备份。', function () {
     localStorage.removeItem(DB.KEY);
+    // 同时清空云端（若有配置）
+    if (DB.supabaseUrl && DB.supabaseKey) {
+      fetch(DB.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/beauty_db?id=eq.main', {
+        method: 'DELETE', headers: DB._headers()
+      }).catch(function () {});
+    }
     DB.init();
+    DB._cache = DB._readLocal();
     toast('已重置，正在刷新...');
     setTimeout(function () { render(); }, 300);
   }, '重置确认');
@@ -5654,6 +5869,7 @@ function bindEdEvents(canvas) {
 DB.init();
 restoreSession();
 render();
+DB.loadCloudAndMigrate({ rerender: true });
 </script>
 </body>
 </html>
