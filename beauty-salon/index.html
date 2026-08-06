@@ -4407,7 +4407,7 @@ function previewProject(id) {
         ${p.detail ? `<div style="margin-top:10px"><div style="font-size:13px;font-weight:600;color:#374151">详情</div><div style="font-size:13px;color:#4b5563;white-space:pre-wrap;margin-top:4px">${esc(p.detail)}</div></div>` : ''}
         ${p.suggested_cycle ? `<div style="margin-top:8px;font-size:13px;color:#6b7280">建议周期：${esc(p.suggested_cycle)}</div>` : ''}
         ${moreImgs ? `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">${moreImgs}</div>` : ''}
-        ${p.video_url ? `<div style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : ''}
+        ${p.video_data ? `<div style="margin-top:10px"><video src="${p.video_data}" controls style="width:100%;border-radius:8px;max-height:280px"></video></div>` : (p.video_url ? `<div style="margin-top:10px"><a href="${esc(p.video_url)}" target="_blank" style="color:#7c3aed;font-size:13px">▶ 观看视频</a></div>` : '')}
         ${p.douyin_link ? `<div style="margin-top:6px"><a href="${esc(p.douyin_link)}" target="_blank" style="color:#7c3aed;font-size:13px">📕 抖音团购链接</a></div>` : ''}
       </div>
       <div style="padding:10px 16px 16px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6">
@@ -4420,6 +4420,8 @@ function previewProject(id) {
 function openProjectForm(id) {
   const p = id ? DB.getList('projects').find(x => x.id === id) : null;
   const v = (k, d) => p ? (p[k] != null ? p[k] : (d === undefined ? '' : d)) : (d === undefined ? '' : d);
+  App._pjImgs = (p && p.images) ? p.images.slice() : [];
+  App._pjVideo = (p && p.video_data) ? p.video_data : null;
   const html = `
     <h3>${id ? '编辑项目' : '新增项目'}</h3>
     <div class="field"><label>名称<span class="req">*</span></label><input id="pj_name" value="${esc(v('name'))}" placeholder="如：玻尿酸水光"></div>
@@ -4428,10 +4430,13 @@ function openProjectForm(id) {
       <div class="field" style="flex:1"><label>状态</label><select id="pj_status"><option value="published" ${v('status', 'published') === 'published' ? 'selected' : ''}>已上架</option><option value="draft" ${v('status') === 'draft' ? 'selected' : ''}>草稿</option></select></div>
       <div class="field" style="width:110px"><label>排序</label><input id="pj_sort" type="number" value="${v('sort_order', 0)}"></div>
     </div>
-    <div class="field"><label>图片URL（每行一个，选填）</label><textarea id="pj_imgs" rows="3" placeholder="https://...">${(v('images') || []).join('\n')}</textarea></div>
-    <div class="row">
-      <div class="field" style="flex:1"><label>视频链接（选填）</label><input id="pj_video_url" value="${esc(v('video_url'))}"></div>
-      <div class="field" style="width:130px"><label>视频类型</label><select id="pj_video_type"><option value="" ${!v('video_type') ? 'selected' : ''}>无</option><option value="link" ${v('video_type') === 'link' ? 'selected' : ''}>外链</option><option value="douyin" ${v('video_type') === 'douyin' ? 'selected' : ''}>抖音</option><option value="bilibili" ${v('video_type') === 'bilibili' ? 'selected' : ''}>B站</option></select></div>
+    <div class="field"><label>图片（点击上传，可多张，选填）</label>
+      <div id="pj_imgs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
+      <input type="file" id="pj_file" multiple accept="image/*" onchange="addProjectImages()">
+    </div>
+    <div class="field"><label>视频（点击上传，选填）</label>
+      <div id="pj_video_preview" style="margin-bottom:6px"></div>
+      <input type="file" id="pj_video_file" accept="video/*" onchange="addProjectVideo()">
     </div>
     <div class="field"><label>简介（选填）</label><textarea id="pj_intro" rows="2">${esc(v('intro'))}</textarea></div>
     <div class="field"><label>详情（选填）</label><textarea id="pj_detail" rows="3">${esc(v('detail'))}</textarea></div>
@@ -4445,27 +4450,81 @@ function openProjectForm(id) {
       <button class="btn ghost" style="flex:1" onclick="closeModal()">取消</button>
     </div>`;
   openModal(html);
+  renderProjectImgPreview();
+  renderProjectVideoPreview();
+}
+
+function addProjectImages() {
+  const inp = document.getElementById('pj_file');
+  const files = Array.from(inp.files || []);
+  if (!files.length) return;
+  let pending = files.length;
+  files.forEach(f => {
+    fileToOptimizedBase64(f, 1200, 0.72).then(b64 => {
+      App._pjImgs.push(b64);
+      renderProjectImgPreview();
+    }).catch(() => {}).finally(() => { if (--pending === 0) inp.value = ''; });
+  });
+}
+function removeProjectImg(i) { App._pjImgs.splice(i, 1); renderProjectImgPreview(); }
+function renderProjectImgPreview() {
+  const box = document.getElementById('pj_imgs'); if (!box) return;
+  box.innerHTML = (App._pjImgs || []).map((u, i) =>
+    `<div style="position:relative"><img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px">
+      <button type="button" onclick="removeProjectImg(${i})" style="position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer" title="删除">×</button></div>`
+  ).join('');
+}
+function addProjectVideo() {
+  const inp = document.getElementById('pj_video_file');
+  const f = inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 5 * 1024 * 1024) toast('视频超过 5MB，可能存不下，建议用更短或压缩后的视频');
+  const reader = new FileReader();
+  reader.onload = () => { App._pjVideo = reader.result; renderProjectVideoPreview(); toast('视频已添加'); };
+  reader.onerror = () => toast('视频读取失败');
+  reader.readAsDataURL(f);
+  inp.value = '';
+}
+function removeProjectVideo() { App._pjVideo = null; renderProjectVideoPreview(); }
+function renderProjectVideoPreview() {
+  const box = document.getElementById('pj_video_preview'); if (!box) return;
+  if (!App._pjVideo) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div style="position:relative;display:inline-block">
+    <video src="${App._pjVideo}" controls style="max-width:220px;border-radius:8px"></video>
+    <button type="button" onclick="removeProjectVideo()" style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#ef4444;color:#fff;border:none;cursor:pointer;font-size:13px" title="删除视频">×</button>
+  </div>`;
 }
 
 function saveProject(id) {
   const name = document.getElementById('pj_name').value.trim();
   if (!name) { toast('请填写项目名称'); return; }
+  const origVideoUrl = (id ? (DB.getList('projects').find(x => x.id === id) || {}).video_url : '') || '';
+  const videoData = App._pjVideo || null;
+  const videoUrl = videoData ? '' : origVideoUrl; // 上传优先；未上传则保留原链接（仅兼容旧数据，不再提供贴网址入口）
+  const videoType = videoData ? 'upload' : (videoUrl ? 'link' : '');
   const data = {
     name,
     category_ids: document.getElementById('pj_cats').value.split(/[,，]/).map(s => s.trim()).filter(Boolean),
     status: document.getElementById('pj_status').value,
     sort_order: Number(document.getElementById('pj_sort').value || 0),
-    images: document.getElementById('pj_imgs').value.split('\n').map(s => s.trim()).filter(Boolean),
-    video_url: document.getElementById('pj_video_url').value.trim(),
-    video_type: document.getElementById('pj_video_type').value,
+    images: (App._pjImgs || []).slice(),
+    video_data: videoData,
+    video_url: videoUrl,
+    video_type: videoType,
     intro: document.getElementById('pj_intro').value,
     detail: document.getElementById('pj_detail').value,
     suggested_cycle: document.getElementById('pj_cycle').value.trim(),
     douyin_link: document.getElementById('pj_douyin').value.trim(),
     hot_badge: document.getElementById('pj_hot').value.trim()
   };
-  if (id) { DB.update('projects', id, data); toast('已保存'); }
-  else { DB.insert('projects', Object.assign(data, { created_at: todayStr() })); toast('已新建'); }
+  try {
+    if (id) { DB.update('projects', id, data); toast('已保存'); }
+    else { DB.insert('projects', Object.assign(data, { created_at: todayStr() })); toast('已新建'); }
+  } catch (e) {
+    if (checkDBWriteQuota()) return;
+    toast('保存失败：' + (e && e.message || '请重试'));
+    return;
+  }
   closeModal();
   renderProjects(document.getElementById('content'));
 }
