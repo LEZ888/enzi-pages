@@ -853,6 +853,8 @@
  * ============================================================ */
 const DB = {
   KEY: 'beauty_saloon_db',
+  CLOUD_KEY: 'beauty_saloon_supabase',
+  DEFAULT_CLOUD: { url: 'https://slqykvmjgyacducedfny.supabase.co', key: 'sb_publishable_Q-mOMy4Zw4igQyXaVbc0CQ_3RcJVW9U' },
 
   init() {
     if (!localStorage.getItem(this.KEY)) {
@@ -868,6 +870,8 @@ const DB = {
         this._writeLocal(d);
       }
     } catch (e) {}
+    // 启动即异步拉云端（首次会自动迁移/拉取云端数据）；fire-and-forget，不阻塞初始化
+    this.loadCloudAndMigrate({ rerender: true }).catch(function () {});
   },
 
   _defaultData() {
@@ -911,10 +915,16 @@ const DB = {
 
   loadConfig() {
     try {
-      const cfg = JSON.parse(localStorage.getItem(this.CLOUD_KEY) || 'null');
-      if (cfg && cfg.url && cfg.key) { this.supabaseUrl = cfg.url; this.supabaseKey = cfg.key; }
-      else { this.supabaseUrl = null; this.supabaseKey = null; }
-    } catch (e) { this.supabaseUrl = null; this.supabaseKey = null; }
+      let cfg = JSON.parse(localStorage.getItem(this.CLOUD_KEY) || 'null');
+      if (!cfg || !cfg.url || !cfg.key) {
+        // 未配置时使用用户提供的 Supabase 默认连接：首次打开即自动开启云端同步
+        cfg = this.DEFAULT_CLOUD;
+        localStorage.setItem(this.CLOUD_KEY, JSON.stringify(cfg));
+      }
+      this.supabaseUrl = cfg.url; this.supabaseKey = cfg.key;
+    } catch (e) {
+      this.supabaseUrl = this.DEFAULT_CLOUD.url; this.supabaseKey = this.DEFAULT_CLOUD.key;
+    }
   },
 
   saveConfig(url, key) {
