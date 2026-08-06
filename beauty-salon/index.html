@@ -2469,6 +2469,7 @@ function renderSupplies(c) {
       ${banner}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <input id="supSearch" class="inp" placeholder="搜索名称/备注" style="flex:1;min-width:160px" value="${esc(App.supSearch || '')}" />
+        <button class="btn sm" type="button" onclick="App.supSearch=document.getElementById('supSearch').value;renderSupplies(document.getElementById('content'))">搜索</button>
       </div>
       <div class="m-chips">${filterChips}</div>
       <div class="cat-toggle ${catOpen ? 'exp' : ''}" onclick="toggleSupCat()">分类管理（${cats.length}）</div>
@@ -3533,7 +3534,9 @@ function shServiceCardTotal(o) {
 function renderShareholder(c) {
   const f = n => (Number(n) || 0).toFixed(2);
   const month = shareholderState.month;
+  const shKw = (App.shSearch || '').trim().toLowerCase();
   const orders = DB.getList('orders').filter(o => (o.order_date || '').slice(0, 7) === month)
+    .filter(o => !shKw || (maskName(o.customer_name) || '').toLowerCase().includes(shKw) || (o.id || '').toLowerCase().includes(shKw))
     .sort((a, b) => (a.order_date || '').localeCompare(b.order_date || ''));
   const emps = DB.getList('employees');
   const en = id => { const e = emps.find(x => x.id === id); return e ? e.name : '—'; };
@@ -3555,6 +3558,10 @@ function renderShareholder(c) {
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px">
       <div style="flex:1;min-width:140px;background:#f5f3ff;border:1px solid #e9e3ff;border-radius:10px;padding:12px"><div style="font-size:22px;font-weight:700;color:#6d28d9">${orders.length}</div><div style="font-size:12px;color:#7c3aed">当月订单数</div></div>
       <div style="flex:1;min-width:140px;background:#ecfdf5;border:1px solid #d1fae5;border-radius:10px;padding:12px"><div style="font-size:22px;font-weight:700;color:#047857">¥${f(svc)}</div><div style="font-size:12px;color:#059669">服务·卡实收（不含产品零售）</div></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <input id="shSearch" class="inp" placeholder="搜索客户名 / 订单号" style="flex:1;min-width:160px" value="${esc(App.shSearch || '')}" />
+      <button class="btn sm" type="button" onclick="App.shSearch=document.getElementById('shSearch').value;renderShareholder(document.getElementById('content'))">搜索</button>
     </div>
     ${orders.length === 0 ? '<div class="card"><div class="placeholder"><div class="big">📭</div><div>该月份暂无订单</div></div></div>' : `
     <div class="card">
@@ -4080,9 +4087,12 @@ function renderActivityCards(c) {
             <button type="button" class="btn sm ghost" onclick="addAcCategory()">+ 新增</button>
           </div>
           <div style="margin-top:10px">
-            <div class="ac-search-wrap" style="width:100%">
-              <input id="acSearch" placeholder="🔎 搜索标题/明细/价格" style="width:100%;padding-left:30px">
-              <button type="button" class="ac-search-clear" id="acSearchClear" onclick="clearAcSearch()" title="清空搜索">×</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="ac-search-wrap" style="flex:1">
+                <input id="acSearch" placeholder="🔎 搜索标题/明细/价格" style="width:100%;padding-left:30px">
+                <button type="button" class="ac-search-clear" id="acSearchClear" onclick="clearAcSearch()" title="清空搜索">×</button>
+              </div>
+              <button type="button" class="btn sm" onclick="App.acSearch=document.getElementById('acSearch').value;renderAcGrid()">搜索</button>
             </div>
           </div>
         </div>
@@ -4554,6 +4564,7 @@ function renderCards(c) {
         <h2>卡管理</h2>
         <div class="m-exports">
           <input id="cardSearch" placeholder="搜索卡名/对外名" style="max-width:180px">
+          <button class="btn sm" type="button" onclick="App.cardSearch=document.getElementById('cardSearch').value;renderCards(document.getElementById('content'))">搜索</button>
           <button class="btn" onclick="openCardForm(null)">+ 新增卡</button>
         </div>
       </div>
@@ -4636,6 +4647,7 @@ function renderActivities(c) {
         <h2>活动 / 团购</h2>
         <div class="m-exports">
           <input id="activitySearch" class="inp" placeholder="搜索标题/详情" style="max-width:200px" value="${esc(App.activitySearch || '')}" />
+          <button class="btn sm" type="button" onclick="App.activitySearch=document.getElementById('activitySearch').value;renderActivities(document.getElementById('content'))">搜索</button>
           <button class="btn" onclick="openActivityForm(null)">+ 新增活动</button>
         </div>
       </div>
@@ -4797,6 +4809,7 @@ function renderKnowledge(c) {
         <div class="cat-main">
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
             <input id="kSearch" class="inp" placeholder="搜索标题/内容" style="flex:1;min-width:160px">
+            <button class="btn sm" type="button" onclick="App.kSearch=document.getElementById('kSearch').value;renderKGrid()">搜索</button>
             <button class="btn" onclick="openKnowledgeForm(null)">+ 新建知识</button>
           </div>
           <div id="kGrid"></div>
@@ -5126,6 +5139,7 @@ function renderCases(c) {
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
         <input id="caseSearch" class="inp" placeholder="搜索标题 / 内容" style="flex:1;min-width:160px" value="${esc(App.caseSearch || '')}" />
+        <button class="btn sm" type="button" onclick="App.caseSearch=document.getElementById('caseSearch').value;renderCaseGrid()">搜索</button>
       </div>
       <div class="cat-toggle ${App.caseCatOpen ? 'exp' : ''}" onclick="App.caseCatOpen=!App.caseCatOpen;renderCases(document.getElementById('content'))">分类筛选（${cats.length}）</div>
       <div class="cat-body" style="${App.caseCatOpen ? '' : 'display:none'}">
