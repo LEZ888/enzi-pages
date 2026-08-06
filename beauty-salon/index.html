@@ -167,6 +167,14 @@
   .set-sec:first-of-type { border-top: none; padding-top: 0; }
   .set-sec > h3 { margin: 0 0 12px; font-size: 15px; color: #1f2937; }
   .set-sec .btn { margin-top: 4px; }
+  /* 首页模块管理列表行 */
+  .hm-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 8px; background: #fff; border: 1px solid #ece9f5; border-radius: 12px; cursor: grab; }
+  .hm-row:active { cursor: grabbing; }
+  .hm-grip { color: #9ca3af; font-size: 18px; line-height: 1; user-select: none; }
+  .hm-info { flex: 1; min-width: 0; }
+  .hm-title { font-weight: 600; font-size: 14px; color: #1f2937; }
+  .hm-meta { font-size: 12px; color: #6b7280; margin-top: 2px; }
+  .hm-ops { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .danger-sec { background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 16px; margin-top: 8px; }
   .modal-card h3 { margin: 0 0 14px; font-size: 17px; }
   .modal-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
@@ -3909,8 +3917,18 @@ function renderSettings(c) {
           </div>
           <div class="field"><label>Logo 图片链接（可选）</label><input id="set_logo_url" type="text" value="${esc(s.logo_url || '')}" placeholder="https://..."></div>
           <div class="field"><label>微信二维码链接（可选）</label><input id="set_wechat_qr_url" type="text" value="${esc(s.wechat_qr_url || '')}" placeholder="https://..."></div>
+          <div class="field"><label>品牌标语（可选）</label><input id="set_slogan" type="text" value="${esc(s.slogan || '')}" maxlength="30" placeholder="如：专业美容 · 匠心美学"></div>
         </div>
         <button class="btn" onclick="saveStoreSettings()">保存店铺信息</button>
+      </section>
+
+      <section class="set-sec">
+        <h3>首页模块管理 <span class="muted" style="font-size:12px;font-weight:400">（前台 App 首页展示）</span></h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px">配置前台首页展示的模块（精选产品 / 客户案例 / 热门活动等）。可添加、编辑、删除、拖拽排序、启用/禁用。保存后前台自动按此顺序展示。模块数据取自同一份云端库，前后台一致。</p>
+        <div class="row" style="margin-bottom:10px">
+          <button class="btn" onclick="openHomeModuleForm(null)">+ 添加模块</button>
+        </div>
+        <div id="homeModuleList">${homeModuleManagerHTML()}</div>
       </section>
 
       <section class="set-sec">
@@ -3976,11 +3994,96 @@ function saveStoreSettings() {
   if (!/^#[0-9a-fA-F]{6}$/.test(brand_color)) brand_color = document.getElementById('set_brand_color').value || '#7c3aed';
   const logo_url = (document.getElementById('set_logo_url').value || '').trim();
   const wechat_qr_url = (document.getElementById('set_wechat_qr_url').value || '').trim();
-  DB.saveSettings({ store_name, brand_color, logo_url, wechat_qr_url });
+  const slogan = (document.getElementById('set_slogan').value || '').trim();
+  DB.saveSettings({ store_name, brand_color, logo_url, wechat_qr_url, slogan });
   applyBrand();
   const nameEl = document.querySelector('.topbar .left strong');
   if (nameEl) nameEl.textContent = store_name || '美容院后台';
   toast('店铺信息已保存');
+}
+
+/* ============================================================
+ * 首页模块管理（前台 App 首页 home_modules 配置）
+ * ============================================================ */
+const HM_DEFAULT_MODULES = [
+  { id:"m1", type:"products", title:"精选产品", limit:6, style:"card_grid", enabled:true },
+  { id:"m2", type:"cases", title:"客户案例", limit:3, style:"carousel", enabled:true },
+  { id:"m3", type:"activities", title:"热门活动", limit:4, style:"list", enabled:true }
+];
+const HM_TYPE_NAMES = { products:"产品", projects:"项目", cases:"案例", activities:"活动", knowledge:"知识", banner:"大图(Banner)" };
+const HM_STYLE_NAMES = { card_grid:"卡片网格", horizontal_scroll:"横向滚动", carousel:"轮播", list:"列表" };
+
+function getHomeModulesBackend(){
+  const s = DB.getSettings();
+  return (Array.isArray(s.home_modules) && s.home_modules.length) ? s.home_modules : HM_DEFAULT_MODULES.slice();
+}
+function homeModuleManagerHTML(){
+  const mods = getHomeModulesBackend();
+  if (!mods.length) return '<p class="muted">尚未添加模块，点上方「+ 添加模块」。</p>';
+  return mods.map(m => {
+    const tn = HM_TYPE_NAMES[m.type] || m.type;
+    const sn = HM_STYLE_NAMES[m.style] || m.style;
+    const on = m.enabled !== false;
+    return '<div class="hm-row" draggable="true" ondragstart="hmDragStart(\''+m.id+'\')" ondragover="event.preventDefault()" ondrop="hmDrop(\''+m.id+'\')">'
+      + '<span class="hm-grip" title="拖拽排序">⠿</span>'
+      + '<div class="hm-info"><div class="hm-title">'+esc(m.title || tn)+'</div>'
+      + '<div class="hm-meta">'+tn+' · '+sn+' · 取'+(Number(m.limit)||6)+'条 · '+(on?'显示':'隐藏')+'</div></div>'
+      + '<div class="hm-ops">'
+      + '<button class="btn sm ghost" onclick="hmToggle(\''+m.id+'\')">'+(on?'隐藏':'显示')+'</button>'
+      + '<button class="btn sm" onclick="openHomeModuleForm(\''+m.id+'\')">编辑</button>'
+      + '<button class="btn sm ghost" onclick="hmMove(\''+m.id+'\',-1)">↑</button>'
+      + '<button class="btn sm ghost" onclick="hmMove(\''+m.id+'\',1)">↓</button>'
+      + '<button class="btn sm danger" onclick="hmDelete(\''+m.id+'\')">删除</button>'
+      + '</div></div>';
+  }).join('');
+}
+function hmRebuild(){ const el = document.getElementById('homeModuleList'); if (el) el.innerHTML = homeModuleManagerHTML(); }
+function hmSave(arr){ DB.saveSettings({ home_modules: arr }); toast('首页模块已保存'); hmRebuild(); }
+function hmToggle(id){ const a = getHomeModulesBackend(); const m = a.find(x => x.id === id); if (m){ m.enabled = (m.enabled === false); hmSave(a); } }
+function hmMove(id, dir){ const a = getHomeModulesBackend(); const i = a.findIndex(x => x.id === id); if (i < 0) return; const j = i + dir; if (j < 0 || j >= a.length) return; const t = a[i]; a[i] = a[j]; a[j] = t; hmSave(a); }
+function hmDelete(id){ confirmDialog('确定删除该首页模块？此操作可重新添加。', function(){ const a = getHomeModulesBackend().filter(x => x.id !== id); hmSave(a); }); }
+function hmDragStart(id){ App._hmDrag = id; }
+function hmDrop(targetId){
+  const a = getHomeModulesBackend();
+  const from = a.findIndex(x => x.id === App._hmDrag);
+  const to = a.findIndex(x => x.id === targetId);
+  if (from < 0 || to < 0 || from === to) return;
+  const moved = a.splice(from, 1)[0];
+  a.splice(to, 0, moved);
+  App._hmDrag = null;
+  hmSave(a);
+}
+function openHomeModuleForm(id){
+  const a = getHomeModulesBackend();
+  const m = id ? a.find(x => x.id === id) : null;
+  const isEdit = !!m;
+  const cur = m || { type:"products", title:"", limit:6, style:"card_grid", enabled:true };
+  const typeOpts = Object.keys(HM_TYPE_NAMES).map(k => '<option value="'+k+'"'+(cur.type === k ? ' selected' : '')+'>'+HM_TYPE_NAMES[k]+'</option>').join('');
+  const styleOpts = Object.keys(HM_STYLE_NAMES).map(k => '<option value="'+k+'"'+(cur.style === k ? ' selected' : '')+'>'+HM_STYLE_NAMES[k]+'</option>').join('');
+  const html = '<div class="modal-card">'
+    + '<h3>'+(isEdit ? '编辑首页模块' : '添加首页模块')+'</h3>'
+    + '<div class="field"><label>模块类型</label><select id="hmType">'+typeOpts+'</select></div>'
+    + '<div class="field"><label>标题</label><input id="hmTitle" type="text" value="'+esc(cur.title || '')+'" maxlength="20" placeholder="如：精选产品"></div>'
+    + '<div class="field"><label>展示数量（取前 N 条）</label><input id="hmLimit" type="number" min="1" max="50" value="'+(Number(cur.limit) || 6)+'"></div>'
+    + '<div class="field"><label>展示样式</label><select id="hmStyle">'+styleOpts+'</select></div>'
+    + '<div class="field" style="flex-direction:row;align-items:center;gap:8px"><label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:400"><input id="hmEnabled" type="checkbox"'+(cur.enabled !== false ? ' checked' : '')+' style="width:auto;margin:0"> 启用（在前台显示）</label></div>'
+    + '<div class="modal-act"><button class="btn ghost" onclick="closeModal()">取消</button><button class="btn" id="hmSaveBtn">保存</button></div>'
+    + '</div>';
+  openModal(html);
+  const btn = document.getElementById('hmSaveBtn');
+  if (btn) btn.onclick = function(){
+    const type = document.getElementById('hmType').value;
+    const title = (document.getElementById('hmTitle').value || '').trim() || (HM_TYPE_NAMES[type] || type);
+    let limit = Number(document.getElementById('hmLimit').value) || 6;
+    if (limit < 1) limit = 1; if (limit > 50) limit = 50;
+    const style = document.getElementById('hmStyle').value;
+    const enabled = document.getElementById('hmEnabled').checked;
+    const arr = getHomeModulesBackend();
+    if (isEdit){ const t = arr.find(x => x.id === id); if (t){ t.type = type; t.title = title; t.limit = limit; t.style = style; t.enabled = enabled; } }
+    else { arr.push({ id: DB.genId(), type: type, title: title, limit: limit, style: style, enabled: enabled }); }
+    closeModal();
+    hmSave(arr);
+  };
 }
 
 function saveStockThreshold() {
