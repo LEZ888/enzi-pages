@@ -3918,6 +3918,8 @@ function renderSettings(c) {
           <div class="field"><label>Logo 图片链接（可选）</label><input id="set_logo_url" type="text" value="${esc(s.logo_url || '')}" placeholder="https://..."></div>
           <div class="field"><label>微信二维码链接（可选）</label><input id="set_wechat_qr_url" type="text" value="${esc(s.wechat_qr_url || '')}" placeholder="https://..."></div>
           <div class="field"><label>品牌标语（可选）</label><input id="set_slogan" type="text" value="${esc(s.slogan || '')}" maxlength="30" placeholder="如：专业美容 · 匠心美学"></div>
+          <div class="field"><label>店铺地址（可选，前台“我的”展示）</label><input id="set_address" type="text" value="${esc(s.address || '')}" maxlength="60" placeholder="如：广州市天河区xx路xx号"></div>
+          <div class="field"><label>营业时间（可选，前台“我的”展示）</label><input id="set_hours" type="text" value="${esc(s.business_hours || '')}" maxlength="40" placeholder="如：10:00–21:00"></div>
         </div>
         <button class="btn" onclick="saveStoreSettings()">保存店铺信息</button>
       </section>
@@ -3995,7 +3997,9 @@ function saveStoreSettings() {
   const logo_url = (document.getElementById('set_logo_url').value || '').trim();
   const wechat_qr_url = (document.getElementById('set_wechat_qr_url').value || '').trim();
   const slogan = (document.getElementById('set_slogan').value || '').trim();
-  DB.saveSettings({ store_name, brand_color, logo_url, wechat_qr_url, slogan });
+  const address = (document.getElementById('set_address').value || '').trim();
+  const business_hours = (document.getElementById('set_hours').value || '').trim();
+  DB.saveSettings({ store_name, brand_color, logo_url, wechat_qr_url, slogan, address, business_hours });
   applyBrand();
   const nameEl = document.querySelector('.topbar .left strong');
   if (nameEl) nameEl.textContent = store_name || '美容院后台';
